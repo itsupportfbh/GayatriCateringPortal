@@ -1,0 +1,29 @@
+@{
+    ViewData["Title"] = "Reports";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/admin/reports.css" asp-append-version="true">
+}
+
+<div class="page-header">
+    <div>
+        <div class="page-title">Reports</div>
+        <div class="page-subtitle">Sales, menu popularity, kitchen, transport and finance overview</div>
+    </div>
+</div>
+
+<div class="card" style="margin-bottom:18px">
+    <div class="section-label">Revenue by Package</div>
+    <div id="reportBars"></div>
+</div>
+
+<div class="card">
+    <div class="section-label">Report Coverage</div>
+    <div class="pkg-grid" id="reportCoverage"></div>
+</div>
+
+@section Scripts {
+    <script src="~/js/admin/table-utils.js" asp-append-version="true"></script>
+    <script src="~/js/admin/reports.js" asp-append-version="true"></script>
+}

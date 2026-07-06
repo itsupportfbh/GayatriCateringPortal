@@ -1,0 +1,19 @@
+/* ===== ADMIN DASHBOARD ===== */
+.kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:18px}
+.kpi{background:var(--white);border-radius:var(--radius);border:1px solid var(--gray-200);padding:18px;box-shadow:var(--shadow)}
+.kpi-val{font-size:30px;font-weight:800;color:var(--gray-900)}
+.kpi-label{font-size:12px;color:var(--gray-500);font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-top:4px}
+.kpi-change{font-size:11.5px;color:var(--green);margin-top:4px}
+
+.timeline{list-style:none}
+.timeline li{display:flex;gap:12px;padding:10px 0;border-bottom:1px solid var(--gray-100)}
+.timeline li:last-child{border-bottom:none}
+.tl-dot{width:10px;height:10px;border-radius:50%;background:var(--green);margin-top:5px;flex-shrink:0}
+.tl-dot.orange{background:var(--orange)}
+.tl-dot.blue{background:var(--blue)}
+.tl-dot.red{background:var(--red)}
+.tl-text{font-size:13px;color:var(--gray-700)}
+.tl-time{font-size:11px;color:var(--gray-500);margin-top:2px}
+
+@media(max-width:900px){.kpi-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:640px){.kpi-grid{grid-template-columns:1fr 1fr}}

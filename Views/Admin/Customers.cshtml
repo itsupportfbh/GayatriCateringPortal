@@ -1,0 +1,49 @@
+@{
+    ViewData["Title"] = "Customers";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/admin/customers.css" asp-append-version="true">
+}
+
+<div class="page-header">
+    <div>
+        <div class="page-title">Customers</div>
+        <div class="page-subtitle">Customer database and order history</div>
+    </div>
+    <div class="page-header-actions">
+        <div class="app-header-filter">
+            <input type="text" id="custSearch" placeholder="Search customers...">
+        </div>
+        <button class="btn btn-orange btn-add" id="btnAddCustomer">+ Add Customer</button>
+    </div>
+</div>
+
+<div class="card">
+    <div class="table-wrap" id="customersTable">
+        <p class="muted">Loading...</p>
+    </div>
+</div>
+
+<!-- Add Customer Modal (static, per-view) -->
+<div class="modal-overlay hidden" id="customersModal">
+    <div class="modal-box">
+        <div class="modal-header">
+            <span class="modal-title">Create Customer</span>
+            <button class="modal-close">✕</button>
+        </div>
+        <div class="form-group"><label>Name</label><input type="text" id="newCustName" class="form-control"></div>
+        <div class="form-group"><label>Phone</label><input type="text" id="newCustPhone" class="form-control"></div>
+        <div class="form-group"><label>Email</label><input type="email" id="newCustEmail" class="form-control"></div>
+        @Html.AntiForgeryToken()
+        <div class="actions">
+            <button class="btn btn-secondary" id="btnClearCustomer">Clear</button>
+            <button class="btn btn-primary" id="btnSaveCustomer">Save</button>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/admin/table-utils.js" asp-append-version="true"></script>
+    <script src="~/js/admin/customers.js" asp-append-version="true"></script>
+}

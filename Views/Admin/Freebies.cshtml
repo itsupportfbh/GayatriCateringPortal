@@ -1,0 +1,49 @@
+@{
+    ViewData["Title"] = "Freebies";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/admin/freebies.css" asp-append-version="true">
+}
+
+<div class="page-header">
+    <div>
+        <div class="page-title">Freebies</div>
+        <div class="page-subtitle">Configure complimentary items included in packages</div>
+    </div>
+    <div class="page-header-actions">
+        <div class="app-header-filter">
+            <input type="text" id="freebiesSearch" data-table="freebiesTable" placeholder="Search freebies...">
+        </div>
+        <button class="btn btn-orange btn-add" id="btnAddFreebie">+ Add Freebie</button>
+    </div>
+</div>
+
+    @section Scripts {
+        <script src="~/js/admin/table-utils.js" asp-append-version="true"></script>
+        <script src="~/js/admin/freebies.js" asp-append-version="true"></script>
+    }
+
+<div class="card">
+    <div class="table-wrap">
+        <table class="tbl" id="freebiesTable">
+            <thead><tr><th>Item</th><th>Trigger</th><th>Condition</th><th>Active</th><th>Actions</th></tr></thead>
+            <tbody>
+                <!-- rows rendered by ~/js/admin/freebies.js -->
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Per-view Freebies modal -->
+<div class="modal-overlay hidden" id="freebiesModal">
+    <div class="modal-box">
+        <div class="modal-header">
+            <span class="modal-title">Create Freebie</span>
+            <button class="modal-close">✕</button>
+        </div>
+        <div class="form-group"><label>Item</label><input id="fbNameField" class="form-control"></div>
+        @Html.AntiForgeryToken()
+        <div class="actions"><button class="btn btn-secondary" id="btnClearFreebie">Clear</button> <button class="btn btn-primary" id="btnSaveFreebie">Save</button></div>
+    </div>
+</div>

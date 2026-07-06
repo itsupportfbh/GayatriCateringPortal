@@ -1,0 +1,31 @@
+@{
+    ViewData["Title"] = "Orders";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/admin/orders.css" asp-append-version="true">
+}
+
+<div class="page-header">
+    <div>
+        <div class="page-title">All Orders</div>
+        <div class="page-subtitle">Order management with quotation, kitchen and delivery actions</div>
+    </div>
+    <div class="page-actions"></div>
+</div>
+
+<div class="card">
+    <div class="table-wrap" id="ordersContainer"></div>
+</div>
+
+@section Scripts {
+    <script src="~/js/admin/table-utils.js" asp-append-version="true"></script>
+    <script src="~/js/admin/orders.js" asp-append-version="true"></script>
+}
+
+<!-- Order Details Modal -->
+<div class="modal-overlay hidden" id="orderModal">
+    <div class="modal-box" id="orderModalBox">
+        <!-- content injected by JS -->
+    </div>
+</div>

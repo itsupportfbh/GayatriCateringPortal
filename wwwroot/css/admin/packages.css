@@ -1,0 +1,1 @@
+.pkg-row{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:18px}.pkg-config-card{background:var(--white);border:1px solid var(--gray-200);border-radius:var(--radius);padding:16px;box-shadow:var(--shadow)}.pkg-config-card h3{font-size:15px;color:var(--green-dark);margin-bottom:8px}.pkg-price{font-size:22px;font-weight:800;color:var(--orange)}

@@ -1,0 +1,37 @@
+@{
+    ViewData["Title"] = "Quotations";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/admin/quotations.css" asp-append-version="true">
+}
+
+<div class="page-header">
+    <div>
+        <div class="page-title">Quotations</div>
+        <div class="page-subtitle">Create, preview, print, email and WhatsApp quotations</div>
+    </div>
+</div>
+
+<div class="card" style="margin-bottom:18px">
+    <div class="table-wrap" id="quotationsTable"></div>
+</div>
+
+<div class="card">
+    <div class="section-label">Quotation Actions</div>
+    <div class="actions" style="margin-bottom:10px">
+        <button class="btn btn-primary" id="previewQuotationBtn">Preview Quotation PDF</button>
+        <button class="btn btn-orange" id="emailQuotationBtn">Send Outlook Email</button>
+        <button class="btn btn-primary" id="waQuotationBtn">Send WhatsApp</button>
+    </div>
+    <div class="muted">Every send attempt is recorded in Communication Log.</div>
+</div>
+
+<div id="quotationDoc" class="hidden">
+    <div class="print-doc" id="quotationDocContent"></div>
+</div>
+
+@section Scripts {
+    <script src="~/js/admin/table-utils.js" asp-append-version="true"></script>
+    <script src="~/js/admin/quotations.js" asp-append-version="true"></script>
+}

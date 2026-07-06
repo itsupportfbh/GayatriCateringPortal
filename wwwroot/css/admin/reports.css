@@ -1,0 +1,23 @@
+.report-card{background:var(--white);border:1px solid var(--gray-200);border-radius:var(--radius);padding:18px;box-shadow:var(--shadow);margin-bottom:14px}
+.report-number{font-size:32px;font-weight:800;color:var(--green-dark)}
+.report-label{font-size:12px;color:var(--gray-500);text-transform:uppercase;letter-spacing:.5px}
+.export-btn{margin-right:8px}
+
+.report-bars{display:grid;gap:14px}
+.report-bar-row{display:grid;grid-template-columns:190px 1fr;gap:12px;align-items:center}
+.report-bar-label{font-size:13px;color:var(--gray-900);line-height:1.45}
+.report-bar-track{background:var(--gray-100);border-radius:6px;overflow:hidden}
+.report-bar-fill{background:var(--green);color:#fff;padding:6px 12px;font-weight:800;border-radius:6px;white-space:nowrap}
+
+.report-coverage-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}
+.report-coverage-card{background:#fff;border:1px solid var(--gray-200);border-radius:14px;padding:18px 20px;box-shadow:var(--shadow)}
+.report-coverage-card b{display:block;font-size:16px;color:var(--gray-900);margin-bottom:8px}
+
+@media(max-width:1000px){
+  .report-coverage-grid{grid-template-columns:1fr 1fr}
+}
+
+@media(max-width:700px){
+  .report-bar-row{grid-template-columns:1fr}
+  .report-coverage-grid{grid-template-columns:1fr}
+}

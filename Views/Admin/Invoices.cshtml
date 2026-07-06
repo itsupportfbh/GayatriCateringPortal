@@ -1,0 +1,26 @@
+@{
+    ViewData["Title"] = "Invoices";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/admin/invoices.css" asp-append-version="true">
+}
+
+<div class="page-header">
+    <div>
+        <div class="page-title">Invoices</div>
+        <div class="page-subtitle">Invoice generation, payment tracking and balance control</div>
+    </div>
+    <button class="btn btn-light js-print-page">🖨️ Print</button>
+</div>
+
+<div class="card">
+    <div class="table-wrap" id="invoicesTable">
+        <p class="muted">Loading...</p>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/admin/table-utils.js" asp-append-version="true"></script>
+    <script src="~/js/admin/invoices.js" asp-append-version="true"></script>
+}

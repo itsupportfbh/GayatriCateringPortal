@@ -1,0 +1,117 @@
+@{
+    ViewData["Title"] = "Packages";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/customer/packages.css" asp-append-version="true">
+}
+
+<div class="page-header">
+    <div>
+        <div class="page-title">Catering Packages</div>
+        <div class="page-subtitle">Pre-configured packages with dish choices and pricing per pax</div>
+    </div>
+    <a href="/Customer/Order" class="btn btn-orange">Order Now</a>
+</div>
+
+<!-- PACKAGES -->
+<div class="preset-grid">
+    <div class="preset-card">
+        <div class="preset-name">🌅 Breakfast</div>
+        <div class="preset-price">S$10 <span>/pax</span></div>
+        <ul class="preset-items">
+            <li>Idli / Vada / Puri (choose 2)</li>
+            <li>Sambar & Coconut Chutney</li>
+            <li>Masala Chai or Coffee</li>
+            <li>Min 50 pax</li>
+        </ul>
+        <a href="/Customer/Order" class="btn btn-outline btn-sm">Order This</a>
+    </div>
+    <div class="preset-card featured">
+        <div class="preset-badge">POPULAR</div>
+        <div class="preset-name">🍛 Indian Buffet</div>
+        <div class="preset-price">S$18 <span>/pax</span></div>
+        <ul class="preset-items">
+            <li>Basmati / Biryani Rice</li>
+            <li>2 Vegetarian Curries</li>
+            <li>1 Non-Vegetarian Curry</li>
+            <li>Dal, Papad, Pickle</li>
+            <li>1 Dessert</li>
+        </ul>
+        <a href="/Customer/Order" class="btn btn-orange btn-sm">Order This</a>
+    </div>
+    <div class="preset-card">
+        <div class="preset-name">☕ Hi-Tea</div>
+        <div class="preset-price">S$15 <span>/pax</span></div>
+        <ul class="preset-items">
+            <li>4 Snack Items (choose)</li>
+            <li>Sandwiches & Pastries</li>
+            <li>Tea, Coffee, Juice</li>
+            <li>Min 30 pax</li>
+        </ul>
+        <a href="/Customer/Order" class="btn btn-outline btn-sm">Order This</a>
+    </div>
+    <div class="preset-card">
+        <div class="preset-name">🍌 Banana Leaf</div>
+        <div class="preset-price">S$22 <span>/pax</span></div>
+        <ul class="preset-items">
+            <li>Traditional Banana Leaf</li>
+            <li>Rice + 4 Curries</li>
+            <li>Papad, Pickle, Rasam</li>
+            <li>Payasam Dessert</li>
+        </ul>
+        <a href="/Customer/Order" class="btn btn-outline btn-sm">Order This</a>
+    </div>
+    <div class="preset-card featured">
+        <div class="preset-badge">BEST VALUE</div>
+        <div class="preset-name">💍 Wedding Feast</div>
+        <div class="preset-price">S$35 <span>/pax</span></div>
+        <ul class="preset-items">
+            <li>Full Wedding Spread</li>
+            <li>8 Dishes (4 Veg + 4 Non-Veg)</li>
+            <li>Biryani + Breads</li>
+            <li>2 Desserts + Drinks</li>
+            <li>Chafing Dish Setup</li>
+        </ul>
+        <a href="/Customer/Order" class="btn btn-orange btn-sm">Order This</a>
+    </div>
+    <div class="preset-card">
+        <div class="preset-name">🏢 Corporate Lunch Box</div>
+        <div class="preset-price">S$12 <span>/pax</span></div>
+        <ul class="preset-items">
+            <li>Rice + 1 Veg + 1 Non-Veg</li>
+            <li>Pickle & Papad</li>
+            <li>1 Dessert</li>
+            <li>Individually packed</li>
+        </ul>
+        <a href="/Customer/Order" class="btn btn-outline btn-sm">Order This</a>
+    </div>
+</div>
+
+<!-- PACKAGE INCLUDES -->
+<div class="card" style="margin-bottom:18px">
+    <div class="section-label">What's Included in Every Package</div>
+    <div class="includes-grid">
+        <div class="include-item">
+            <div class="include-icon">🥄</div>
+            <strong>Utensils</strong>
+            <div style="font-size:11px;color:var(--gray-500);margin-top:4px">Chafing dishes, serving spoons, plates</div>
+        </div>
+        <div class="include-item">
+            <div class="include-icon">👨‍🍳</div>
+            <strong>Service Staff</strong>
+            <div style="font-size:11px;color:var(--gray-500);margin-top:4px">Trained serving staff on-site</div>
+        </div>
+        <div class="include-item">
+            <div class="include-icon">🚚</div>
+            <strong>Delivery & Setup</strong>
+            <div style="font-size:11px;color:var(--gray-500);margin-top:4px">Delivery and buffet line setup</div>
+        </div>
+        <div class="include-item">
+            <div class="include-icon">🧹</div>
+            <strong>Cleanup</strong>
+            <div style="font-size:11px;color:var(--gray-500);margin-top:4px">Post-event cleanup and collection</div>
+        </div>
+    </div>
+    <p class="hint">LED wall, sound system, and table setting available as add-ons. Contact us for custom packages.</p>
+</div>

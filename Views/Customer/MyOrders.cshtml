@@ -1,0 +1,23 @@
+@{
+    ViewData["Title"] = "My Orders";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/customer/myorders.css" asp-append-version="true">
+}
+
+<div class="page-header">
+    <div>
+        <div class="page-title">My Orders</div>
+        <div class="page-subtitle">Track and manage your catering orders</div>
+    </div>
+    <a href="/Customer/Order" class="btn btn-orange">+ New Order</a>
+</div>
+
+<div id="ordersList">
+    <div class="card"><p class="muted">Loading orders...</p></div>
+</div>
+
+@section Scripts {
+    <script src="~/js/customer/myorders.js" asp-append-version="true"></script>
+}

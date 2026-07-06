@@ -1,0 +1,30 @@
+@{
+    ViewData["Title"] = "Track Order";
+}
+
+<div class="page-header">
+    <div>
+        <div class="page-title">Track Order</div>
+        <div class="page-subtitle">Enter your order reference to check status</div>
+    </div>
+</div>
+
+<div class="card" style="max-width:500px;margin-bottom:18px">
+    <div class="section-label">Order Lookup</div>
+    <div class="form-group">
+        <label>Order Reference</label>
+        <input type="text" id="trackRef" placeholder="e.g. GC-2024-001">
+    </div>
+    <button class="btn btn-primary" id="btnTrack">Track Order</button>
+</div>
+
+<div id="trackResult" class="hidden">
+    <div class="card">
+        <div class="section-label">Order Status</div>
+        <div id="trackContent"></div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/customer/track.js" asp-append-version="true"></script>
+}

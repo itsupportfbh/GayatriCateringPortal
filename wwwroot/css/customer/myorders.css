@@ -1,0 +1,6 @@
+/* ===== CUSTOMER MY ORDERS ===== */
+.order-card{background:var(--white);border-radius:var(--radius);border:1px solid var(--gray-200);padding:16px;margin-bottom:12px;box-shadow:var(--shadow)}
+.order-card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.order-ref{font-size:14px;font-weight:700;color:var(--green-dark)}
+.order-meta{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;font-size:12.5px}
+.order-meta-item strong{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.4px;color:var(--gray-500);margin-bottom:2px}

@@ -1,0 +1,21 @@
+using System;
+
+namespace GayatriCateringPortal.Models
+{
+    public class LocationMaster
+    {
+        public int Id { get; set; }
+        public string LocationCode { get; set; } = null!;
+        public string LocationName { get; set; } = null!;
+        public decimal DeliveryFee { get; set; }
+        public int MinimumPax { get; set; }
+        public int LeadTimeDays { get; set; }
+        public bool IsActive { get; set; }
+        public string? Remarks { get; set; }
+        public bool IsDeleted { get; set; }
+        public int? CreatedBy { get; set; }
+        public DateTime CreatedDate { get; set; }
+        public int? UpdatedBy { get; set; }
+        public DateTime? UpdatedDate { get; set; }
+    }
+}

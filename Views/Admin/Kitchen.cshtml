@@ -1,0 +1,23 @@
+@{
+    ViewData["Title"] = "Kitchen Queue";
+}
+
+<div class="page-header">
+    <div>
+        <div class="page-title">Kitchen Queue</div>
+        <div class="page-subtitle">Confirmed Indian catering orders for preparation with utensils pick list</div>
+    </div>
+</div>
+
+@section Styles {
+     <link rel="stylesheet" href="~/css/admin/kitchen.css" asp-append-version="true">
+}
+
+<div class="card" id="kitchenTable">
+    <p class="muted">Loading...</p>
+</div>
+
+@section Scripts {
+    <script src="~/js/admin/table-utils.js" asp-append-version="true"></script>
+    <script src="~/js/admin/kitchen.js" asp-append-version="true"></script>
+}

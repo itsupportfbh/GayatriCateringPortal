@@ -1,0 +1,152 @@
+is_global = true
+build_property.TargetFramework = net10.0
+build_property.TargetFrameworkIdentifier = .NETCoreApp
+build_property.TargetFrameworkVersion = v10.0
+build_property.TargetPlatformMinVersion = 
+build_property.UsingMicrosoftNETSdkWeb = true
+build_property.ProjectTypeGuids = 
+build_property.InvariantGlobalization = 
+build_property.PlatformNeutralAssembly = 
+build_property.EnforceExtendedAnalyzerRules = 
+build_property.EntryPointFilePath = 
+build_property._SupportedPlatformList = Linux,macOS,Windows
+build_property.RootNamespace = GayatriCateringPortal
+build_property.RootNamespace = GayatriCateringPortal
+build_property.ProjectDir = C:\Antony\CCSPL\Projects\GayatriCatering\GayatriCateringPortal_by_html\GayatriCateringPortal\
+build_property.EnableComHosting = 
+build_property.EnableGeneratedComInterfaceComImportInterop = 
+build_property.RazorLangVersion = 10.0
+build_property.SupportLocalizedComponentNames = 
+build_property.GenerateRazorMetadataSourceChecksumAttributes = 
+build_property.MSBuildProjectDirectory = C:\Antony\CCSPL\Projects\GayatriCatering\GayatriCateringPortal_by_html\GayatriCateringPortal
+build_property._RazorSourceGeneratorDebug = 
+build_property.EffectiveAnalysisLevelStyle = 10.0
+build_property.EnableCodeStyleSeverity = 
+
+[C:/Antony/CCSPL/Projects/GayatriCatering/GayatriCateringPortal_by_html/GayatriCateringPortal/Views/Admin/Comms.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQWRtaW5cQ29tbXMuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Antony/CCSPL/Projects/GayatriCatering/GayatriCateringPortal_by_html/GayatriCateringPortal/Views/Admin/Customers.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQWRtaW5cQ3VzdG9tZXJzLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Antony/CCSPL/Projects/GayatriCatering/GayatriCateringPortal_by_html/GayatriCateringPortal/Views/Admin/Dashboard.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQWRtaW5cRGFzaGJvYXJkLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Antony/CCSPL/Projects/GayatriCatering/GayatriCateringPortal_by_html/GayatriCateringPortal/Views/Admin/Finance.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQWRtaW5cRmluYW5jZS5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Antony/CCSPL/Projects/GayatriCatering/GayatriCateringPortal_by_html/GayatriCateringPortal/Views/Admin/Freebies.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQWRtaW5cRnJlZWJpZXMuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Antony/CCSPL/Projects/GayatriCatering/GayatriCateringPortal_by_html/GayatriCateringPortal/Views/Admin/Invoices.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQWRtaW5cSW52b2ljZXMuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Antony/CCSPL/Projects/GayatriCatering/GayatriCateringPortal_by_html/GayatriCateringPortal/Views/Admin/Kitchen.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQWRtaW5cS2l0Y2hlbi5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Antony/CCSPL/Projects/GayatriCatering/GayatriCateringPortal_by_html/GayatriCateringPortal/Views/Admin/Locations.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQWRtaW5cTG9jYXRpb25zLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Antony/CCSPL/Projects/GayatriCatering/GayatriCateringPortal_by_html/GayatriCateringPortal/Views/Admin/Logistics.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQWRtaW5cTG9naXN0aWNzLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Antony/CCSPL/Projects/GayatriCatering/GayatriCateringPortal_by_html/GayatriCateringPortal/Views/Admin/MealPeriods.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQWRtaW5cTWVhbFBlcmlvZHMuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Antony/CCSPL/Projects/GayatriCatering/GayatriCateringPortal_by_html/GayatriCateringPortal/Views/Admin/Menus.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQWRtaW5cTWVudXMuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Antony/CCSPL/Projects/GayatriCatering/GayatriCateringPortal_by_html/GayatriCateringPortal/Views/Admin/Orders.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQWRtaW5cT3JkZXJzLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Antony/CCSPL/Projects/GayatriCatering/GayatriCateringPortal_by_html/GayatriCateringPortal/Views/Admin/Packages.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQWRtaW5cUGFja2FnZXMuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Antony/CCSPL/Projects/GayatriCatering/GayatriCateringPortal_by_html/GayatriCateringPortal/Views/Admin/Quotations.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQWRtaW5cUXVvdGF0aW9ucy5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Antony/CCSPL/Projects/GayatriCatering/GayatriCateringPortal_by_html/GayatriCateringPortal/Views/Admin/Reports.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQWRtaW5cUmVwb3J0cy5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Antony/CCSPL/Projects/GayatriCatering/GayatriCateringPortal_by_html/GayatriCateringPortal/Views/Admin/Roles.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQWRtaW5cUm9sZXMuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Antony/CCSPL/Projects/GayatriCatering/GayatriCateringPortal_by_html/GayatriCateringPortal/Views/Admin/Settings.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQWRtaW5cU2V0dGluZ3MuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Antony/CCSPL/Projects/GayatriCatering/GayatriCateringPortal_by_html/GayatriCateringPortal/Views/Admin/Utensils.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQWRtaW5cVXRlbnNpbHMuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Antony/CCSPL/Projects/GayatriCatering/GayatriCateringPortal_by_html/GayatriCateringPortal/Views/Customer/Home.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQ3VzdG9tZXJcSG9tZS5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Antony/CCSPL/Projects/GayatriCatering/GayatriCateringPortal_by_html/GayatriCateringPortal/Views/Customer/Menu.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQ3VzdG9tZXJcTWVudS5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Antony/CCSPL/Projects/GayatriCatering/GayatriCateringPortal_by_html/GayatriCateringPortal/Views/Customer/MyOrders.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQ3VzdG9tZXJcTXlPcmRlcnMuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Antony/CCSPL/Projects/GayatriCatering/GayatriCateringPortal_by_html/GayatriCateringPortal/Views/Customer/Order.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQ3VzdG9tZXJcT3JkZXIuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Antony/CCSPL/Projects/GayatriCatering/GayatriCateringPortal_by_html/GayatriCateringPortal/Views/Customer/Packages.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQ3VzdG9tZXJcUGFja2FnZXMuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Antony/CCSPL/Projects/GayatriCatering/GayatriCateringPortal_by_html/GayatriCateringPortal/Views/Customer/Track.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQ3VzdG9tZXJcVHJhY2suY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Antony/CCSPL/Projects/GayatriCatering/GayatriCateringPortal_by_html/GayatriCateringPortal/Views/Customer/Venue.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQ3VzdG9tZXJcVmVudWUuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Antony/CCSPL/Projects/GayatriCatering/GayatriCateringPortal_by_html/GayatriCateringPortal/Views/Home/Index.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcSG9tZVxJbmRleC5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Antony/CCSPL/Projects/GayatriCatering/GayatriCateringPortal_by_html/GayatriCateringPortal/Views/Home/Privacy.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcSG9tZVxQcml2YWN5LmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Antony/CCSPL/Projects/GayatriCatering/GayatriCateringPortal_by_html/GayatriCateringPortal/Views/Shared/Error.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2hhcmVkXEVycm9yLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Antony/CCSPL/Projects/GayatriCatering/GayatriCateringPortal_by_html/GayatriCateringPortal/Views/Shared/_ValidationScriptsPartial.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2hhcmVkXF9WYWxpZGF0aW9uU2NyaXB0c1BhcnRpYWwuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Antony/CCSPL/Projects/GayatriCatering/GayatriCateringPortal_by_html/GayatriCateringPortal/Views/_ViewImports.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcX1ZpZXdJbXBvcnRzLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Antony/CCSPL/Projects/GayatriCatering/GayatriCateringPortal_by_html/GayatriCateringPortal/Views/_ViewStart.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcX1ZpZXdTdGFydC5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Antony/CCSPL/Projects/GayatriCatering/GayatriCateringPortal_by_html/GayatriCateringPortal/Views/Shared/_Layout.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2hhcmVkXF9MYXlvdXQuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = b-5v5ik4ysj7

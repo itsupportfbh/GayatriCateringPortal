@@ -1,0 +1,51 @@
+@{
+    ViewData["Title"] = "Utensils";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/admin/utensils.css" asp-append-version="true">
+}
+
+<div class="page-header">
+    <div>
+        <div class="page-title">Utensils Configuration</div>
+        <div class="page-subtitle">Configure chafing dish, fork, spoon and serving utensil rules per pax</div>
+    </div>
+    <div class="page-header-actions">
+        <div class="app-header-filter">
+            <input type="text" id="utensilsSearch" data-table="utensilsTable" placeholder="Search utensils...">
+        </div>
+        <button class="btn btn-orange">+ Add Rule</button>
+    </div>
+</div>
+
+<div class="card">
+    <div class="table-wrap">
+        <table class="tbl" id="utensilsTable">
+            <thead><tr><th>Utensil</th><th>Rule</th><th>Per Pax</th><th>Min Qty</th><th>Actions</th></tr></thead>
+            <tbody>
+                <!-- rows are rendered dynamically by ~/js/admin/utensils.js -->
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Per-view Utensils modal -->
+<div class="modal-overlay hidden" id="utensilsModal">
+    <div class="modal-box">
+        <div class="modal-header">
+            <span class="modal-title">Create Utensil</span>
+            <button class="modal-close">✕</button>
+        </div>
+        <div class="form-group"><label>Utensil</label><input id="utNameField" class="form-control"></div>
+        <div class="form-group"><label>Rule</label><input id="utRuleField" class="form-control"></div>
+        <div class="form-row col2"><div class="form-group"><label>Per Pax</label><input id="utPerPaxField" class="form-control"></div><div class="form-group"><label>Min Qty</label><input id="utMinQtyField" type="number" class="form-control"></div></div>
+        @Html.AntiForgeryToken()
+        <div class="actions"><button class="btn btn-secondary" id="btnClearUtensil">Clear</button> <button class="btn btn-primary" id="btnSaveUtensil">Save</button></div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/admin/table-utils.js" asp-append-version="true"></script>
+    <script src="~/js/admin/utensils.js" asp-append-version="true"></script>
+}

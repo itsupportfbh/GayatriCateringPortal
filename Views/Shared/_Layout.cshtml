@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@ViewData["Title"] - Gayatri Catering</title>
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true">
+    @await RenderSectionAsync("Styles", required: false)
+</head>
+<body class="@(ViewData["Mode"]?.ToString() == "customer" ? "customer-mode" : "admin-mode")">
+
+<nav class="top-nav">
+    <a class="brand" href="/Customer/Home">
+        <img class="brand-logo" src="~/images/logo.jpg" alt="Gayatri">
+        <div>
+            <div class="brand-name">Gayatri Catering</div>
+            <small>COMPLETE ORDER SYSTEM</small>
+        </div>
+    </a>
+    @if (ViewData["Mode"]?.ToString() == "customer")
+    {
+        <div class="nav-links">
+            <a class="nav-link" href="/Customer/Packages">Indian Packages</a>
+            <a class="nav-link" href="/Customer/MyOrders">My Orders</a>
+            <a class="nav-link" href="/Customer/Track">Track Order</a>
+        </div>
+    }
+    @if (ViewData["Mode"]?.ToString() == "admin")
+    {
+        <button class="btn btn-outline btn-sm sidebar-toggle" id="sidebarToggle" type="button" aria-label="Toggle sidebar">&#9776;</button>
+    }
+    <div class="nav-user">
+        <span id="nav-status">&#128994; Guest</span>
+        <button class="btn btn-outline btn-sm" id="loginBtn" style="color:#fff;border-color:rgba(255,255,255,.45)">Login</button>
+    </div>
+</nav>
+
+<div class="portal-wrap">
+    @if (ViewData["Mode"]?.ToString() == "admin")
+    {
+        <aside class="sidebar">
+            <div class="sidebar-section">Operations</div>
+            <a class="sidebar-item @(ViewData["Page"]?.ToString() == "dashboard" ? "active" : "")" href="/Admin/Dashboard"><span class="icon">&#128202;</span> Dashboard</a>
+            <a class="sidebar-item @(ViewData["Page"]?.ToString() == "orders" ? "active" : "")" href="/Admin/Orders"><span class="icon">&#128203;</span> All Orders <span class="sidebar-badge" id="orderBadge">0</span></a>
+            <a class="sidebar-item @(ViewData["Page"]?.ToString() == "quotations" ? "active" : "")" href="/Admin/Quotations"><span class="icon">&#128196;</span> Quotations</a>
+            <a class="sidebar-item @(ViewData["Page"]?.ToString() == "invoices" ? "active" : "")" href="/Admin/Invoices"><span class="icon">&#129534;</span> Invoices</a>
+            <a class="sidebar-item @(ViewData["Page"]?.ToString() == "kitchen" ? "active" : "")" href="/Admin/Kitchen"><span class="icon">&#127859;</span> Kitchen Queue</a>
+            <a class="sidebar-item @(ViewData["Page"]?.ToString() == "logistics" ? "active" : "")" href="/Admin/Logistics"><span class="icon">&#128666;</span> Logistics</a>
+
+            <div class="sidebar-section">Masters &amp; Configuration</div>
+            <a class="sidebar-item @(ViewData["Page"]?.ToString() == "customers" ? "active" : "")" href="/Admin/Customers"><span class="icon">&#128101;</span> Customers</a>
+            <a class="sidebar-item @(ViewData["Page"]?.ToString() == "menus" ? "active" : "")" href="/Admin/Menus"><span class="icon">&#127869;</span> Menu Master</a>
+            <a class="sidebar-item @(ViewData["Page"]?.ToString() == "packages" ? "active" : "")" href="/Admin/Packages"><span class="icon">&#128230;</span> Package Config</a>
+            <a class="sidebar-item @(ViewData["Page"]?.ToString() == "utensils" ? "active" : "")" href="/Admin/Utensils"><span class="icon">&#129348;</span> Utensils Config</a>
+            <a class="sidebar-item @(ViewData["Page"]?.ToString() == "mealperiods" ? "active" : "")" href="/Admin/MealPeriods"><span class="icon">&#9200;</span> Meal Periods</a>
+            <a class="sidebar-item @(ViewData["Page"]?.ToString() == "freebies" ? "active" : "")" href="/Admin/Freebies"><span class="icon">&#127873;</span> Popular &amp; Freebies</a>
+            <a class="sidebar-item @(ViewData["Page"]?.ToString() == "locations" ? "active" : "")" href="/Admin/Locations"><span class="icon">&#128205;</span> Locations</a>
+
+            <div class="sidebar-section">Finance / Reports / Security</div>
+            <a class="sidebar-item @(ViewData["Page"]?.ToString() == "finance" ? "active" : "")" href="/Admin/Finance"><span class="icon">&#128176;</span> Finance &amp; Payments</a>
+            <a class="sidebar-item @(ViewData["Page"]?.ToString() == "reports" ? "active" : "")" href="/Admin/Reports"><span class="icon">&#128200;</span> Reports</a>
+            <a class="sidebar-item @(ViewData["Page"]?.ToString() == "comms" ? "active" : "")" href="/Admin/Comms"><span class="icon">&#128172;</span> Communication Log</a>
+            <a class="sidebar-item @(ViewData["Page"]?.ToString() == "roles" ? "active" : "")" href="/Admin/Roles"><span class="icon">&#128272;</span> Roles &amp; Permissions</a>
+            <a class="sidebar-item @(ViewData["Page"]?.ToString() == "settings" ? "active" : "")" href="/Admin/Settings"><span class="icon">&#9881;</span> Settings</a>
+        </aside>
+    }
+
+    <main class="main">
+        @RenderBody()
+    </main>
+</div>
+
+<footer class="app-footer">
+    <div class="footer-content">
+        <div>
+            <div class="footer-logo">Gayatri Catering</div>
+            <div class="footer-copy">Copyright © 2026 Gayatri Restaurant. All rights reserved.</div>
+        </div>
+        <div class="footer-links">
+            <a href="/Admin/Dashboard">Dashboard</a>
+            <a href="/Admin/Orders">Orders</a>
+            <a href="/Admin/Finance">Finance</a>
+            <a href="/Admin/Reports">Reports</a>
+        </div>
+        <div class="footer-contact">
+            <div>Contact: +65 6294 6294</div>
+            <div>122 Race Course Road, Singapore 218583</div>
+        </div>
+    </div>
+</footer>
+
+<div class="toast" id="toast"></div>
+
+<div class="login-overlay" id="loginModal">
+    <div class="login-box">
+        <div class="login-header">
+            <button class="login-close" id="loginCloseBtn">&times;</button>
+            <img class="login-brand-img" src="~/images/logo.jpg" alt="Gayatri Restaurant Logo">
+            <div class="login-title">Gayatri Backend Login</div>
+            <div class="login-sub">Demo OTP: 123456. Role access is controlled at backend.</div>
+        </div>
+        <div class="login-body">
+                <div class="form-group">
+                <label>Email</label>
+                <input id="loginEmail" value="admin@gayatrirestaurant.com" placeholder="email@gayatrirestaurant.com">
+            </div>
+            <div class="form-group">
+                <label>Password</label>
+                <input id="loginPassword" type="password" placeholder="Password">
+            </div>
+            <div class="form-group">
+                <label>OTP / Access Code</label>
+                <div style="display:grid;grid-template-columns:1fr 120px;gap:8px">
+                    <input id="loginCode" placeholder="123456">
+                    <button class="btn btn-light" id="sendCodeBtn">Send Code</button>
+                </div>
+                <div class="hint">Use password <strong>password123</strong> or code <strong>123456</strong>. Live system loads roles from Users, UserRoles and RolePermissions tables.</div>
+            </div>
+            <div class="form-group">
+                <label>Demo Role</label>
+                <select id="loginRole">
+                    <option value="admin">Admin</option>
+                    <option value="kitchen">Kitchen Staff</option>
+                    <option value="driver">Driver</option>
+                    <option value="customer">Customer</option>
+                </select>
+            </div>
+            <button class="btn btn-orange" id="signInBtn" style="width:100%;padding:12px">Sign In</button>
+            <button class="btn btn-light" id="cancelLoginBtn" style="width:100%;margin-top:8px">Cancel</button>
+        </div>
+    </div>
+</div>
+
+<script src="~/lib/jquery/dist/jquery.min.js"></script>
+<script src="~/js/site.js" asp-append-version="true"></script>
+@if (ViewData["Mode"]?.ToString() == "admin")
+{
+    <script src="~/js/admin/modal.js" asp-append-version="true"></script>
+}
+@await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

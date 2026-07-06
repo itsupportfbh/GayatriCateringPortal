@@ -1,0 +1,51 @@
+@{
+    ViewData["Title"] = "Locations";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/admin/locations.css" asp-append-version="true">
+}
+
+<div class="page-header">
+    <div>
+        <div class="page-title">Locations</div>
+        <div class="page-subtitle">Manage event venues and delivery locations</div>
+    </div>
+    <div class="page-header-actions">
+        <div class="app-header-filter">
+            <input type="text" id="locationsSearch" data-table="locationsTable" placeholder="Search locations...">
+        </div>
+        <button class="btn btn-orange btn-add" id="btnAddLocation">+ Add Location</button>
+    </div>
+</div>
+
+<div class="card">
+    <div class="table-wrap">
+        <table class="tbl" id="locationsTable">
+            <thead><tr><th>Location</th><th>Address</th><th>Capacity</th><th>Type</th><th>Active</th><th>Actions</th></tr></thead>
+            <tbody>
+                <!-- rows rendered by ~/js/admin/locations.js -->
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Per-view Locations modal -->
+<div class="modal-overlay hidden" id="locationsModal">
+    <div class="modal-box">
+        <div class="modal-header">
+            <span class="modal-title">Create Location</span>
+            <button class="modal-close">✕</button>
+        </div>
+        <div class="form-group"><label>Location</label><input id="locNameField" class="form-control"></div>
+        <div class="form-group"><label>Address</label><input id="locAddressField" class="form-control"></div>
+        <div class="form-row col2"><div class="form-group"><label>Capacity</label><input id="locCapacityField" type="number" class="form-control"></div><div class="form-group"><label>Type</label><input id="locTypeField" class="form-control"></div></div>
+        @Html.AntiForgeryToken()
+        <div class="actions"><button class="btn btn-secondary" id="btnClearLocation">Clear</button> <button class="btn btn-primary" id="btnSaveLocation">Save</button></div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/admin/table-utils.js" asp-append-version="true"></script>
+    <script src="~/js/admin/locations.js" asp-append-version="true"></script>
+}

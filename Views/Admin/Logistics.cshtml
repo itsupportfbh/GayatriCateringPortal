@@ -1,0 +1,25 @@
+@{
+    ViewData["Title"] = "Logistics";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/admin/logistics.css" asp-append-version="true">
+}
+
+<div class="page-header">
+    <div>
+        <div class="page-title">Logistics</div>
+        <div class="page-subtitle">Dispatch and delivery tracking for all active orders</div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="table-wrap" id="logisticsTable">
+        <p class="muted">Loading...</p>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/admin/table-utils.js" asp-append-version="true"></script>
+    <script src="~/js/admin/logistics.js" asp-append-version="true"></script>
+}

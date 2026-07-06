@@ -1,0 +1,50 @@
+@{
+    ViewData["Title"] = "Meal Periods";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/admin/mealperiods.css" asp-append-version="true">
+}
+
+<div class="page-header">
+    <div>
+        <div class="page-title">Meal Periods</div>
+        <div class="page-subtitle">Configure meal period time slots and availability</div>
+    </div>
+    <div class="page-header-actions">
+        <div class="app-header-filter">
+            <input type="text" id="mealPeriodsSearch" data-table="mealPeriodsTable" placeholder="Search meal periods...">
+        </div>
+        <button class="btn btn-orange btn-add" id="btnAddPeriod">+ Add Period</button>
+    </div>
+</div>
+
+<div class="card">
+    <div class="table-wrap">
+        <table class="tbl" id="mealPeriodsTable">
+            <thead><tr><th>Period</th><th>Start Time</th><th>End Time</th><th>Active</th><th>Actions</th></tr></thead>
+            <tbody>
+                <!-- rows rendered by ~/js/admin/mealperiods.js -->
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Per-view Meal Periods modal -->
+<div class="modal-overlay hidden" id="mealPeriodsModal">
+    <div class="modal-box">
+        <div class="modal-header">
+            <span class="modal-title">Create Period</span>
+            <button class="modal-close">✕</button>
+        </div>
+        <div class="form-group"><label>Period</label><input id="mpNameField" class="form-control"></div>
+        <div class="form-row col2"><div class="form-group"><label>Start</label><input id="mpStartField" type="time" class="form-control" value="00:00"></div><div class="form-group"><label>End</label><input id="mpEndField" type="time" class="form-control" value="00:00"></div></div>
+        @Html.AntiForgeryToken()
+        <div class="actions"><button class="btn btn-secondary" id="btnClearPeriod">Clear</button> <button class="btn btn-primary" id="btnSavePeriod">Save</button></div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/admin/table-utils.js" asp-append-version="true"></script>
+    <script src="~/js/admin/mealperiods.js" asp-append-version="true"></script>
+}

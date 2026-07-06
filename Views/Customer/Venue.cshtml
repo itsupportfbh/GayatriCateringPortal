@@ -1,0 +1,94 @@
+@{
+    ViewData["Title"] = "Function Hall";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/customer/venue.css" asp-append-version="true">
+}
+
+<div class="page-header">
+    <div>
+        <div class="page-title">Function Hall &amp; Event Setup</div>
+        <div class="page-subtitle">Use these images in customer enquiry, quotation reference and event setup planning</div>
+    </div>
+    <a href="/Customer/Order" class="btn btn-orange">Book Function</a>
+</div>
+
+<div class="section-note">
+    <b>Available setup:</b> function hall, buffet set-up, cutleries, table setting, LED wall and sound system. Admin can configure whether these are included or chargeable.
+</div>
+
+<!-- PACKAGE INCLUDES / SETUP OPTIONS -->
+<div class="card" style="margin-bottom:14px">
+    <div class="section-label">Package Includes / Setup Options</div>
+    <div class="package-includes-row">
+        <div class="included-feature">
+            <span>🏛️</span>
+            <div>Function Hall</div>
+            <small>Admin configurable</small>
+        </div>
+        <div class="included-feature">
+            <span>🍲</span>
+            <div>Buffet Set-up</div>
+            <small>Admin configurable</small>
+        </div>
+        <div class="included-feature">
+            <span>🍴</span>
+            <div>Cutleries</div>
+            <small>Admin configurable</small>
+        </div>
+        <div class="included-feature">
+            <span>🪑</span>
+            <div>Table Setting</div>
+            <small>Admin configurable</small>
+        </div>
+        <div class="included-feature">
+            <span>🖥️</span>
+            <div>LED Wall &amp; Sound System</div>
+            <small>Admin configurable</small>
+        </div>
+    </div>
+    <p class="hint" style="margin-top:10px">These items can be treated as included in selected event packages or configured as chargeable add-ons by Admin / Kitchen Admin.</p>
+</div>
+
+<!-- VENUE GALLERY -->
+<div class="venue-grid">
+    <div class="venue-card">
+        <img src="~/images/hallLed.jpg" alt="LED Wall to Display">
+        <div class="venue-caption">
+            <b>LED Wall to Display</b>
+            <span>Function hall with large LED wall for event display, presentation and video playback.</span>
+        </div>
+    </div>
+    <div class="venue-card">
+        <img src="~/images/hallBuffet.jpg" alt="Buffet Line Setup">
+        <div class="venue-caption">
+            <b>Buffet Line Setup</b>
+            <span>Buffet counter layout with chafing dishes and serving area.</span>
+        </div>
+    </div>
+    <div class="venue-card">
+        <img src="~/images/hallDining.jpg" alt="Table Setting">
+        <div class="venue-caption">
+            <b>Table Setting</b>
+            <span>Round table setting suitable for family, corporate and wedding functions.</span>
+        </div>
+    </div>
+    <div class="venue-card">
+        <img src="~/images/hallSetup.jpg" alt="Full Function Hall View">
+        <div class="venue-caption">
+            <b>Full Function Hall View</b>
+            <span>Function hall, buffet line, table setting and lighting arrangement.</span>
+        </div>
+    </div>
+</div>
+
+<!-- MENU REFERENCE POSTER -->
+<div class="card" style="margin-top:14px">
+    <div class="section-label">Uploaded Menu Reference</div>
+    <img class="media-poster" src="~/images/menuNonVegPoster.jpg" alt="Gayatri Non-Vegetarian Menu Reference">
+</div>
+
+@section Scripts {
+    <script src="~/js/customer/venue.js" asp-append-version="true"></script>
+}

@@ -1,0 +1,24 @@
+@{
+    ViewData["Title"] = "Full Indian Menu";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/customer/menu.css" asp-append-version="true">
+}
+
+<div class="page-header">
+    <div>
+        <div class="page-title">Full Indian Menu</div>
+        <div class="page-subtitle">Published Gayatri menu presets plus all menu items with guide prices used in quotation lines</div>
+    </div>
+</div>
+
+<div class="card" style="background:#eef8f2;border-left:5px solid var(--green);margin-bottom:18px;padding:14px 18px">
+    <strong>Menu rule:</strong> Package selections are included in the package value and do not show individual dish prices. Extra/additional items show guide price and quantity.
+</div>
+
+<div id="menuSections"></div>
+
+@section Scripts {
+    <script src="~/js/customer/menu.js" asp-append-version="true"></script>
+}

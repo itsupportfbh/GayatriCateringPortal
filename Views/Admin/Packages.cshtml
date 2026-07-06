@@ -1,0 +1,50 @@
+@{
+    ViewData["Title"] = "Packages";
+}
+
+<div class="page-header">
+    <div>
+        <div class="page-title">Package Configuration</div>
+        <div class="page-subtitle">Configure catering packages, pricing and dish inclusions</div>
+    </div>
+    <div class="page-header-actions">
+        <div class="app-header-filter">
+            <input type="text" id="packagesSearch" data-table="packagesTable" placeholder="Search packages...">
+        </div>
+        <button class="btn btn-orange btn-add" id="btnAddPackage">+ Add Package</button>
+    </div>
+</div>
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/admin/packages.css" asp-append-version="true">
+}
+
+<div class="card">
+    <div class="table-wrap">
+        <table class="tbl" id="packagesTable">
+            <thead><tr><th>Package Name</th><th>Type</th><th class="num">Price/pax</th><th>Min Pax</th><th>Dish Slots</th><th>Active</th><th>Actions</th></tr></thead>
+            <tbody>
+                <!-- rows rendered by ~/js/admin/packages.js -->
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Per-view Packages modal -->
+<div class="modal-overlay hidden" id="packagesModal">
+    <div class="modal-box">
+        <div class="modal-header">
+            <span class="modal-title">Create Package</span>
+            <button class="modal-close">✕</button>
+        </div>
+        <div class="form-group"><label>Package Name</label><input id="pkgNameField" class="form-control"></div>
+        <div class="form-group"><label>Price</label><input id="pkgPriceField" type="number" step="0.50" class="form-control"></div>
+        @Html.AntiForgeryToken()
+        <div class="actions"><button class="btn btn-secondary" id="btnClearPackage">Clear</button> <button class="btn btn-primary" id="btnSavePackage">Save</button></div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/admin/table-utils.js" asp-append-version="true"></script>
+    <script src="~/js/admin/packages.js" asp-append-version="true"></script>
+}

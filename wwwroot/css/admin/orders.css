@@ -1,0 +1,8 @@
+/* ===== ADMIN ORDERS / SHARED TABLE VIEWS ===== */
+.order-ref{font-weight:700;color:var(--green-dark);font-size:13px}
+.tbl .num{text-align:right}
+.tbl td.num{text-align:right}
+.filter-row{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:18px;align-items:center;justify-content:space-between}
+.filter-row .btn{margin-top:0}
+.filter-row select{width:auto;min-width:140px}
+.filter-row select{width:auto;min-width:140px}

@@ -1,0 +1,54 @@
+@{
+    ViewData["Title"] = "Place Order";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/customer/order.css" asp-append-version="true">
+}
+
+<div class="page-header">
+    <div>
+        <div class="page-title">Place New Order</div>
+        <div class="page-subtitle">Step 1 package choices are included in the package value. Step 2 is only for additional menu items customer wants to add with prices.</div>
+    </div>
+    <button class="btn btn-light" id="btnResetOrder">Reset</button>
+</div>
+
+<div class="order-layout">
+    <div class="order-main">
+        <div class="wizard-steps order-steps" id="orderSteps">
+            <div class="wizard-step active" data-step="1"><span class="wizard-step-num">1</span><span class="wizard-step-label">Package Choices</span></div>
+            <div class="wizard-step" data-step="2"><span class="wizard-step-num">2</span><span class="wizard-step-label">Extra Items + Qty</span></div>
+            <div class="wizard-step" data-step="3"><span class="wizard-step-num">3</span><span class="wizard-step-label">Add-ons</span></div>
+            <div class="wizard-step" data-step="4"><span class="wizard-step-num">4</span><span class="wizard-step-label">Event Details</span></div>
+            <div class="wizard-step" data-step="5"><span class="wizard-step-num">5</span><span class="wizard-step-label">Utensils &amp; Payment</span></div>
+            <div class="wizard-step" data-step="6"><span class="wizard-step-num">6</span><span class="wizard-step-label">Review</span></div>
+        </div>
+
+        <div id="orderStepContent"></div>
+        @Html.AntiForgeryToken()
+    </div>
+
+    <aside class="order-summary-box">
+        <div class="section-label">Order Summary</div>
+        <div class="summary-row"><span>Package</span><strong id="summaryPkg">-</strong></div>
+        <div class="summary-row"><span>Pax</span><strong id="summaryPax">50</strong></div>
+        <div class="summary-row"><span>Package Base</span><strong id="summaryBase">S$0.00</strong></div>
+        <div class="summary-row"><span>Additional Menu</span><strong id="summaryAdditional">S$0.00</strong></div>
+        <div class="summary-row"><span>Add-ons</span><strong id="summaryAddons">S$0.00</strong></div>
+        <div class="summary-row"><span>Utensils / Setup</span><strong id="summaryUtensils">S$0.00</strong></div>
+        <div class="summary-row"><span>GST</span><strong id="summaryGst">S$0.00</strong></div>
+        <div class="summary-row deposit"><span>Refundable Deposit</span><strong id="summaryDeposit">S$0.00</strong></div>
+        <div class="summary-row total"><span>Total</span><span id="summaryTotal">S$0.00</span></div>
+        <div class="hint">Step 1 dish choices are included in the selected package. Step 2 items are additional chargeable items.</div>
+        <div class="actions order-summary-actions">
+            <button class="btn btn-light btn-sm" id="summaryBackBtn">Back</button>
+            <button class="btn btn-orange btn-sm" id="summaryNextBtn">Next</button>
+            <button class="btn btn-orange btn-sm hidden" id="summarySubmitBtn">Submit</button>
+        </div>
+    </aside>
+</div>
+
+@section Scripts {
+    <script src="~/js/customer/order.js" asp-append-version="true"></script>
+}
