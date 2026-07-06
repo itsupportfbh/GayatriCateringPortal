@@ -4,19 +4,19 @@ namespace GayatriCateringPortal.Models
 {
     public class FoodMenu
     {
-        public int Id { get; set; }
+        public string Id { get; set; } = null!;
         public string Code { get; set; } = null!;
         public string Name { get; set; } = null!;
-        public int CategoryId { get; set; }
-        public decimal? Price { get; set; }
-        public int? PreparationTime { get; set; }
-        public int? FoodType { get; set; }
-        public int? Servicecharge { get; set; }
-        public bool IsActive { get; set; }
-        public bool IsDeleted { get; set; }
-        public int CreatedBy { get; set; }
-        public DateTime CreatedDate { get; set; }
-        public int? UpdatedBy { get; set; }
-        public DateTime? UpdatedDate { get; set; }
+        public string CategoryId { get; set; } = null!;
+        public string? Price { get; set; }
+        public string? PreparationTime { get; set; }
+        public string? FoodType { get; set; }
+        public string? Servicecharge { get; set; }
+        public string IsActive { get; set; } = null!;
+        public string IsDeleted { get; set; } = null!;
+        public string CreatedBy { get; set; } = null!;
+        public string CreatedDate { get; set; } = null!;
+        public string? UpdatedBy { get; set; }
+        public string? UpdatedDate { get; set; }
     }
 }

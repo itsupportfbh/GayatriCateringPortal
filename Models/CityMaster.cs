@@ -4,12 +4,12 @@ namespace GayatriCateringPortal.Models
 {
     public class CityMaster
     {
-        public int? Id { get; set; }
-        public string? Name { get; set; }
-        public short? StateId { get; set; }
-        public byte? CountryId { get; set; }
-        public double? Latitude { get; set; }
-        public double? Longitude { get; set; }
-        public string? Timezone { get; set; }
+        public string? id { get; set; }
+        public string? name { get; set; }
+        public string? state_id { get; set; }
+        public string? country_id { get; set; }
+        public string? latitude { get; set; }
+        public string? longitude { get; set; }
+        public string? timezone { get; set; }
     }
 }

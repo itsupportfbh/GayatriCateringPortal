@@ -5,17 +5,17 @@ namespace GayatriCateringPortal.Models
     public class CustomerMaster
     {
         public int Id { get; set; }
-        public string Code { get; set; } = null!;
-        public string Name { get; set; } = null!;
-        public string MobileNo { get; set; } = null!;
-        public string EmailId { get; set; } = null!;
-        public string CompanyName { get; set; } = null!;
-        public string AddressLine1 { get; set; } = null!;
-        public string AddressLine2 { get; set; } = null!;
+        public string? Code { get; set; }
+        public string Name { get; set; } = string.Empty;
+        public string? MobileNo { get; set; }
+        public string? EmailId { get; set; }
+        public string? CompanyName { get; set; }
+        public string? AddressLine1 { get; set; }
+        public string? AddressLine2 { get; set; }
         public int CityId { get; set; }
         public int StateId { get; set; }
         public int CountryId { get; set; }
-        public string Pincode { get; set; } = null!;
+        public string? Pincode { get; set; }
         public DateTime? DateOfBirth { get; set; }
         public int? Gender { get; set; }
         public string? Remarks { get; set; }

@@ -4,21 +4,21 @@ namespace GayatriCateringPortal.Models
 {
     public class RolePermission
     {
-        public int Id { get; set; }
-        public int RoleId { get; set; }
-        public int EntityNo { get; set; }
-        public bool View { get; set; }
-        public bool Create { get; set; }
-        public bool Edit { get; set; }
-        public bool Delete { get; set; }
-        public bool? ActiveInActive { get; set; }
-        public bool? Print { get; set; }
-        public bool? Download { get; set; }
-        public DateTime CreatedDate { get; set; }
-        public int CreatedBy { get; set; }
-        public DateTime? UpdatedDate { get; set; }
-        public int? UpdatedBy { get; set; }
-        public bool IsActive { get; set; }
-        public bool IsDeleted { get; set; }
+        public string Id { get; set; } = null!;
+        public string RoleId { get; set; } = null!;
+        public string EntityNo { get; set; } = null!;
+        public string View { get; set; } = null!;
+        public string Create { get; set; } = null!;
+        public string Edit { get; set; } = null!;
+        public string Delete { get; set; } = null!;
+        public string? ActiveInActive { get; set; }
+        public string? Print { get; set; }
+        public string? Download { get; set; }
+        public string CreatedDate { get; set; } = null!;
+        public string CreatedBy { get; set; } = null!;
+        public string? UpdatedDate { get; set; }
+        public string? UpdatedBy { get; set; }
+        public string IsActive { get; set; } = null!;
+        public string IsDeleted { get; set; } = null!;
     }
 }

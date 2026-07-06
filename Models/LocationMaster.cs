@@ -5,8 +5,8 @@ namespace GayatriCateringPortal.Models
     public class LocationMaster
     {
         public int Id { get; set; }
-        public string LocationCode { get; set; } = null!;
-        public string LocationName { get; set; } = null!;
+        public string? Code { get; set; }
+        public string LocationName { get; set; } = string.Empty;
         public decimal DeliveryFee { get; set; }
         public int MinimumPax { get; set; }
         public int LeadTimeDays { get; set; }

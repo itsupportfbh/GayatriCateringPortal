@@ -4,20 +4,20 @@ namespace GayatriCateringPortal.Models
 {
     public class SubMenu
     {
-        public int Id { get; set; }
-        public int? MenuId { get; set; }
+        public string Id { get; set; } = null!;
+        public string? MenuId { get; set; }
         public string? Name { get; set; }
-        public int? EntityNo { get; set; }
-        public bool? IsActive { get; set; }
-        public bool? IsDeleted { get; set; }
-        public int? CreatedBy { get; set; }
-        public DateTime? CreatedDate { get; set; }
-        public int? UpdatedBy { get; set; }
-        public DateTime? UpdatedDate { get; set; }
-        public int? DisplayOrder { get; set; }
+        public string? EntityNo { get; set; }
+        public string? IsActive { get; set; }
+        public string? IsDeleted { get; set; }
+        public string? CreatedBy { get; set; }
+        public string? CreatedDate { get; set; }
+        public string? UpdatedBy { get; set; }
+        public string? UpdatedDate { get; set; }
+        public string? DisplayOrder { get; set; }
         public string? Route { get; set; }
         public string? Remarks { get; set; }
-        public int? Menuscope { get; set; }
+        public string? Menuscope { get; set; }
         public string? MenuIcon { get; set; }
     }
 }

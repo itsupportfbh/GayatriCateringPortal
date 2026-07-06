@@ -9,4 +9,5 @@ public interface ICustomerRepository
     CustomerMaster? GetById(int id);
     bool Save(CustomerMaster customer);
     bool Delete(int id);
+    bool ActiveInActive(int id);
 }

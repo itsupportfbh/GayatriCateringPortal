@@ -4,8 +4,8 @@ namespace GayatriCateringPortal.Models
 {
     public class Organization
     {
-        public int Id { get; set; }
-        public int Code { get; set; }
+        public string Id { get; set; } = null!;
+        public string Code { get; set; } = null!;
         public string Name { get; set; } = null!;
         public string GSTNO { get; set; } = null!;
         public string Phone { get; set; } = null!;
@@ -16,14 +16,14 @@ namespace GayatriCateringPortal.Models
         public string ContactEmail { get; set; } = null!;
         public string AddressLine1 { get; set; } = null!;
         public string AdressLine2 { get; set; } = null!;
-        public int City { get; set; }
-        public int State { get; set; }
-        public int Country { get; set; }
-        public bool IsActive { get; set; }
-        public bool IsDeleted { get; set; }
-        public DateTime CreatedDate { get; set; }
-        public int? CreatedBy { get; set; }
-        public DateTime? UpdatedDate { get; set; }
-        public int? UpdatedBy { get; set; }
+        public string City { get; set; } = null!;
+        public string State { get; set; } = null!;
+        public string Country { get; set; } = null!;
+        public string IsActive { get; set; } = null!;
+        public string IsDeleted { get; set; } = null!;
+        public string CreatedDate { get; set; } = null!;
+        public string? CreatedBy { get; set; }
+        public string? UpdatedDate { get; set; }
+        public string? UpdatedBy { get; set; }
     }
 }
