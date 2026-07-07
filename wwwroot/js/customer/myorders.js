@@ -3,7 +3,7 @@ $(function () {
     loadMyOrders();
 
     function loadMyOrders() {
-        $.get('/Customer/GetMyOrders', function (data) {
+        $.get('/Customer/MyOrders/get', function (data) {
             renderOrders(data);
         }).fail(function () {
             // Show sample data for UI demo
@@ -20,21 +20,27 @@ $(function () {
             html = '<div class="card"><p class="muted">No orders found. <a href="/Customer/Order">Place your first order</a>.</p></div>';
         } else {
             orders.forEach(function (o) {
-                var balance = (o.amount || 0) - (o.paid || 0);
+                var orderNumber = o.orderNumber || o.id || 'Unknown';
+                var packageLabel = o.packageId || '-';
+                var eventDate = o.eventStartDateTime || '-';
+                var total = parseFloat(o.totalAmount) || 0;
+                var paid = parseFloat(o.paidAmount) || 0;
+                var balance = total - paid;
+                var status = (o.orderStatus || 'Pending').toLowerCase();
                 html += '<div class="order-card">' +
                     '<div class="order-card-header">' +
-                    '<span class="order-ref">' + o.id + '</span>' +
-                    '<span class="badge badge-' + (o.status || 'pending').toLowerCase() + '">' + (o.status || 'Pending') + '</span>' +
+                    '<span class="order-ref">' + orderNumber + '</span>' +
+                    '<span class="badge badge-' + status + '">' + (o.orderStatus || 'Pending') + '</span>' +
                     '</div>' +
                     '<div class="order-meta">' +
-                    '<div class="order-meta-item"><strong>Package</strong>' + (o.pkg || '-') + '</div>' +
-                    '<div class="order-meta-item"><strong>Event Date</strong>' + (o.date || '-') + '</div>' +
+                    '<div class="order-meta-item"><strong>Package</strong>' + packageLabel + '</div>' +
+                    '<div class="order-meta-item"><strong>Event Date</strong>' + eventDate + '</div>' +
                     '<div class="order-meta-item"><strong>Pax</strong>' + (o.pax || 0) + '</div>' +
-                    '<div class="order-meta-item"><strong>Balance</strong>S$' + (balance).toFixed(2) + '</div>' +
+                    '<div class="order-meta-item"><strong>Balance</strong>S$' + balance.toFixed(2) + '</div>' +
                     '</div>' +
                     '<div class="actions" style="margin-top:10px">' +
-                    '<a href="/Customer/Track?id=' + o.id + '" class="btn btn-light btn-xs">📍 Track</a>' +
-                    '<a href="https://wa.me/6591234567?text=Order+' + o.id + '" target="_blank" class="btn btn-orange btn-xs">💬 WhatsApp</a>' +
+                    '<a href="/Customer/Track?ref=' + encodeURIComponent(orderNumber) + '" class="btn btn-light btn-xs">📍 Track</a>' +
+                    '<a href="https://wa.me/6591234567?text=Order+' + encodeURIComponent(orderNumber) + '" target="_blank" class="btn btn-orange btn-xs">💬 WhatsApp</a>' +
                     '</div>' +
                     '</div>';
             });

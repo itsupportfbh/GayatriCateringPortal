@@ -24,6 +24,13 @@ namespace GayatriCateringPortal.Controllers.Customer
             return View("~/Views/Customer/MyOrders.cshtml");
         }
 
+        [HttpGet("get")]
+        public IActionResult GetAll()
+        {
+            var items = _orders.GetAll();
+            return Ok(items);
+        }
+
         [HttpGet("get/{id}")]
         public IActionResult Get(int id)
         {

@@ -5,11 +5,15 @@ $(function () {
         { name: 'Anand Corp', phone: '+65 9555 6666', email: 'anand@corp.com', orders: 5, totalSpend: 18000 }
     ];
 
-    $.get('/Admin/Customers/GetCustomers').done(function (rows) {
-        render(rows);
-    }).fail(function () {
-        render(demoData);
-    });
+    loadCustomers();
+
+    function loadCustomers() {
+        $.get('/Admin/Customers/get').done(function (rows) {
+            render(rows);
+        }).fail(function () {
+            render(demoData);
+        });
+    }
 
     function render(rows) {
         var html = '<table class="tbl" id="custTbl"><thead><tr><th>Name</th><th>Phone</th><th>Email</th><th>Orders</th><th class="num">Total Spend</th><th>Actions</th></tr></thead><tbody>';
@@ -44,9 +48,26 @@ $(function () {
             orders: 0,
             totalSpend: 0
         };
-        demoData.push(newCust);
-        $('#customersModal').addClass('hidden');
-        render(demoData);
+
+        $.ajax({
+            url: '/Admin/Customers/save',
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify(newCust)
+        }).done(function (response) {
+            if (response && response.success) {
+                showToast('Customer saved');
+                $('#customersModal').addClass('hidden');
+                loadCustomers();
+            } else {
+                showToast('Unable to save customer');
+            }
+        }).fail(function () {
+            demoData.push(newCust);
+            $('#customersModal').addClass('hidden');
+            render(demoData);
+            showToast('Saved locally (demo)');
+        });
     });
 
     $('#custSearch').on('keyup', function () {

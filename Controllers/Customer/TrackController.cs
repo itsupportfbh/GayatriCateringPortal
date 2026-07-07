@@ -24,10 +24,17 @@ namespace GayatriCateringPortal.Controllers.Customer
             return View("~/Views/Customer/Track.cshtml");
         }
 
-        [HttpGet("get/{id}")]
-        public IActionResult Get(int id)
+        [HttpGet("get")]
+        public IActionResult GetAll()
         {
-            var item = _logistics.GetById(id);
+            var items = _logistics.GetAll();
+            return Ok(items);
+        }
+
+        [HttpGet("get/{orderNumber}")]
+        public IActionResult Get(string orderNumber)
+        {
+            var item = _logistics.GetByOrderNumber(orderNumber);
             if (item == null) return NotFound();
             return Ok(item);
         }

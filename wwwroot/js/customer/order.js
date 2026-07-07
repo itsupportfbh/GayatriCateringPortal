@@ -259,6 +259,69 @@ $(function () {
         $('#orderStepContent').html(html);
     }
 
+    function generateOrderNumber() {
+        var datePart = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+        var randomPart = Math.floor(Math.random() * 900) + 100;
+        return 'GC-' + datePart + '-' + randomPart;
+    }
+
+    function buildOrderPayload() {
+        return {
+            id: '',
+            orderNumber: generateOrderNumber(),
+            customerId: '',
+            packageId: state.selectedPackage,
+            mealPeriodId: state.details.mealPeriod,
+            locationId: '',
+            eventStartDateTime: state.details.eventDate,
+            eventEndDateTime: '',
+            deliveryAddress: state.details.location,
+            notes: state.details.notes,
+            pax: state.pax.toString(),
+            packageBaseAmount: packageBase().toString(),
+            additionalMenuAmount: extraTotal().toString(),
+            addOnsAmount: addonTotal().toString(),
+            utensilsAmount: utensilTotal().toString(),
+            subTotal: grandTotal().toString(),
+            discount: '0',
+            deliveryFee: '0',
+            taxAmount: gstTotal().toString(),
+            totalAmount: grandTotal().toString(),
+            taxPercentage: state.gstMode === 'apply' ? '9' : '0',
+            paidAmount: '0',
+            orderStatus: 'Quotation',
+            createdDate: new Date().toISOString(),
+            createdBy: '',
+            updatedDate: null,
+            updatedBy: null,
+            isActive: '1',
+            isDeleted: '0'
+        };
+    }
+
+    function submitOrder() {
+        var order = buildOrderPayload();
+        $.ajax({
+            url: '/Customer/Order/save',
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify(order),
+            success: function (response) {
+                if (response && response.success) {
+                    showToast('Order submitted successfully');
+                    setTimeout(function () {
+                        window.location.href = '/Customer/MyOrders';
+                    }, 1200);
+                } else {
+                    alert('Failed to submit order');
+                }
+            },
+            error: function () {
+                alert('Error submitting order');
+            }
+        });
+    }
+
     $(document).on('click', '.wizard-step', function () {
         currentStep = parseInt($(this).data('step'), 10);
         renderStep();
@@ -279,7 +342,7 @@ $(function () {
     });
 
     $('#summarySubmitBtn').on('click', function () {
-        showToast('Quotation request submitted');
+        submitOrder();
     });
 
     $('#btnResetOrder').on('click', function () {

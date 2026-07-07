@@ -7,20 +7,30 @@ $(function () {
         { id: 5, name: 'Masala Chai', cat: 'Drinks', price: 1.50, type: 'Veg', active: true }
     ];
 
-    $.get('/Admin/GetMenuItems', function (rows) {
-        render(rows);
-    }).fail(function () {
-        render(items);
-    });
+    loadMenuItems();
+
+    function loadMenuItems() {
+        $.get('/Admin/Menus/get').done(function (rows) {
+            render(rows);
+        }).fail(function () {
+            render(items);
+        });
+    }
 
     function render(rows) {
+        rows = rows || [];
         var html = '<table class="tbl" id="menuTbl"><thead><tr><th>Name</th><th>Category</th><th>Type</th><th class="num">Price/pax</th><th>Active</th><th>Actions</th></tr></thead><tbody>';
         rows.forEach(function (row) {
-            html += '<tr><td><strong>' + row.name + '</strong></td><td>' + row.cat + '</td>' +
-                '<td><span class="badge ' + (row.type === 'Veg' ? 'badge-confirmed' : 'badge-cancelled') + '">' + row.type + '</span></td>' +
-                '<td class="num">S$' + parseFloat(row.price || 0).toFixed(2) + '</td>' +
-                '<td><span class="badge ' + (row.active ? 'badge-confirmed' : 'badge-cancelled') + '">' + (row.active ? 'Active' : 'Inactive') + '</span></td>' +
-                '<td>' + window.buildRowActions(row.id, { active: row.active }) + '</td></tr>';
+            var name = row.name || row.Name || 'Unnamed';
+            var cat = row.cat || row.Cat || row.Category || 'General';
+            var type = row.type || row.Type || 'Veg';
+            var price = parseFloat(row.price || row.Price || 0) || 0;
+            var active = row.active === true || row.active === '1' || row.active === 'true' || row.IsActive === '1' || row.IsActive === 'true';
+            html += '<tr><td><strong>' + name + '</strong></td><td>' + cat + '</td>' +
+                '<td><span class="badge ' + (type === 'Veg' ? 'badge-confirmed' : 'badge-cancelled') + '">' + type + '</span></td>' +
+                '<td class="num">S$' + price.toFixed(2) + '</td>' +
+                '<td><span class="badge ' + (active ? 'badge-confirmed' : 'badge-cancelled') + '">' + (active ? 'Active' : 'Inactive') + '</span></td>' +
+                '<td>' + window.buildRowActions(row.id || row.Id || '', { active: active }) + '</td></tr>';
         });
         html += '</tbody></table>';
         $('#menuTable').html(html);
@@ -41,16 +51,22 @@ $(function () {
             return;
         }
 
-        $.post('/Admin/AddMenuItem', {
+        var payload = {
             name: name,
             cat: $('#newItemCat').val(),
             price: $('#newItemPrice').val(),
-            type: $('#newItemType').val(),
-            __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val()
-        }, function () {
+            type: $('#newItemType').val()
+        };
+
+        $.ajax({
+            url: '/Admin/Menus/save',
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify(payload)
+        }).done(function () {
             showToast('Item added');
             $('#addMenuModal').addClass('hidden');
-            location.reload();
+            loadMenuItems();
         }).fail(function () {
             showToast('Item added (demo)');
             $('#addMenuModal').addClass('hidden');

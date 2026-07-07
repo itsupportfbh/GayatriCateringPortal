@@ -1,4 +1,4 @@
-@{
+﻿@{
     ViewData["Title"] = "Function Hall";
 }
 
@@ -23,27 +23,27 @@
     <div class="section-label">Package Includes / Setup Options</div>
     <div class="package-includes-row">
         <div class="included-feature">
-            <span>🏛️</span>
+            <span>ðŸ›ï¸</span>
             <div>Function Hall</div>
             <small>Admin configurable</small>
         </div>
         <div class="included-feature">
-            <span>🍲</span>
+            <span>ðŸ²</span>
             <div>Buffet Set-up</div>
             <small>Admin configurable</small>
         </div>
         <div class="included-feature">
-            <span>🍴</span>
+            <span>ðŸ´</span>
             <div>Cutleries</div>
             <small>Admin configurable</small>
         </div>
         <div class="included-feature">
-            <span>🪑</span>
+            <span>ðŸª‘</span>
             <div>Table Setting</div>
             <small>Admin configurable</small>
         </div>
         <div class="included-feature">
-            <span>🖥️</span>
+            <span>ðŸ–¥ï¸</span>
             <div>LED Wall &amp; Sound System</div>
             <small>Admin configurable</small>
         </div>
@@ -52,36 +52,7 @@
 </div>
 
 <!-- VENUE GALLERY -->
-<div class="venue-grid">
-    <div class="venue-card">
-        <img src="~/images/hallLed.jpg" alt="LED Wall to Display">
-        <div class="venue-caption">
-            <b>LED Wall to Display</b>
-            <span>Function hall with large LED wall for event display, presentation and video playback.</span>
-        </div>
-    </div>
-    <div class="venue-card">
-        <img src="~/images/hallBuffet.jpg" alt="Buffet Line Setup">
-        <div class="venue-caption">
-            <b>Buffet Line Setup</b>
-            <span>Buffet counter layout with chafing dishes and serving area.</span>
-        </div>
-    </div>
-    <div class="venue-card">
-        <img src="~/images/hallDining.jpg" alt="Table Setting">
-        <div class="venue-caption">
-            <b>Table Setting</b>
-            <span>Round table setting suitable for family, corporate and wedding functions.</span>
-        </div>
-    </div>
-    <div class="venue-card">
-        <img src="~/images/hallSetup.jpg" alt="Full Function Hall View">
-        <div class="venue-caption">
-            <b>Full Function Hall View</b>
-            <span>Function hall, buffet line, table setting and lighting arrangement.</span>
-        </div>
-    </div>
-</div>
+<div class="venue-grid" id="venueCards"></div>
 
 <!-- MENU REFERENCE POSTER -->
 <div class="card" style="margin-top:14px">
@@ -92,3 +63,4 @@
 @section Scripts {
     <script src="~/js/customer/venue.js" asp-append-version="true"></script>
 }
+

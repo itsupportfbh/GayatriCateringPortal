@@ -6,11 +6,15 @@ $(function () {
         { invoice: 'INV-2024-020', order: 'GC-2024-020', customer: 'Suresh Babu', amount: 750, paid: 0 }
     ];
 
-    $.get('/Admin/GetInvoices', function (rows) {
-        render(rows);
-    }).fail(function () {
-        render(data);
-    });
+    loadInvoices();
+
+    function loadInvoices() {
+        $.get('/Admin/Invoices/get').done(function (rows) {
+            render(rows);
+        }).fail(function () {
+            render(data);
+        });
+    }
 
     function render(rows) {
         var html = '<table class="tbl"><thead><tr><th>Invoice</th><th>Order</th><th>Customer</th><th class="num">Total</th><th class="num">Paid</th><th class="num">Balance</th><th>Actions</th></tr></thead><tbody>';

@@ -24,6 +24,13 @@ namespace GayatriCateringPortal.Controllers.Admin
             return View("~/Views/Admin/Locations.cshtml");
         }
 
+        [HttpGet("get")]
+        public IActionResult GetAll()
+        {
+            var items = _locationsRepository.GetAll();
+            return Ok(items);
+        }
+
         [HttpGet("get/{id}")]
         public IActionResult Get(int id)
         {

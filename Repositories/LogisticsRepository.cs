@@ -77,6 +77,41 @@ public class LogisticsRepository : ILogisticsRepository
         }
     }
 
+    public LogisticsDetails? GetByOrderNumber(string orderNumber)
+    {
+        if (string.IsNullOrWhiteSpace(orderNumber)) return null;
+
+        IDbConnection? conn = null;
+        IDbCommand? cmd = null;
+        IDataReader? reader = null;
+        try
+        {
+            using (conn = DataFactory.CreateConnection())
+            {
+                using (cmd = DataFactory.CreateCommand("SELECT * FROM LogisticsDetails WHERE OrderNumber = @OrderNumber AND IsDeleted = 0", conn))
+                {
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@OrderNumber", orderNumber));
+                    if (conn.State == ConnectionState.Closed) conn.Open();
+                    reader = cmd.ExecuteReader();
+                    if (reader.Read()) return new LogisticsDetails();
+                }
+            }
+            return null;
+        }
+        catch (SqlException)
+        {
+            throw new Exception("Database error");
+        }
+        catch (Exception ex)
+        {
+            throw new Exception(ex.StackTrace);
+        }
+        finally
+        {
+            if (conn != null && conn.State != ConnectionState.Closed) conn.Close();
+        }
+    }
+
     public bool Save(LogisticsDetails item)
     {
         IDbConnection? conn = null;

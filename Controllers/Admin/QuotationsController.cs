@@ -23,6 +23,13 @@ namespace GayatriCateringPortal.Controllers.Admin
             return View("~/Views/Admin/Quotations.cshtml");
         }
 
+        [HttpGet("get")]
+        public IActionResult GetAll()
+        {
+            var items = _quotationsRepository.GetAll();
+            return Ok(items);
+        }
+
         [HttpGet("get/{id}")]
         public IActionResult Get(int id)
         {
