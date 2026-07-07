@@ -27,66 +27,9 @@
     <div class="table-wrap">
         <table class="tbl" id="rolesList">
             <thead>
-                <tr><th>Id</th><th>Code</th><th>Name</th><th>Remarks</th><th>Active</th><th>Actions</th></tr>
+                <tr><th>Id</th><th>Code</th><th>Name</th><th>Remarks</th><th>Status</th><th>Actions</th></tr>
             </thead>
             <tbody>
-                <tr>
-                    <td>1</td>
-                    <td>ADMIN</td>
-                    <td>Administrator</td>
-                    <td>Full system access</td>
-                    <td>Yes</td>
-                    <td>
-                        <div class="row-actions">
-                            <button class="dots-btn" title="Actions">⋯</button>
-                            <div class="actions-menu hidden">
-                                <button class="action-item btn-edit" data-id="1"><span class="action-icon p-p-pencil"></span>Edit</button>
-                                <button class="action-item btn-delete" data-id="1"><span class="action-icon p-p-trash"></span>Delete</button>
-                                <button class="action-item btn-set-active disabled" data-id="1" disabled><span class="action-icon p-p-unlock"></span>Active</button>
-                                <button class="action-item btn-set-inactive" data-id="1"><span class="action-icon p-p-lock"></span>Inactive</button>
-                                <button class="action-item btn-role-permission" data-id="1" data-code="ADMIN"><span class="action-icon p-p-cog"></span>Role Permission</button>
-                            </div>
-                        </div>
-                    </td>
-                </tr>
-                <tr>
-                    <td>2</td>
-                    <td>SALES</td>
-                    <td>Sales Team</td>
-                    <td>Quotation and customer access</td>
-                    <td>Yes</td>
-                    <td>
-                        <div class="row-actions">
-                            <button class="dots-btn" title="Actions">⋯</button>
-                            <div class="actions-menu hidden">
-                                <button class="action-item btn-edit" data-id="2"><span class="action-icon p-p-pencil"></span>Edit</button>
-                                <button class="action-item btn-delete" data-id="2"><span class="action-icon p-p-trash"></span>Delete</button>
-                                <button class="action-item btn-set-active disabled" data-id="2" disabled><span class="action-icon p-p-unlock"></span>Active</button>
-                                <button class="action-item btn-set-inactive" data-id="2"><span class="action-icon p-p-lock"></span>Inactive</button>
-                                <button class="action-item btn-role-permission" data-id="2" data-code="SALES"><span class="action-icon p-p-cog"></span>Role Permission</button>
-                            </div>
-                        </div>
-                    </td>
-                </tr>
-                <tr>
-                    <td>3</td>
-                    <td>VIEWER</td>
-                    <td>View Only</td>
-                    <td>Read-only dashboard access</td>
-                    <td>No</td>
-                    <td>
-                        <div class="row-actions">
-                            <button class="dots-btn" title="Actions">⋯</button>
-                            <div class="actions-menu hidden">
-                                <button class="action-item btn-edit" data-id="3"><span class="action-icon p-p-pencil"></span>Edit</button>
-                                <button class="action-item btn-delete" data-id="3"><span class="action-icon p-p-trash"></span>Delete</button>
-                                <button class="action-item btn-set-active" data-id="3"><span class="action-icon p-p-unlock"></span>Active</button>
-                                <button class="action-item btn-set-inactive disabled" data-id="3" disabled><span class="action-icon p-p-lock"></span>Inactive</button>
-                                <button class="action-item btn-role-permission" data-id="3" data-code="VIEWER"><span class="action-icon p-p-cog"></span>Role Permission</button>
-                            </div>
-                        </div>
-                    </td>
-                </tr>
             </tbody>
         </table>
     </div>
@@ -109,9 +52,6 @@
         <div class="form-group">
             <label>Remarks</label>
             <input type="text" id="roleRemarks" class="form-control" placeholder="Remarks" />
-        </div>
-        <div class="form-group">
-            <label><input type="checkbox" id="roleIsActive" checked /> Active</label>
         </div>
         <input type="hidden" id="roleId" />
         <div class="actions">

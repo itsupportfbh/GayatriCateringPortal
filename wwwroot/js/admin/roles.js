@@ -104,7 +104,6 @@ function clearRoleForm() {
     $('#roleCode').val('');
     $('#roleName').val('');
     $('#roleRemarks').val('');
-    $('#roleIsActive').prop('checked', true);
 }
 
 function saveRole() {
@@ -113,7 +112,7 @@ function saveRole() {
         Code: $('#roleCode').val() || '',
         Name: $('#roleName').val() || '',
         Remarks: $('#roleRemarks').val() || '',
-        IsActive: $('#roleIsActive').is(':checked') ? '1' : '0',
+        IsActive: '1',
         IsDeleted: '0',
         CreatedBy: '',
         CreatedDate: '',
@@ -148,7 +147,6 @@ function editRole(id) {
             $('#roleCode').val(role.Code || role.code || '');
             $('#roleName').val(role.Name || role.name || '');
             $('#roleRemarks').val(role.Remarks || role.remarks || '');
-            $('#roleIsActive').prop('checked', (role.IsActive === '1' || role.IsActive === 'true' || role.isActive === '1' || role.isActive === 'true'));
             hideRolePermission();
             $('#rolesModal').removeClass('hidden');
         },
