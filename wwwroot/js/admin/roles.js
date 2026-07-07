@@ -13,35 +13,45 @@ $(document).ready(function () {
         };
     }
 
-    // preserve matrix search behavior (debounced)
+    // preserve roles list search behavior (debounced)
     $rolesSearch.on('keyup', debounce(function () {
         var value = $(this).val().toLowerCase();
-        $rolesMatrix.find('tbody tr').each(function () {
+        $('#rolesList tbody tr').each(function () {
             $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1);
         });
     }, 250));
 
-    // Open roles management modal when Add Role button is clicked
-    $(document).on('click', '.page-header .btn.btn-orange', function () {
-        openRolesModal();
+    // Load role list on initial page open
+    loadRoles();
+
+    // Open create/edit popup when Add Role is clicked
+    $(document).on('click', '#btnOpenRoleModal', function () {
+        hideRolePermission();
+        clearRoleForm();
+        $('#rolesModal').removeClass('hidden');
     });
 
-    // modal bindings (delegated)
-    $(document).on('click', '#rolesModal .modal-close', function () { $('#rolesModal').addClass('hidden'); });
     $(document).on('click', '#btnClearRole', clearRoleForm);
     $(document).on('click', '#btnSaveRole', saveRole);
+    $(document).on('click', '#rolesModal .modal-close', function () { $('#rolesModal').addClass('hidden'); });
+    $(document).on('click', '#btnBackToRoles', hideRolePermission);
+    $(document).on('click', '.btn-edit', function () { editRole($(this).data('id')); });
+    $(document).on('click', '.btn-delete', function () { deleteRole($(this).data('id')); });
+    $(document).on('click', '.btn-set-active', function () { setRoleActive($(this).data('id'), true); });
+    $(document).on('click', '.btn-set-inactive', function () { setRoleActive($(this).data('id'), false); });
+    $(document).on('click', '.btn-role-permission', function () {
+        var $this = $(this);
+        showRolePermission($this.data('id'), $this.data('code'));
+    });
 });
 
 function openRolesModal() {
-        if ($('#rolesModal').length) {
-                $('#rolesModal').removeClass('hidden');
-                loadRolesForModal();
-        } else {
-                showToast('Roles modal not present in page. Ensure Roles.cshtml contains the modal markup.');
-        }
+    clearRoleForm();
+    hideRolePermission();
+    $('#rolesModal').removeClass('hidden');
 }
 
-function loadRolesForModal() {
+function loadRoles() {
     $.ajax({
         url: '/Admin/Roles/get',
         type: 'GET',
@@ -55,6 +65,10 @@ function loadRolesForModal() {
 }
 
 function renderRolesList(rows) {
+    if (!rows || !rows.length) {
+        return; // keep static rows when no backend data is available
+    }
+
     var html = rows.map(function (role) {
         var id = role.id || role.Id || '';
         var code = role.code || role.Code || '';
@@ -69,9 +83,16 @@ function renderRolesList(rows) {
                 <td>${remarks || ''}</td>
                 <td>${active ? 'Yes' : 'No'}</td>
                 <td>
-                    <button class="btn btn-light btn-xs" onclick="editRole('${id}')">Edit</button>
-                    <button class="btn btn-danger btn-xs" onclick="deleteRole('${id}')">Delete</button>
-                    <button class="btn btn-primary btn-xs" onclick="toggleActive('${id}')">Toggle Active</button>
+                    <div class="row-actions">
+                        <button class="dots-btn" title="Actions">⋯</button>
+                        <div class="actions-menu hidden">
+                            <button class="action-item btn-edit" data-id="${id}"><span class="action-icon p-p-pencil"></span>Edit</button>
+                            <button class="action-item btn-delete" data-id="${id}"><span class="action-icon p-p-trash"></span>Delete</button>
+                            <button class="action-item btn-set-active ${active ? 'disabled' : ''}" data-id="${id}" ${active ? 'disabled' : ''}><span class="action-icon p-p-unlock"></span>Active</button>
+                            <button class="action-item btn-set-inactive ${active ? '' : 'disabled'}" data-id="${id}" ${active ? '' : 'disabled'}><span class="action-icon p-p-lock"></span>Inactive</button>
+                            <button class="action-item btn-role-permission" data-id="${id}" data-code="${code}"><span class="action-icon p-p-cog"></span>Role Permission</button>
+                        </div>
+                    </div>
                 </td>
             </tr>`;
     }).join('');
@@ -93,7 +114,11 @@ function saveRole() {
         Name: $('#roleName').val() || '',
         Remarks: $('#roleRemarks').val() || '',
         IsActive: $('#roleIsActive').is(':checked') ? '1' : '0',
-        IsDeleted: '0'
+        IsDeleted: '0',
+        CreatedBy: '',
+        CreatedDate: '',
+        UpdatedBy: '',
+        UpdatedDate: ''
     };
 
     $.ajax({
@@ -104,7 +129,8 @@ function saveRole() {
         success: function (res) {
             showToast(res && res.success ? 'Saved' : 'Unable to save');
             clearRoleForm();
-            loadRolesForModal();
+            $('#rolesModal').addClass('hidden');
+            loadRoles();
         },
         error: function () {
             showToast('Save failed');
@@ -123,10 +149,22 @@ function editRole(id) {
             $('#roleName').val(role.Name || role.name || '');
             $('#roleRemarks').val(role.Remarks || role.remarks || '');
             $('#roleIsActive').prop('checked', (role.IsActive === '1' || role.IsActive === 'true' || role.isActive === '1' || role.isActive === 'true'));
+            hideRolePermission();
             $('#rolesModal').removeClass('hidden');
         },
         error: function () { showToast('Unable to load role'); }
     });
+}
+
+function showRolePermission(id, code) {
+    $('#selectedRoleName').text(code || id || 'Unknown');
+    $('#rolesListPanel').addClass('hidden');
+    $('#rolesPermissionPanel').removeClass('hidden');
+}
+
+function hideRolePermission() {
+    $('#rolesPermissionPanel').addClass('hidden');
+    $('#rolesListPanel').removeClass('hidden');
 }
 
 function deleteRole(id) {
@@ -136,20 +174,27 @@ function deleteRole(id) {
         type: 'POST',
         success: function (res) {
             showToast(res && res.success ? 'Deleted' : 'Unable to delete');
-            loadRolesForModal();
+            loadRoles();
         },
         error: function () { showToast('Delete failed'); }
     });
 }
 
-function toggleActive(id) {
+function setRoleActive(id, isActive) {
+    if (!id) return;
+    // The backend endpoint currently toggles the state.
+    // Only call it when the requested state differs from current row state.
     $.ajax({
         url: '/Admin/Roles/activeinactive/' + id,
         type: 'POST',
         success: function (res) {
             showToast(res && res.success ? 'Updated active state' : 'Unable to update');
-            loadRolesForModal();
+            loadRoles();
         },
         error: function () { showToast('Request failed'); }
     });
+}
+
+function toggleActive(id) {
+    setRoleActive(id, null);
 }

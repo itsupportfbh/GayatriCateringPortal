@@ -62,33 +62,5 @@
         $('.modal-overlay').each(function () { var $o = $(this); if (!$o.hasClass('keep-open')) { $o.addClass('hidden'); $o.find('.modal-box').html(''); } });
     };
 
-    // Helper to build a three-dot actions menu for table rows.
-    window.buildRowActions = function (id, opts) {
-        opts = opts || {};
-        var showEdit = opts.showEdit !== false;
-        var showDelete = opts.showDelete !== false;
-        var showToggle = opts.showToggle !== false;
-        var showWA = !!opts.showWA;
-        var active = opts.active;
-        var html = '<div class="row-actions">';
-        html += '<button class="dots-btn" title="Actions">⋯</button>';
-        html += '<div class="actions-menu hidden">';
-        if (showWA) html += '<button class="action-item btn-wa" data-id="' + id + '">WA</button>';
-        if (showEdit) html += '<button class="action-item btn-edit" data-id="' + id + '">Edit</button>';
-        if (showDelete) html += '<button class="action-item btn-delete" data-id="' + id + '">Delete</button>';
-        if (showToggle) html += '<button class="action-item btn-toggle" data-id="' + id + '" data-state="' + (active ? 'active' : 'inactive') + '">' + (active ? 'Deactivate' : 'Activate') + '</button>';
-        html += '</div></div>';
-        return html;
-    };
 
-    // Document handlers for actions menu
-    $(document).on('click', '.dots-btn', function (e) {
-        e.stopPropagation();
-        var $menu = $(this).next('.actions-menu');
-        $('.actions-menu').not($menu).addClass('hidden');
-        $menu.toggleClass('hidden');
-    });
-    $(document).on('click', function () {
-        $('.actions-menu').addClass('hidden');
-    });
 })();

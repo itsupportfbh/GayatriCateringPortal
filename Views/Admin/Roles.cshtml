@@ -13,14 +13,122 @@
     </div>
     <div class="page-header-actions">
         <div class="app-header-filter">
-            <input type="text" id="rolesSearch" data-table="rolesMatrix" placeholder="Search roles...">
+            <input type="text" id="rolesSearch" placeholder="Search roles...">
         </div>
-        <button class="btn btn-orange">+ Add Role</button>
+        <button class="btn btn-orange" id="btnOpenRoleModal">+ Add Role</button>
     </div>
 </div>
 
-<div class="card">
-    <div class="muted" style="margin-bottom:16px">This matrix should be stored in backend tables and checked in controllers/API before allowing each action.</div>
+<div id="rolesListPanel" class="card">
+    <div class="panel-header">
+        <div class="panel-title">Manage Roles</div>
+    </div>
+    <div class="muted" style="margin-bottom:16px">Create, edit and manage roles. Use Role Permission to assign rights by role.</div>
+    <div class="table-wrap">
+        <table class="tbl" id="rolesList">
+            <thead>
+                <tr><th>Id</th><th>Code</th><th>Name</th><th>Remarks</th><th>Active</th><th>Actions</th></tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>1</td>
+                    <td>ADMIN</td>
+                    <td>Administrator</td>
+                    <td>Full system access</td>
+                    <td>Yes</td>
+                    <td>
+                        <div class="row-actions">
+                            <button class="dots-btn" title="Actions">⋯</button>
+                            <div class="actions-menu hidden">
+                                <button class="action-item btn-edit" data-id="1"><span class="action-icon p-p-pencil"></span>Edit</button>
+                                <button class="action-item btn-delete" data-id="1"><span class="action-icon p-p-trash"></span>Delete</button>
+                                <button class="action-item btn-set-active disabled" data-id="1" disabled><span class="action-icon p-p-unlock"></span>Active</button>
+                                <button class="action-item btn-set-inactive" data-id="1"><span class="action-icon p-p-lock"></span>Inactive</button>
+                                <button class="action-item btn-role-permission" data-id="1" data-code="ADMIN"><span class="action-icon p-p-cog"></span>Role Permission</button>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td>2</td>
+                    <td>SALES</td>
+                    <td>Sales Team</td>
+                    <td>Quotation and customer access</td>
+                    <td>Yes</td>
+                    <td>
+                        <div class="row-actions">
+                            <button class="dots-btn" title="Actions">⋯</button>
+                            <div class="actions-menu hidden">
+                                <button class="action-item btn-edit" data-id="2"><span class="action-icon p-p-pencil"></span>Edit</button>
+                                <button class="action-item btn-delete" data-id="2"><span class="action-icon p-p-trash"></span>Delete</button>
+                                <button class="action-item btn-set-active disabled" data-id="2" disabled><span class="action-icon p-p-unlock"></span>Active</button>
+                                <button class="action-item btn-set-inactive" data-id="2"><span class="action-icon p-p-lock"></span>Inactive</button>
+                                <button class="action-item btn-role-permission" data-id="2" data-code="SALES"><span class="action-icon p-p-cog"></span>Role Permission</button>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td>3</td>
+                    <td>VIEWER</td>
+                    <td>View Only</td>
+                    <td>Read-only dashboard access</td>
+                    <td>No</td>
+                    <td>
+                        <div class="row-actions">
+                            <button class="dots-btn" title="Actions">⋯</button>
+                            <div class="actions-menu hidden">
+                                <button class="action-item btn-edit" data-id="3"><span class="action-icon p-p-pencil"></span>Edit</button>
+                                <button class="action-item btn-delete" data-id="3"><span class="action-icon p-p-trash"></span>Delete</button>
+                                <button class="action-item btn-set-active" data-id="3"><span class="action-icon p-p-unlock"></span>Active</button>
+                                <button class="action-item btn-set-inactive disabled" data-id="3" disabled><span class="action-icon p-p-lock"></span>Inactive</button>
+                                <button class="action-item btn-role-permission" data-id="3" data-code="VIEWER"><span class="action-icon p-p-cog"></span>Role Permission</button>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="modal-overlay hidden" id="rolesModal">
+    <div class="modal-box">
+        <div class="modal-header">
+            <span class="modal-title">Create / Edit Role</span>
+            <button class="modal-close">✕</button>
+        </div>
+        <div class="form-group">
+            <label>Code</label>
+            <input type="text" id="roleCode" class="form-control" placeholder="Role code (eg. ADMIN)" />
+        </div>
+        <div class="form-group">
+            <label>Name</label>
+            <input type="text" id="roleName" class="form-control" placeholder="Role name" />
+        </div>
+        <div class="form-group">
+            <label>Remarks</label>
+            <input type="text" id="roleRemarks" class="form-control" placeholder="Remarks" />
+        </div>
+        <div class="form-group">
+            <label><input type="checkbox" id="roleIsActive" checked /> Active</label>
+        </div>
+        <input type="hidden" id="roleId" />
+        <div class="actions">
+            <button type="button" class="btn btn-light" id="btnClearRole">Clear</button>
+            <button type="button" class="btn btn-primary" id="btnSaveRole">Save</button>
+        </div>
+    </div>
+</div>
+
+<div id="rolesPermissionPanel" class="card hidden">
+    <div class="panel-header">
+        <div class="panel-title">Role Permission</div>
+        <div class="panel-actions">
+            <button id="btnBackToRoles" class="btn">Back to Roles</button>
+        </div>
+    </div>
+    <div class="muted" style="margin-bottom:16px">Viewing permissions for role: <strong id="selectedRoleName">None</strong></div>
     <div class="table-wrap">
         <table class="tbl" id="rolesMatrix">
             <thead>
@@ -58,43 +166,6 @@
         </table>
     </div>
 </div>
-
-
-<!-- Roles modal (moved from JS) -->
-<div class="modal hidden" id="rolesModal">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h3>Manage Roles</h3>
-            <button class="modal-close">×</button>
-        </div>
-        <div class="modal-body">
-            <div class="form-row">
-                <input type="hidden" id="roleId" />
-                <label>Code</label>
-                <input type="text" id="roleCode" placeholder="Role code (eg. ADMIN)" />
-                <label>Name</label>
-                <input type="text" id="roleName" placeholder="Role name" />
-                <label>Remarks</label>
-                <input type="text" id="roleRemarks" placeholder="Remarks" />
-                <label><input type="checkbox" id="roleIsActive" checked /> Active</label>
-                <div class="modal-actions">
-                    <button id="btnSaveRole" class="btn btn-orange">Save</button>
-                    <button id="btnClearRole" class="btn">Clear</button>
-                </div>
-            </div>
-            <hr />
-            <div class="table-wrap">
-                <table class="tbl" id="rolesList">
-                    <thead>
-                        <tr><th>Id</th><th>Code</th><th>Name</th><th>Remarks</th><th>Active</th><th>Actions</th></tr>
-                    </thead>
-                    <tbody></tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-</div>
-
 
 @section Scripts {
     <script src="~/js/admin/table-utils.js" asp-append-version="true"></script>
