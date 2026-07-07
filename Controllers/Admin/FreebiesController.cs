@@ -43,7 +43,16 @@ namespace GayatriCateringPortal.Controllers.Admin
         public IActionResult Save([FromBody] PopularFreebieMaster item)
         {
             if (item == null) return BadRequest();
-            bool result = _freebiesRepository.Save(item);
+            var idValue = 0;
+            if (item.Id != 0) idValue = item.Id;
+
+            if (idValue == 0)
+            {
+                int newId = _freebiesRepository.Create(item);
+                return Ok(new { success = newId > 0, id = newId });
+            }
+
+            bool result = _freebiesRepository.Update(item);
             return Ok(new { success = result });
         }
 

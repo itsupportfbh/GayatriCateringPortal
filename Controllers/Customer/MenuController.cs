@@ -36,7 +36,13 @@ namespace GayatriCateringPortal.Controllers.Customer
         public IActionResult Save([FromBody] Menu item)
         {
             if (item == null) return BadRequest();
-            bool result = _menusRepository.Save(item);
+            if (item.Id == 0)
+            {
+                int newId = _menusRepository.Create(item);
+                return Ok(new { success = newId > 0, id = newId });
+            }
+
+            bool result = _menusRepository.Update(item);
             return Ok(new { success = result });
         }
 

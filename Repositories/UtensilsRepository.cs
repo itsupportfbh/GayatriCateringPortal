@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Data;
 using Microsoft.Data.SqlClient;
@@ -20,7 +20,7 @@ public class UtensilsRepository : IUtensilsRepository
             conn = DataFactory.CreateConnection();
             cmd = DataFactory.CreateCommand("SELECT * FROM UtensilMaster WHERE IsDeleted = 0", conn);
             conn.Open();
-            using IDataReader reader = cmd.ExecuteReader();
+            using IDataReader reader = DataFactory.ExecuteReader(cmd);
             while (reader.Read()) list.Add(new UtensilMaster());
             return list;
         }
@@ -48,7 +48,7 @@ public class UtensilsRepository : IUtensilsRepository
             cmd = DataFactory.CreateCommand("SELECT * FROM UtensilMaster WHERE Id = @Id", conn);
             cmd.Parameters.Add(DataFactory.CreateParameter("@Id", id));
             conn.Open();
-            using IDataReader reader = cmd.ExecuteReader();
+            using IDataReader reader = DataFactory.ExecuteReader(cmd);
             if (reader.Read()) return new UtensilMaster();
             return null;
         }
@@ -66,7 +66,7 @@ public class UtensilsRepository : IUtensilsRepository
         }
     }
 
-    public bool Save(UtensilMaster item)
+    public int Create(UtensilMaster item)
     {
         IDbConnection? conn = null;
         IDbCommand? cmd = null;
@@ -77,8 +77,35 @@ public class UtensilsRepository : IUtensilsRepository
             ((SqlCommand)cmd).CommandType = CommandType.StoredProcedure;
             cmd.Parameters.Add(DataFactory.CreateParameter("@Id", item.Id));
             conn.Open();
-            cmd.ExecuteNonQuery();
-            return true;
+            var rows = DataFactory.ExecuteNonQuery(cmd);
+            return rows > 0 ? 1 : 0;
+        }
+        catch (SqlException)
+        {
+            throw new Exception("Database error");
+        }
+        catch (Exception ex)
+        {
+            throw new Exception(ex.StackTrace);
+        }
+        finally
+        {
+            if (conn != null && conn.State != ConnectionState.Closed) conn.Close();
+        }
+    }
+
+    public bool Update(UtensilMaster item)
+    {
+        IDbConnection? conn = null;
+        IDbCommand? cmd = null;
+        try
+        {
+            conn = DataFactory.CreateConnection();
+            cmd = DataFactory.CreateCommand("SP_CreateUtensilMaster", conn);
+            ((SqlCommand)cmd).CommandType = CommandType.StoredProcedure;
+            cmd.Parameters.Add(DataFactory.CreateParameter("@Id", item.Id));
+            conn.Open();
+            return DataFactory.ExecuteNonQuery(cmd) > 0;
         }
         catch (SqlException)
         {
@@ -150,3 +177,4 @@ public class UtensilsRepository : IUtensilsRepository
         }
     }
 }
+

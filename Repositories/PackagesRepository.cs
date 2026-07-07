@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Data;
 using Microsoft.Data.SqlClient;
@@ -23,7 +23,7 @@ public class PackagesRepository : IPackagesRepository
                 conn.Open();
                 using (cmd = DataFactory.CreateCommand("SELECT * FROM Packages WHERE IsDeleted = 0", conn))
                 {
-                    reader = cmd.ExecuteReader();
+                    reader = DataFactory.ExecuteReader(cmd);
                     list = new List<Packages>();
                     while (reader.Read()) list.Add(new Packages());
                 }
@@ -54,7 +54,7 @@ public class PackagesRepository : IPackagesRepository
             cmd = DataFactory.CreateCommand("SELECT * FROM Packages WHERE Id = @Id", conn);
             cmd.Parameters.Add(DataFactory.CreateParameter("@Id", id));
             conn.Open();
-            using IDataReader reader = cmd.ExecuteReader();
+            using IDataReader reader = DataFactory.ExecuteReader(cmd);
             if (reader.Read()) return new Packages();
             return null;
         }
@@ -72,7 +72,7 @@ public class PackagesRepository : IPackagesRepository
         }
     }
 
-    public bool Save(Packages item)
+    public int Create(Packages item)
     {
         IDbConnection? conn = null;
         IDbCommand? cmd = null;
@@ -83,8 +83,35 @@ public class PackagesRepository : IPackagesRepository
             ((SqlCommand)cmd).CommandType = CommandType.StoredProcedure;
             cmd.Parameters.Add(DataFactory.CreateParameter("@Id", item.Id));
             conn.Open();
-            cmd.ExecuteNonQuery();
-            return true;
+            var rows = DataFactory.ExecuteNonQuery(cmd);
+            return rows > 0 ? 1 : 0;
+        }
+        catch (SqlException)
+        {
+            throw new Exception("Database error");
+        }
+        catch (Exception ex)
+        {
+            throw new Exception(ex.StackTrace);
+        }
+        finally
+        {
+            if (conn != null && conn.State != ConnectionState.Closed) conn.Close();
+        }
+    }
+
+    public bool Update(Packages item)
+    {
+        IDbConnection? conn = null;
+        IDbCommand? cmd = null;
+        try
+        {
+            conn = DataFactory.CreateConnection();
+            cmd = DataFactory.CreateCommand("SP_CreatePackages", conn);
+            ((SqlCommand)cmd).CommandType = CommandType.StoredProcedure;
+            cmd.Parameters.Add(DataFactory.CreateParameter("@Id", item.Id));
+            conn.Open();
+            return DataFactory.ExecuteNonQuery(cmd) > 0;
         }
         catch (SqlException)
         {
@@ -156,3 +183,4 @@ public class PackagesRepository : IPackagesRepository
         }
     }
 }
+

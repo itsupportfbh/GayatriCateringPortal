@@ -81,7 +81,7 @@ function renderRolesList(rows) {
                 <td>${code}</td>
                 <td>${name}</td>
                 <td>${remarks || ''}</td>
-                <td>${active ? 'Yes' : 'No'}</td>
+                <td>${active ? 'Active' : 'Inactive'}</td>
                 <td>
                     <div class="row-actions">
                         <button class="dots-btn" title="Actions">⋯</button>
@@ -107,6 +107,7 @@ function clearRoleForm() {
 }
 
 function saveRole() {
+    debugger;
     var role = {
         Id: $('#roleId').val() || '',
         Code: $('#roleCode').val() || '',

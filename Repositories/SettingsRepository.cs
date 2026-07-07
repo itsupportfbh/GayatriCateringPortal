@@ -33,7 +33,12 @@ public class SettingsRepository : ISettingsRepository
         }
     }
 
-    public bool Save(object settings)
+    public int Create(object settings)
+    {
+        throw new NotImplementedException();
+    }
+
+    public bool Update(object settings)
     {
         throw new NotImplementedException();
     }

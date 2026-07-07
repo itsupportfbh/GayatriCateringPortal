@@ -1,4 +1,4 @@
-using System.Data;
+﻿using System.Data;
 using Microsoft.Data.SqlClient;
 using GayatriCateringPortal.Models;
 using GayatriCateringPortal.Data;
@@ -21,7 +21,7 @@ public class CustomerRepository : ICustomerRepository
                 conn.Open();
                 using (cmd = DataFactory.CreateCommand(@"SELECT Id, Code, Name, MobileNo, EmailId, CompanyName, AddressLine1, AddressLine2, CityId, StateId, CountryId, Pincode, DateOfBirth, Gender, Remarks, IsActive, CreatedBy, CreatedDate, UpdatedBy, UpdatedDate, IsDeleted FROM CustomerMaster WHERE IsDeleted = 0", conn))
                 {
-                    reader = cmd.ExecuteReader();
+                    reader = DataFactory.ExecuteReader(cmd);
                     list = new List<CustomerMaster>();
                     while (reader.Read())
                     {
@@ -58,7 +58,7 @@ public class CustomerRepository : ICustomerRepository
                 {
                     cmd.Parameters.Add(DataFactory.CreateParameter("@Id", id));
                     if (conn.State == ConnectionState.Closed) conn.Open();
-                    reader = cmd.ExecuteReader();
+                    reader = DataFactory.ExecuteReader(cmd);
                     if (reader.Read())
                     {
                         return ReadCustomer((SqlDataReader)reader);
@@ -81,7 +81,7 @@ public class CustomerRepository : ICustomerRepository
         }
     }
 
-    public bool Save(CustomerMaster customer)
+    public int Create(CustomerMaster customer)
     {
         IDbConnection? conn = null;
         IDbCommand? cmd = null;
@@ -89,16 +89,65 @@ public class CustomerRepository : ICustomerRepository
         {
             using (conn = DataFactory.CreateConnection())
             {
-                string query;
-                if (customer.Id == 0)
-                {
-                    query = @"INSERT INTO CustomerMaster (Code, Name, MobileNo, EmailId, CompanyName, AddressLine1, AddressLine2, CityId, StateId, CountryId, Pincode, DateOfBirth, Gender, Remarks, IsActive, CreatedBy, CreatedDate, IsDeleted)
+                var query = @"INSERT INTO CustomerMaster (Code, Name, MobileNo, EmailId, CompanyName, AddressLine1, AddressLine2, CityId, StateId, CountryId, Pincode, DateOfBirth, Gender, Remarks, IsActive, CreatedBy, CreatedDate, IsDeleted)
+                              OUTPUT INSERTED.Id
                               VALUES (@Code, @Name, @MobileNo, @EmailId, @CompanyName, @AddressLine1, @AddressLine2, @CityId, @StateId, @CountryId, @Pincode, @DateOfBirth, @Gender, @Remarks, @IsActive, @CreatedBy, @CreatedDate, @IsDeleted)";
-                }
-                else
+
+                using (cmd = DataFactory.CreateCommand(query, conn))
                 {
-                    query = @"UPDATE CustomerMaster SET Code = @Code, Name = @Name, MobileNo = @MobileNo, EmailId = @EmailId, CompanyName = @CompanyName, AddressLine1 = @AddressLine1, AddressLine2 = @AddressLine2, CityId = @CityId, StateId = @StateId, CountryId = @CountryId, Pincode = @Pincode, DateOfBirth = @DateOfBirth, Gender = @Gender, Remarks = @Remarks, IsActive = @IsActive, UpdatedBy = @UpdatedBy, UpdatedDate = @UpdatedDate, IsDeleted = @IsDeleted WHERE Id = @Id";
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@Code", (object?)customer.Code ?? DBNull.Value));
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@Name", (object?)customer.Name ?? DBNull.Value));
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@MobileNo", (object?)customer.MobileNo ?? DBNull.Value));
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@EmailId", (object?)customer.EmailId ?? DBNull.Value));
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@CompanyName", (object?)customer.CompanyName ?? DBNull.Value));
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@AddressLine1", (object?)customer.AddressLine1 ?? DBNull.Value));
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@AddressLine2", (object?)customer.AddressLine2 ?? DBNull.Value));
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@CityId", customer.CityId == 0 ? (object)DBNull.Value : customer.CityId));
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@StateId", customer.StateId == 0 ? (object)DBNull.Value : customer.StateId));
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@CountryId", customer.CountryId == 0 ? (object)DBNull.Value : customer.CountryId));
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@Pincode", (object?)customer.Pincode ?? DBNull.Value));
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@DateOfBirth", customer.DateOfBirth.HasValue ? (object)customer.DateOfBirth.Value : DBNull.Value));
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@Gender", customer.Gender.HasValue ? (object)customer.Gender.Value : DBNull.Value));
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@Remarks", (object?)customer.Remarks ?? DBNull.Value));
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@IsActive", customer.IsActive));
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@CreatedBy", customer.CreatedBy == 0 ? (object)DBNull.Value : customer.CreatedBy));
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@CreatedDate", customer.CreatedDate == default ? DateTime.Now : customer.CreatedDate));
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@IsDeleted", customer.IsDeleted));
+
+                    conn.Open();
+                    var result = DataFactory.ExecuteScalar(cmd);
+                    if (result != null && int.TryParse(Convert.ToString(result), out var newId))
+                    {
+                        return newId;
+                    }
                 }
+            }
+        }
+        catch (SqlException)
+        {
+            throw new Exception("Database error");
+        }
+        catch (Exception ex)
+        {
+            throw new Exception(ex.StackTrace);
+        }
+        finally
+        {
+            if (conn != null && conn.State != ConnectionState.Closed) conn.Close();
+        }
+
+        return 0;
+    }
+
+    public bool Update(CustomerMaster customer)
+    {
+        IDbConnection? conn = null;
+        IDbCommand? cmd = null;
+        try
+        {
+            using (conn = DataFactory.CreateConnection())
+            {
+                var query = @"UPDATE CustomerMaster SET Code = @Code, Name = @Name, MobileNo = @MobileNo, EmailId = @EmailId, CompanyName = @CompanyName, AddressLine1 = @AddressLine1, AddressLine2 = @AddressLine2, CityId = @CityId, StateId = @StateId, CountryId = @CountryId, Pincode = @Pincode, DateOfBirth = @DateOfBirth, Gender = @Gender, Remarks = @Remarks, IsActive = @IsActive, UpdatedBy = @UpdatedBy, UpdatedDate = @UpdatedDate, IsDeleted = @IsDeleted WHERE Id = @Id";
 
                 using (cmd = DataFactory.CreateCommand(query, conn))
                 {
@@ -118,14 +167,12 @@ public class CustomerRepository : ICustomerRepository
                     cmd.Parameters.Add(DataFactory.CreateParameter("@Gender", customer.Gender.HasValue ? (object)customer.Gender.Value : DBNull.Value));
                     cmd.Parameters.Add(DataFactory.CreateParameter("@Remarks", (object?)customer.Remarks ?? DBNull.Value));
                     cmd.Parameters.Add(DataFactory.CreateParameter("@IsActive", customer.IsActive));
-                    cmd.Parameters.Add(DataFactory.CreateParameter("@CreatedBy", customer.CreatedBy == 0 ? (object)DBNull.Value : customer.CreatedBy));
-                    cmd.Parameters.Add(DataFactory.CreateParameter("@CreatedDate", customer.CreatedDate == default ? DateTime.Now : customer.CreatedDate));
                     cmd.Parameters.Add(DataFactory.CreateParameter("@UpdatedBy", customer.UpdatedBy.HasValue ? (object)customer.UpdatedBy.Value : DBNull.Value));
                     cmd.Parameters.Add(DataFactory.CreateParameter("@UpdatedDate", customer.UpdatedDate.HasValue ? (object)customer.UpdatedDate.Value : DBNull.Value));
                     cmd.Parameters.Add(DataFactory.CreateParameter("@IsDeleted", customer.IsDeleted));
 
                     conn.Open();
-                    return cmd.ExecuteNonQuery() > 0;
+                    return DataFactory.ExecuteNonQuery(cmd) > 0;
                 }
             }
         }
@@ -231,3 +278,4 @@ public class CustomerRepository : ICustomerRepository
         };
     }
 }
+

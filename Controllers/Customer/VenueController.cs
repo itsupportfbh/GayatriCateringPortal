@@ -43,7 +43,13 @@ namespace GayatriCateringPortal.Controllers.Customer
         public IActionResult Save([FromBody] LocationMaster item)
         {
             if (item == null) return BadRequest();
-            bool result = _locations.Save(item);
+            if (item.Id == 0)
+            {
+                int newId = _locations.Create(item);
+                return Ok(new { success = newId > 0, id = newId });
+            }
+
+            bool result = _locations.Update(item);
             return Ok(new { success = result });
         }
 

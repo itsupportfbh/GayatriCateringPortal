@@ -42,8 +42,9 @@ namespace GayatriCateringPortal.Controllers.Admin
         public IActionResult Save([FromBody] object item)
         {
             if (item == null) return BadRequest();
-            bool result = _quotationsRepository.Save(item);
-            return Ok(new { success = result });
+            // Quotations repository not implemented for create/update yet
+            int newId = _quotationsRepository.Create(item);
+            return Ok(new { success = newId > 0, id = newId });
         }
 
         [HttpPost("delete/{id}")]

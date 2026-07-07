@@ -43,8 +43,17 @@ namespace GayatriCateringPortal.Controllers.Admin
         public IActionResult Save([FromBody] RoleMaster item)
         {
             if (item == null) return BadRequest();
-            bool result = _rolesRepository.Save(item);
-            return Ok(new { success = result });
+            var idValue = 0;
+            if (!string.IsNullOrWhiteSpace(item.Id)) int.TryParse(item.Id, out idValue);
+
+            if (idValue == 0)
+            {
+                int newId = _rolesRepository.Create(item);
+                return Ok(new { success = newId > 0, id = newId });
+            }
+
+            bool updated = _rolesRepository.Update(item);
+            return Ok(new { success = updated });
         }
 
         [HttpPost("delete/{id}")]

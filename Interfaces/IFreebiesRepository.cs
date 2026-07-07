@@ -7,7 +7,8 @@ public interface IFreebiesRepository
 {
     List<PopularFreebieMaster> GetAll();
     PopularFreebieMaster? GetById(int id);
-    bool Save(PopularFreebieMaster item);
+    int Create(PopularFreebieMaster item);
+    bool Update(PopularFreebieMaster item);
     bool Delete(int id);
     bool ActiveInActive(int id);
 }

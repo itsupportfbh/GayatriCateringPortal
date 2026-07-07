@@ -7,5 +7,8 @@ public interface ICommsRepository
 {
     List<CommunicationLog> GetAll();
     CommunicationLog? GetById(int id);
-    bool Save(CommunicationLog item);
-    bool Delete(int id);    bool ActiveInActive(int id);}
+    int Create(CommunicationLog item);
+    bool Update(CommunicationLog item);
+    bool Delete(int id);
+    bool ActiveInActive(int id);
+}

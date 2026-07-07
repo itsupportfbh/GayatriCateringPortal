@@ -23,7 +23,7 @@ public class OrdersRepository : IOrdersRepository
                 conn.Open();
                 using (cmd = DataFactory.CreateCommand("SELECT * FROM Orders WHERE IsDeleted = 0", conn))
                 {
-                    reader = cmd.ExecuteReader();
+                    reader = DataFactory.ExecuteReader(cmd);
                     list = new List<Orders>();
                     while (reader.Read()) list.Add(new Orders());
                 }
@@ -57,7 +57,7 @@ public class OrdersRepository : IOrdersRepository
                 {
                     cmd.Parameters.Add(DataFactory.CreateParameter("@Id", id));
                     if (conn.State == ConnectionState.Closed) conn.Open();
-                    reader = cmd.ExecuteReader();
+                    reader = DataFactory.ExecuteReader(cmd);
                     if (reader.Read()) return new Orders();
                 }
             }
@@ -77,7 +77,7 @@ public class OrdersRepository : IOrdersRepository
         }
     }
 
-    public int CreateOrUpdate(Orders order)
+    public int Create(Orders order)
     {
         IDbConnection? conn = null;
         IDbCommand? cmd = null;
@@ -88,10 +88,42 @@ public class OrdersRepository : IOrdersRepository
                 using (cmd = DataFactory.CreateCommand("SP_CreateOrder", conn))
                 {
                     ((SqlCommand)cmd).CommandType = CommandType.StoredProcedure;
-                    cmd.Parameters.Add(DataFactory.CreateParameter("@Id", order.Id));
+                    // TODO: add specific order parameters
                     conn.Open();
-                    var res = cmd.ExecuteScalar();
+                    var res = DataFactory.ExecuteScalar(cmd);
                     return res != null ? Convert.ToInt32(res) : 0;
+                }
+            }
+        }
+        catch (SqlException)
+        {
+            throw new Exception("Database error");
+        }
+        catch (Exception ex)
+        {
+            throw new Exception(ex.StackTrace);
+        }
+        finally
+        {
+            if (conn != null && conn.State != ConnectionState.Closed) conn.Close();
+        }
+    }
+
+    public bool Update(Orders order)
+    {
+        IDbConnection? conn = null;
+        IDbCommand? cmd = null;
+        try
+        {
+            using (conn = DataFactory.CreateConnection())
+            {
+                using (cmd = DataFactory.CreateCommand("SP_UpdateOrder", conn))
+                {
+                    ((SqlCommand)cmd).CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@Id", order.Id));
+                    // TODO: add other order fields as parameters
+                    if (conn.State == ConnectionState.Closed) conn.Open();
+                    return DataFactory.ExecuteNonQuery(cmd) > 0;
                 }
             }
         }
@@ -169,3 +201,4 @@ public class OrdersRepository : IOrdersRepository
         }
     }
 }
+

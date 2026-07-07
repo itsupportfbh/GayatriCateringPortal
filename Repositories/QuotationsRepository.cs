@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Data;
 using Microsoft.Data.SqlClient;
@@ -19,7 +19,7 @@ public class QuotationsRepository : IQuotationsRepository
             conn = DataFactory.CreateConnection();
             cmd = DataFactory.CreateCommand("SELECT TOP 0 1", conn);
             conn.Open();
-            using IDataReader reader = cmd.ExecuteReader();
+            using IDataReader reader = DataFactory.ExecuteReader(cmd);
             while (reader.Read()) list.Add(new object());
             return list;
         }
@@ -42,7 +42,12 @@ public class QuotationsRepository : IQuotationsRepository
         return null;
     }
 
-    public bool Save(object item)
+    public int Create(object item)
+    {
+        throw new NotImplementedException();
+    }
+
+    public bool Update(object item)
     {
         throw new NotImplementedException();
     }
@@ -57,3 +62,4 @@ public class QuotationsRepository : IQuotationsRepository
         throw new NotImplementedException();
     }
 }
+

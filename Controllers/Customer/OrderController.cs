@@ -34,8 +34,14 @@ namespace GayatriCateringPortal.Controllers.Customer
         public IActionResult Save([FromBody] Orders item)
         {
             if (item == null) return BadRequest();
-            int result = _orders.CreateOrUpdate(item);
-            return Ok(new { success = result > 0 });
+            if (item.Id == 0)
+            {
+                int newId = _orders.Create(item);
+                return Ok(new { success = newId > 0, id = newId });
+            }
+
+            bool result = _orders.Update(item);
+            return Ok(new { success = result });
         }
 
         [HttpPost("delete/{id}")]

@@ -6,7 +6,8 @@ public interface IQuotationsRepository
 {
     List<object> GetAll();
     object? GetById(int id);
-    bool Save(object item);
+    int Create(object item);
+    bool Update(object item);
     bool Delete(int id);
     bool ActiveInActive(int id);
 }

@@ -7,5 +7,8 @@ public interface IMealPeriodsRepository
 {
     List<MealPeriodMaster> GetAll();
     MealPeriodMaster? GetById(int id);
-    bool Save(MealPeriodMaster item);
-    bool Delete(int id);    bool ActiveInActive(int id);}
+    int Create(MealPeriodMaster item);
+    bool Update(MealPeriodMaster item);
+    bool Delete(int id);
+    bool ActiveInActive(int id);
+}

@@ -34,4 +34,20 @@ public static class DataFactory
     {
         return new SqlParameter(name, value ?? DBNull.Value);
     }
+
+    public static IDataReader ExecuteReader(IDbCommand cmd)
+    {
+        return ((SqlCommand)cmd).ExecuteReader();
+    }
+
+    public static object? ExecuteScalar(IDbCommand cmd)
+    {
+        return ((SqlCommand)cmd).ExecuteScalar();
+    }
+
+    public static int ExecuteNonQuery(IDbCommand cmd)
+    {
+        return ((SqlCommand)cmd).ExecuteNonQuery();
+    }
+
 }

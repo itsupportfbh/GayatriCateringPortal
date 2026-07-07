@@ -7,7 +7,8 @@ public interface IPackagesRepository
 {
     List<Packages> GetAll();
     Packages? GetById(int id);
-    bool Save(Packages item);
+    int Create(Packages item);
+    bool Update(Packages item);
     bool Delete(int id);
     bool ActiveInActive(int id);
 }

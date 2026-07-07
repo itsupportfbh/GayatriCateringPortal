@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Data;
 using Microsoft.Data.SqlClient;
@@ -23,7 +23,7 @@ public class MealPeriodsRepository : IMealPeriodsRepository
                 conn.Open();
                 using (cmd = DataFactory.CreateCommand("SELECT * FROM MealPeriodMaster WHERE IsDeleted = 0", conn))
                 {
-                    reader = cmd.ExecuteReader();
+                    reader = DataFactory.ExecuteReader(cmd);
                     list = new List<MealPeriodMaster>();
                     while (reader.Read()) list.Add(new MealPeriodMaster());
                 }
@@ -54,7 +54,7 @@ public class MealPeriodsRepository : IMealPeriodsRepository
             cmd = DataFactory.CreateCommand("SELECT * FROM MealPeriodMaster WHERE Id = @Id", conn);
             cmd.Parameters.Add(DataFactory.CreateParameter("@Id", id));
             conn.Open();
-            using IDataReader reader = cmd.ExecuteReader();
+            using IDataReader reader = DataFactory.ExecuteReader(cmd);
             if (reader.Read()) return new MealPeriodMaster();
             return null;
         }
@@ -72,7 +72,7 @@ public class MealPeriodsRepository : IMealPeriodsRepository
         }
     }
 
-    public bool Save(MealPeriodMaster item)
+    public int Create(MealPeriodMaster item)
     {
         IDbConnection? conn = null;
         IDbCommand? cmd = null;
@@ -83,8 +83,35 @@ public class MealPeriodsRepository : IMealPeriodsRepository
             ((SqlCommand)cmd).CommandType = CommandType.StoredProcedure;
             cmd.Parameters.Add(DataFactory.CreateParameter("@Id", item.Id));
             conn.Open();
-            cmd.ExecuteNonQuery();
-            return true;
+            var rows = DataFactory.ExecuteNonQuery(cmd);
+            return rows > 0 ? 1 : 0;
+        }
+        catch (SqlException)
+        {
+            throw new Exception("Database error");
+        }
+        catch (Exception ex)
+        {
+            throw new Exception(ex.StackTrace);
+        }
+        finally
+        {
+            if (conn != null && conn.State != ConnectionState.Closed) conn.Close();
+        }
+    }
+
+    public bool Update(MealPeriodMaster item)
+    {
+        IDbConnection? conn = null;
+        IDbCommand? cmd = null;
+        try
+        {
+            conn = DataFactory.CreateConnection();
+            cmd = DataFactory.CreateCommand("SP_CreateMealPeriodMaster", conn);
+            ((SqlCommand)cmd).CommandType = CommandType.StoredProcedure;
+            cmd.Parameters.Add(DataFactory.CreateParameter("@Id", item.Id));
+            conn.Open();
+            return DataFactory.ExecuteNonQuery(cmd) > 0;
         }
         catch (SqlException)
         {
@@ -156,3 +183,4 @@ public class MealPeriodsRepository : IMealPeriodsRepository
         }
     }
 }
+

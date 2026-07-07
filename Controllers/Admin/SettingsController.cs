@@ -27,7 +27,7 @@ namespace GayatriCateringPortal.Controllers.Admin
         public IActionResult Save([FromBody] object settings)
         {
             if (settings == null) return BadRequest();
-            bool result = _repo.Save(settings);
+            bool result = _repo.Update(settings);
             return Ok(new { success = result });
         }
     }

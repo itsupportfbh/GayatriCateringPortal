@@ -7,7 +7,8 @@ public interface ICustomerRepository
 {
     List<CustomerMaster> GetAll();
     CustomerMaster? GetById(int id);
-    bool Save(CustomerMaster customer);
+    int Create(CustomerMaster customer);
+    bool Update(CustomerMaster customer);
     bool Delete(int id);
     bool ActiveInActive(int id);
 }

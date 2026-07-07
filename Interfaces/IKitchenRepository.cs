@@ -7,7 +7,8 @@ public interface IKitchenRepository
 {
     List<FoodMenu> GetAll();
     FoodMenu? GetById(int id);
-    bool Save(FoodMenu item);
+    int Create(FoodMenu item);
+    bool Update(FoodMenu item);
     bool Delete(int id);
     bool ActiveInActive(int id);
 }

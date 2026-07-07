@@ -43,7 +43,13 @@ namespace GayatriCateringPortal.Controllers.Admin
         public IActionResult Save([FromBody] CustomerMaster item)
         {
             if (item == null) return BadRequest();
-            bool result = _customers.Save(item);
+            if (item.Id == 0)
+            {
+                int newId = _customers.Create(item);
+                return Ok(new { success = newId > 0, id = newId });
+            }
+
+            bool result = _customers.Update(item);
             return Ok(new { success = result });
         }
 

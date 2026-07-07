@@ -43,7 +43,16 @@ namespace GayatriCateringPortal.Controllers.Admin
         public IActionResult Save([FromBody] UtensilMaster item)
         {
             if (item == null) return BadRequest();
-            bool result = _repo.Save(item);
+            var idValue = 0;
+            if (item.Id != 0) idValue = item.Id;
+
+            if (idValue == 0)
+            {
+                int newId = _repo.Create(item);
+                return Ok(new { success = newId > 0, id = newId });
+            }
+
+            bool result = _repo.Update(item);
             return Ok(new { success = result });
         }
 
