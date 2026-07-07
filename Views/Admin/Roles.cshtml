@@ -13,10 +13,15 @@
     </div>
     <div class="page-header-actions">
         <div class="app-header-filter">
-            <input type="text" id="rolesSearch" placeholder="Search roles...">
+            <input type="text" id="rolesSearch" class="tbl-search" data-table="rolesList" placeholder="Search roles...">
         </div>
-        <button class="btn btn-orange" id="btnOpenRoleModal">+ Add Role</button>
+        <button class="btn btn-orange" onclick="openRolesModal()">+ Add Role</button>
     </div>
+</div>
+
+<div class="pageloaderfull hidden">
+    <div class="spinner"></div>
+    <div class="loader-text">Loading roles...</div>
 </div>
 
 <div id="rolesListPanel" class="card">
@@ -24,10 +29,14 @@
         <div class="panel-title">Manage Roles</div>
     </div>
     <div class="muted" style="margin-bottom:16px">Create, edit and manage roles. Use Role Permission to assign rights by role.</div>
+    <div class="pageloaderpanel hidden">
+        <div class="spinner"></div>
+        <div class="loader-text">Loading roles...</div>
+    </div>
     <div class="table-wrap">
-        <table class="tbl" id="rolesList">
+        <table class="tbl" id="rolesList" data-page-size="10">
             <thead>
-                <tr><th>Id</th><th>Code</th><th>Name</th><th>Remarks</th><th>Status</th><th>Actions</th></tr>
+                <tr><th class="sortable">Id</th><th class="sortable">Code</th><th class="sortable">Name</th><th class="sortable">Remarks</th><th class="sortable">Status</th><th class="no-sort">Actions</th></tr>
             </thead>
             <tbody>
             </tbody>
@@ -39,7 +48,7 @@
     <div class="modal-box">
         <div class="modal-header">
             <span class="modal-title">Create / Edit Role</span>
-            <button class="modal-close">✕</button>
+            <button class="modal-close" type="button" onclick="closeRolesModal()">✕</button>
         </div>
         <div class="form-group">
             <label>Code</label>
@@ -55,8 +64,8 @@
         </div>
         <input type="hidden" id="roleId" />
         <div class="actions">
-            <button type="button" class="btn btn-light" id="btnClearRole">Clear</button>
-            <button type="button" class="btn btn-primary" id="btnSaveRole">Save</button>
+            <button type="button" class="btn btn-light" onclick="clearRoleForm()">Clear</button>
+            <button type="button" class="btn btn-primary" onclick="saveRole()">Save</button>
         </div>
     </div>
 </div>
@@ -65,7 +74,7 @@
     <div class="panel-header">
         <div class="panel-title">Role Permission</div>
         <div class="panel-actions">
-            <button id="btnBackToRoles" class="btn">Back to Roles</button>
+            <button id="btnBackToRoles" class="btn" onclick="hideRolePermission();">Back to Roles</button>
         </div>
     </div>
     <div class="muted" style="margin-bottom:16px">Viewing permissions for role: <strong id="selectedRoleName">None</strong></div>

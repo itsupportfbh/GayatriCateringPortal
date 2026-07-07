@@ -12,7 +12,7 @@ public class PackagesRepository : IPackagesRepository
 {
     public List<Packages> GetAll()
     {
-        List<Packages> list = null;
+        List<Packages> list = new List<Packages>();
         IDbConnection? conn = null;
         IDbCommand? cmd = null;
         IDataReader? reader = null;

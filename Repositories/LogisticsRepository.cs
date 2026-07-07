@@ -12,7 +12,7 @@ public class LogisticsRepository : ILogisticsRepository
 {
     public List<LogisticsDetails> GetAll()
     {
-        List<LogisticsDetails> list = null;
+        List<LogisticsDetails> list = new List<LogisticsDetails>();
         IDbConnection? conn = null;
         IDbCommand? cmd = null;
         IDataReader? reader = null;

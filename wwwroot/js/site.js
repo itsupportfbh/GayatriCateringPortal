@@ -1,11 +1,156 @@
 // ===== SHARED UTILITIES =====
 
-function showToast(msg, duration) {
+function showToast(msg, duration, options) {
+    // options: { confirm: boolean, yesText: string, noText: string, onYes: fn, onNo: fn, type: 'success'|'error'|'info'|'warning', title: string }
+    var container = document.getElementById('toast');
+    if (!container) return;
+
+    function removeItem(el) {
+        el.classList.remove('show');
+        setTimeout(function () { if (el.parentNode) el.parentNode.removeChild(el); }, 300);
+    }
+
+    var type = options && options.type ? options.type : null;
+    if (options && options.confirm) {
+        // single confirm toast item (not stacked) with normal toast layout
+        var confirmType = type || 'warning';
+        var item = document.createElement('div');
+        item.className = 'toast-item toast-item-confirm toast-item-' + confirmType + ' show';
+
+        var row = document.createElement('div');
+        row.className = 'toast-row';
+
+        var icon = document.createElement('div');
+        icon.className = 'toast-icon';
+        var iconText = '';
+        switch (confirmType) {
+            case 'success': iconText = '\u2714'; break;
+            case 'error': iconText = '\u26A0'; break;
+            case 'info': iconText = '\u2139'; break;
+            case 'warning': iconText = '\u26A0'; break;
+            default: iconText = '';
+        }
+        icon.textContent = iconText;
+
+        var body = document.createElement('div');
+        if (options.title) {
+            var titleEl = document.createElement('div');
+            titleEl.className = 'toast-title';
+            titleEl.textContent = options.title;
+            body.appendChild(titleEl);
+        }
+        var txt = document.createElement('div');
+        txt.className = 'toast-text';
+        txt.textContent = msg;
+        body.appendChild(txt);
+
+        row.appendChild(icon);
+        row.appendChild(body);
+        item.appendChild(row);
+
+        var actions = document.createElement('div');
+        actions.className = 'toast-actions';
+
+        var yes = document.createElement('button');
+        yes.className = 'toast-btn toast-yes';
+        yes.textContent = options.yesText || 'Yes';
+        yes.addEventListener('click', function () {
+            removeItem(item);
+            if (typeof options.onYes === 'function') options.onYes();
+        });
+
+        var no = document.createElement('button');
+        no.className = 'toast-btn toast-no' + (confirmType === 'warning' ? ' toast-no-warning' : '');
+        no.textContent = options.noText || 'No';
+        no.addEventListener('click', function () {
+            removeItem(item);
+            if (typeof options.onNo === 'function') options.onNo();
+        });
+
+        actions.appendChild(yes);
+        actions.appendChild(no);
+        item.appendChild(actions);
+
+        var closeBtn = document.createElement('button');
+        closeBtn.type = 'button';
+        closeBtn.className = 'toast-close';
+        closeBtn.textContent = '×';
+        closeBtn.addEventListener('click', function () {
+            removeItem(item);
+        });
+        item.appendChild(closeBtn);
+
+        // replace any existing confirm item
+        var existing = container.querySelector('.toast-item-confirm');
+        if (existing) existing.parentNode.removeChild(existing);
+        container.appendChild(item);
+
+        if (duration && typeof duration === 'number' && duration > 0) {
+            setTimeout(function () { removeItem(item); }, duration);
+        }
+        return;
+    }
+
+    // normal stacked toast
+    var title = options && options.title ? options.title : null;
+
+    var item = document.createElement('div');
+    item.className = 'toast-item' + (type ? ' toast-item-' + type : '');
+
+    var row = document.createElement('div');
+    row.className = 'toast-row';
+
+    var icon = document.createElement('div');
+    icon.className = 'toast-icon';
+    var iconText = '';
+    switch (type) {
+        case 'success': iconText = '\u2714'; break;
+        case 'error': iconText = '\u26A0'; break;
+        case 'info': iconText = '\u2139'; break;
+        case 'warning': iconText = '\u26A0'; break;
+        default: iconText = '';
+    }
+    icon.textContent = iconText;
+
+    var body = document.createElement('div');
+    var titleEl = document.createElement('div');
+    titleEl.className = 'toast-title';
+    titleEl.textContent = title || (type ? (type.charAt(0).toUpperCase() + type.slice(1) + '!') : '');
+    var msgEl = document.createElement('div');
+    msgEl.className = 'toast-message';
+    msgEl.textContent = msg;
+
+    if (titleEl.textContent) body.appendChild(titleEl);
+    body.appendChild(msgEl);
+
+    row.appendChild(icon);
+    row.appendChild(body);
+    item.appendChild(row);
+
+    var closeBtn = document.createElement('button');
+    closeBtn.type = 'button';
+    closeBtn.className = 'toast-close';
+    closeBtn.textContent = '×';
+    closeBtn.addEventListener('click', function () {
+        removeItem(item);
+    });
+    item.appendChild(closeBtn);
+
+    container.appendChild(item);
+
+    // force layout then show
+    setTimeout(function () { item.classList.add('show'); }, 10);
+
+    if (!(options && options.confirm)) {
+        setTimeout(function () { removeItem(item); }, duration || 4000);
+    }
+}
+
+function hideToast() {
     var t = document.getElementById('toast');
     if (!t) return;
-    t.textContent = msg;
-    t.classList.add('show');
-    setTimeout(function () { t.classList.remove('show'); }, duration || 2500);
+    t.classList.remove('show');
+    setTimeout(function () { t.innerHTML = ''; }, 300);
 }
 
 function openModal(html) {
@@ -171,10 +316,16 @@ document.addEventListener('click', function (e) {
 });
 
 $(document).on('keyup', '.tbl-search', function () {
-    var val = $(this).val().toLowerCase();
+    var val = $(this).val();
     var tblId = $(this).data('table');
+    if (typeof window.applyDataTableSearch === 'function') {
+        window.applyDataTableSearch(tblId, val);
+        return;
+    }
+
+    var lower = val.toLowerCase();
     $('#' + tblId + ' tbody tr').each(function () {
-        $(this).toggle($(this).text().toLowerCase().indexOf(val) > -1);
+        $(this).toggle($(this).text().toLowerCase().indexOf(lower) > -1);
     });
 });
 

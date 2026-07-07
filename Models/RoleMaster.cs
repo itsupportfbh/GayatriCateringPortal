@@ -8,8 +8,8 @@ namespace GayatriCateringPortal.Models
         public string Code { get; set; } = null!;
         public string Name { get; set; } = null!;
         public string? Remarks { get; set; }
-        public string IsActive { get; set; } = null!;
-        public string IsDeleted { get; set; } = null!;
+        public bool IsActive { get; set; }
+        public bool IsDeleted { get; set; }
         public string? CreatedBy { get; set; }
         public string? CreatedDate { get; set; }
         public string? UpdatedBy { get; set; }

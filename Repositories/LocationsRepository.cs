@@ -12,7 +12,7 @@ public class LocationsRepository : ILocationsRepository
 {
     public List<LocationMaster> GetAll()
     {
-        List<LocationMaster> list = null;
+        List<LocationMaster> list = new List<LocationMaster>();
         IDbConnection? conn = null;
         IDbCommand? cmd = null;
         IDataReader? reader = null;

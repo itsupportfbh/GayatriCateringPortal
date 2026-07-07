@@ -12,7 +12,7 @@ public class CommsRepository : ICommsRepository
 {
     public List<CommunicationLog> GetAll()
     {
-        List<CommunicationLog> list = null;
+        List<CommunicationLog> list = new List<CommunicationLog>();
         IDbConnection? conn = null;
         IDbCommand? cmd = null;
         IDataReader? reader = null;

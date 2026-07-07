@@ -12,7 +12,7 @@ public class MealPeriodsRepository : IMealPeriodsRepository
 {
     public List<MealPeriodMaster> GetAll()
     {
-        List<MealPeriodMaster> list = null;
+        List<MealPeriodMaster> list = new List<MealPeriodMaster>();
         IDbConnection? conn = null;
         IDbCommand? cmd = null;
         IDataReader? reader = null;

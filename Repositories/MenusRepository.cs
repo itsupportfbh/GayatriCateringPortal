@@ -12,7 +12,7 @@ public class MenusRepository : IMenusRepository
 {
     public List<Menu> GetAll()
     {
-        List<Menu> list = null;
+        List<Menu> list = new List<Menu>();
         IDbConnection? conn = null;
         IDbCommand? cmd = null;
         IDataReader? reader = null;

@@ -12,7 +12,7 @@ public class InvoicesRepository : IInvoicesRepository
 {
     public List<Orders> GetAll()
     {
-        List<Orders> list = null;
+        List<Orders> list = new List<Orders>();
         IDbConnection? conn = null;
         IDbCommand? cmd = null;
         try

@@ -43,7 +43,10 @@ namespace GayatriCateringPortal.Controllers.Customer
         public IActionResult Save([FromBody] LogisticsDetails item)
         {
             if (item == null) return BadRequest();
-            if (item.Id == 0)
+            var idValue = 0;
+            if (!string.IsNullOrWhiteSpace(item.Id)) int.TryParse(item.Id, out idValue);
+
+            if (idValue == 0)
             {
                 int newId = _logistics.Create(item);
                 return Ok(new { success = newId > 0, id = newId });

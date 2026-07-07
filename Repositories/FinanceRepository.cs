@@ -12,7 +12,7 @@ public class FinanceRepository : IFinanceRepository
 {
     public List<Orders> GetAll()
     {
-        List<Orders> list = null;
+        List<Orders> list = new List<Orders>();
         IDbConnection? conn = null;
         IDbCommand? cmd = null;
         IDataReader? reader = null;

@@ -12,7 +12,7 @@ public class KitchenRepository : IKitchenRepository
 {
     public List<FoodMenu> GetAll()
     {
-        List<FoodMenu> list = null;
+        List<FoodMenu> list = new List<FoodMenu>();
         IDbConnection? conn = null;
         IDbCommand? cmd = null;
         IDataReader? reader = null;

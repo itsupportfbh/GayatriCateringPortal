@@ -12,7 +12,7 @@ public class RolesRepository : IRolesRepository
 {
     public List<RoleMaster> GetAll()
     {
-        List<RoleMaster> list = null;
+        List<RoleMaster> list = new List<RoleMaster>();
         IDbConnection conn = null;
         IDbCommand cmd = null;
         IDataReader reader = null;
@@ -22,7 +22,7 @@ public class RolesRepository : IRolesRepository
             using (conn = DataFactory.CreateConnection())
             {
                 conn.Open();
-                using (cmd = DataFactory.CreateCommand("SP_ListRoleMaster", conn))
+                using (cmd = DataFactory.CreateCommand("GetRoleMaster", conn))
                 {
                     ((SqlCommand)cmd).CommandType = CommandType.StoredProcedure;
                     reader = DataFactory.ExecuteReader(cmd);
@@ -99,8 +99,8 @@ public class RolesRepository : IRolesRepository
                     cmd.Parameters.Add(DataFactory.CreateParameter("@Code", (object?)item.Code ?? DBNull.Value));
                     cmd.Parameters.Add(DataFactory.CreateParameter("@Name", (object?)item.Name ?? DBNull.Value));
                     cmd.Parameters.Add(DataFactory.CreateParameter("@Remarks", (object?)item.Remarks ?? DBNull.Value));
-                    cmd.Parameters.Add(DataFactory.CreateParameter("@IsActive", item.IsActive == "1"));
-                    cmd.Parameters.Add(DataFactory.CreateParameter("@IsDeleted", item.IsDeleted == "1"));
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@IsActive", item.IsActive));
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@IsDeleted", item.IsDeleted));
                     cmd.Parameters.Add(DataFactory.CreateParameter("@CreatedBy", int.TryParse(item.CreatedBy, out var createdBy) ? createdBy : (object?)DBNull.Value));
                     cmd.Parameters.Add(DataFactory.CreateParameter("@CreatedDate", DateTime.TryParse(item.CreatedDate, out var createdDate) ? createdDate : (object?)DBNull.Value));
 
@@ -146,8 +146,8 @@ public class RolesRepository : IRolesRepository
                     cmd.Parameters.Add(DataFactory.CreateParameter("@Code", (object?)item.Code ?? DBNull.Value));
                     cmd.Parameters.Add(DataFactory.CreateParameter("@Name", (object?)item.Name ?? DBNull.Value));
                     cmd.Parameters.Add(DataFactory.CreateParameter("@Remarks", (object?)item.Remarks ?? DBNull.Value));
-                    cmd.Parameters.Add(DataFactory.CreateParameter("@IsActive", item.IsActive == "1"));
-                    cmd.Parameters.Add(DataFactory.CreateParameter("@IsDeleted", item.IsDeleted == "1"));
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@IsActive", item.IsActive));
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@IsDeleted", item.IsDeleted));
                     cmd.Parameters.Add(DataFactory.CreateParameter("@UpdatedBy", int.TryParse(item.UpdatedBy, out var updatedBy) ? updatedBy : (object?)DBNull.Value));
                     cmd.Parameters.Add(DataFactory.CreateParameter("@UpdatedDate", DateTime.TryParse(item.UpdatedDate, out var updatedDate) ? updatedDate : (object?)DBNull.Value));
 
@@ -181,7 +181,7 @@ public class RolesRepository : IRolesRepository
             using (conn = DataFactory.CreateConnection())
             {
                 if (conn.State == ConnectionState.Closed) conn.Open();
-                using (cmd = DataFactory.CreateCommand("SP_DeleteRoleMasterByID", conn))
+                using (cmd = DataFactory.CreateCommand("DeleteRoleMasterById", conn))
                 {
                     ((SqlCommand)cmd).CommandType = CommandType.StoredProcedure;
                     cmd.Parameters.Add(DataFactory.CreateParameter("@Id", id));
@@ -207,13 +207,8 @@ public class RolesRepository : IRolesRepository
         return taskStatus;
     }
 
-    public bool ActiveInActive(int id)
+    public bool ActiveInActive(int id, bool status)
     {
-        var existing = GetById(id);
-        if (existing == null)
-            return false;
-
-        var nextActive = existing.IsActive == "1" ? "0" : "1";
 
         IDbConnection conn = null;
         IDbCommand cmd = null;
@@ -222,11 +217,11 @@ public class RolesRepository : IRolesRepository
             using (conn = DataFactory.CreateConnection())
             {
                 if (conn.State == ConnectionState.Closed) conn.Open();
-                using (cmd = DataFactory.CreateCommand("SP_SetRoleMasterActive", conn))
+                using (cmd = DataFactory.CreateCommand("ActiveInActiveRoleMasterById", conn))
                 {
                     ((SqlCommand)cmd).CommandType = CommandType.StoredProcedure;
                     cmd.Parameters.Add(DataFactory.CreateParameter("@Id", id));
-                    cmd.Parameters.Add(DataFactory.CreateParameter("@IsActive", nextActive == "1"));
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@IsActive", status));
                     var r = DataFactory.ExecuteScalar(cmd);
                     return r != null && Convert.ToInt32(r) > 0;
                 }
@@ -264,11 +259,10 @@ public class RolesRepository : IRolesRepository
                 if (reader["Remarks"] != DBNull.Value)
                     item.Remarks = Convert.ToString(reader["Remarks"]);
                 if (reader["IsActive"] != DBNull.Value)
-                    item.IsActive = Convert.ToBoolean(reader["IsActive"]) ? "1" : "0";
-                else
-                    item.IsActive = "0";
+                    item.IsActive = Convert.ToBoolean(reader["IsActive"]);
+                
                 if (reader["IsDeleted"] != DBNull.Value)
-                    item.IsDeleted = Convert.ToBoolean(reader["IsDeleted"]) ? "1" : "0";
+                    item.IsDeleted = Convert.ToBoolean(reader["IsDeleted"]);
                 if (reader["CreatedBy"] != DBNull.Value)
                     item.CreatedBy = Convert.ToString(reader["CreatedBy"]);
                 if (reader["CreatedDate"] != DBNull.Value)

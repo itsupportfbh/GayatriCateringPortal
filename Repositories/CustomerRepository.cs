@@ -10,7 +10,7 @@ public class CustomerRepository : ICustomerRepository
 {
     public List<CustomerMaster> GetAll()
     {
-        List<CustomerMaster> list = null;
+        List<CustomerMaster> list = new List<CustomerMaster>();
         IDbConnection? conn = null;
         IDbCommand? cmd = null;
         IDataReader? reader = null;

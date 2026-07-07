@@ -44,7 +44,7 @@ namespace GayatriCateringPortal.Controllers.Admin
         {
             if (item == null) return BadRequest();
             var idValue = 0;
-            if (item.Id != 0) idValue = item.Id;
+            if (!string.IsNullOrWhiteSpace(item.Id)) int.TryParse(item.Id, out idValue);
 
             if (idValue == 0)
             {

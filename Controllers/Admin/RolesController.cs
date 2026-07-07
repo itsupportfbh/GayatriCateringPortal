@@ -39,19 +39,18 @@ namespace GayatriCateringPortal.Controllers.Admin
             return Ok(item);
         }
 
-        [HttpPost("save")]
-        public IActionResult Save([FromBody] RoleMaster item)
+        [HttpPost("create")]
+        public IActionResult Create([FromBody] RoleMaster item)
         {
             if (item == null) return BadRequest();
-            var idValue = 0;
-            if (!string.IsNullOrWhiteSpace(item.Id)) int.TryParse(item.Id, out idValue);
+            int newId = _rolesRepository.Create(item);
+            return Ok(new { success = newId > 0, id = newId });
+        }
 
-            if (idValue == 0)
-            {
-                int newId = _rolesRepository.Create(item);
-                return Ok(new { success = newId > 0, id = newId });
-            }
-
+        [HttpPost("update")]
+        public IActionResult Update([FromBody] RoleMaster item)
+        {
+            if (item == null) return BadRequest();
             bool updated = _rolesRepository.Update(item);
             return Ok(new { success = updated });
         }
@@ -63,10 +62,10 @@ namespace GayatriCateringPortal.Controllers.Admin
             return Ok(new { success = result });
         }
 
-        [HttpPost("activeinactive/{id}")]
-        public IActionResult ActiveInActive(int id)
+        [HttpPost("activeinactive")]
+        public IActionResult ActiveInActive([FromQuery] int id, [FromQuery] bool status)
         {
-            bool result = _rolesRepository.ActiveInActive(id);
+            bool result = _rolesRepository.ActiveInActive(id, status);
             return Ok(new { success = result });
         }
     }

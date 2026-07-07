@@ -12,7 +12,7 @@ public class FreebiesRepository : IFreebiesRepository
 {
     public List<PopularFreebieMaster> GetAll()
     {
-        List<PopularFreebieMaster> list = null;
+        List<PopularFreebieMaster> list = new List<PopularFreebieMaster>();
         IDbConnection? conn = null;
         IDbCommand? cmd = null;
         IDataReader? reader = null;
