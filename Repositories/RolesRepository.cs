@@ -96,19 +96,17 @@ public class RolesRepository : IRolesRepository
                 using (cmd = DataFactory.CreateCommand("SP_CreateRoleMaster", conn))
                 {
                     ((SqlCommand)cmd).CommandType = CommandType.StoredProcedure;
-                    cmd.Parameters.Add(DataFactory.CreateParameter("@Code", (object?)item.Code ?? DBNull.Value));
-                    cmd.Parameters.Add(DataFactory.CreateParameter("@Name", (object?)item.Name ?? DBNull.Value));
-                    cmd.Parameters.Add(DataFactory.CreateParameter("@Remarks", (object?)item.Remarks ?? DBNull.Value));
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@Code", item.Code));
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@Name",item.Name ));
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@Remarks", item.Remarks ));
                     cmd.Parameters.Add(DataFactory.CreateParameter("@IsActive", item.IsActive));
                     cmd.Parameters.Add(DataFactory.CreateParameter("@IsDeleted", item.IsDeleted));
-                    cmd.Parameters.Add(DataFactory.CreateParameter("@CreatedBy", int.TryParse(item.CreatedBy, out var createdBy) ? createdBy : (object?)DBNull.Value));
-                    cmd.Parameters.Add(DataFactory.CreateParameter("@CreatedDate", DateTime.TryParse(item.CreatedDate, out var createdDate) ? createdDate : (object?)DBNull.Value));
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@CreatedBy", item.CreatedBy));
 
                     var result = DataFactory.ExecuteScalar(cmd);
                     if (result != null)
                     {
-                        item.Id = Convert.ToString(result) ?? item.Id;
-                        return Convert.ToInt32(item.Id);
+                        return Convert.ToInt32(result);
                     }
                 }
             }
@@ -135,21 +133,19 @@ public class RolesRepository : IRolesRepository
         IDbCommand cmd = null;
         try
         {
-            var idValue = int.TryParse(item.Id, out var parsedId) ? parsedId : 0;
             using (conn = DataFactory.CreateConnection())
             {
                 conn.Open();
                 using (cmd = DataFactory.CreateCommand("SP_UpdateRoleMaster", conn))
                 {
                     ((SqlCommand)cmd).CommandType = CommandType.StoredProcedure;
-                    cmd.Parameters.Add(DataFactory.CreateParameter("@Id", idValue));
-                    cmd.Parameters.Add(DataFactory.CreateParameter("@Code", (object?)item.Code ?? DBNull.Value));
-                    cmd.Parameters.Add(DataFactory.CreateParameter("@Name", (object?)item.Name ?? DBNull.Value));
-                    cmd.Parameters.Add(DataFactory.CreateParameter("@Remarks", (object?)item.Remarks ?? DBNull.Value));
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@Id", item.Id));
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@Code", item.Code));
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@Name", item.Name));
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@Remarks", item.Remarks));
                     cmd.Parameters.Add(DataFactory.CreateParameter("@IsActive", item.IsActive));
                     cmd.Parameters.Add(DataFactory.CreateParameter("@IsDeleted", item.IsDeleted));
-                    cmd.Parameters.Add(DataFactory.CreateParameter("@UpdatedBy", int.TryParse(item.UpdatedBy, out var updatedBy) ? updatedBy : (object?)DBNull.Value));
-                    cmd.Parameters.Add(DataFactory.CreateParameter("@UpdatedDate", DateTime.TryParse(item.UpdatedDate, out var updatedDate) ? updatedDate : (object?)DBNull.Value));
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@UpdatedBy", item.UpdatedBy));
 
                     var result = DataFactory.ExecuteScalar(cmd);
                     return result != null && Convert.ToInt32(result) > 0;
@@ -251,7 +247,7 @@ public class RolesRepository : IRolesRepository
             {
                 var item = new RoleMaster();
                 if (reader["Id"] != DBNull.Value)
-                    item.Id = Convert.ToString(reader["Id"])!;
+                    item.Id = Convert.ToInt32(reader["Id"])!;
                 if (reader["Code"] != DBNull.Value)
                     item.Code = Convert.ToString(reader["Code"])!;
                 if (reader["Name"] != DBNull.Value)
@@ -264,13 +260,13 @@ public class RolesRepository : IRolesRepository
                 if (reader["IsDeleted"] != DBNull.Value)
                     item.IsDeleted = Convert.ToBoolean(reader["IsDeleted"]);
                 if (reader["CreatedBy"] != DBNull.Value)
-                    item.CreatedBy = Convert.ToString(reader["CreatedBy"]);
+                    item.CreatedBy = Convert.ToInt32(reader["CreatedBy"]);
                 if (reader["CreatedDate"] != DBNull.Value)
-                    item.CreatedDate = Convert.ToString(reader["CreatedDate"]);
+                    item.CreatedDate = Convert.ToDateTime(reader["CreatedDate"]);
                 if (reader["UpdatedBy"] != DBNull.Value)
-                    item.UpdatedBy = Convert.ToString(reader["UpdatedBy"]);
+                    item.UpdatedBy = Convert.ToInt32(reader["UpdatedBy"]);
                 if (reader["UpdatedDate"] != DBNull.Value)
-                    item.UpdatedDate = Convert.ToString(reader["UpdatedDate"]);
+                    item.UpdatedDate = Convert.ToDateTime(reader["UpdatedDate"]);
 
                 list.Add(item);
             }
