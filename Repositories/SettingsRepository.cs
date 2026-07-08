@@ -42,4 +42,9 @@ public class SettingsRepository : ISettingsRepository
     {
         throw new NotImplementedException();
     }
+
+    public bool Save(object settings)
+    {
+        throw new NotImplementedException();
+    }
 }
