@@ -16,8 +16,8 @@ namespace GayatriCateringPortal.Controllers.Admin
         [HttpGet("")]
         public IActionResult Index()
         {
-            var items = _rolesRepository.GetAll();
-            ViewData["Items"] = items;
+            //var items = _rolesRepository.GetAll();
+            //ViewData["Items"] = items;
             ViewData["Mode"] = "admin";
             ViewData["Page"] = "roles";
             ViewData["Title"] = "Roles";

@@ -47,16 +47,18 @@
 <div class="modal-overlay hidden" id="rolesModal">
     <div class="modal-box">
         <div class="modal-header">
-            <span class="modal-title">Create / Edit Role</span>
+            <span class="modal-title" id="model-title">Create / Edit Role</span>
             <button class="modal-close" type="button" onclick="closeRolesModal()">✕</button>
         </div>
         <div class="form-group">
-            <label>Code</label>
+            <label>Code <span class="field-required">*</span></label>
             <input type="text" id="roleCode" class="form-control" placeholder="Role code (eg. ADMIN)" />
+            <div class="field-error hidden" id="roleCodeError"></div>
         </div>
         <div class="form-group">
-            <label>Name</label>
+            <label>Name <span class="field-required">*</span></label>
             <input type="text" id="roleName" class="form-control" placeholder="Role name" />
+            <div class="field-error hidden" id="roleNameError"></div>
         </div>
         <div class="form-group">
             <label>Remarks</label>

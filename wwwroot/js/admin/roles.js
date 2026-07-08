@@ -10,7 +10,22 @@ function closeRolesModal() {
 function openRolesModal() {
     clearRoleForm();
     hideRolePermission();
+    $('#model-title').html('Create Role');
     $('#rolesModal').removeClass('hidden');
+
+    var codeEl = document.getElementById('roleCode');
+    if (codeEl) {
+        codeEl.oninput = function () {
+            clearRoleError('#roleCode', '#roleCodeError');
+        };
+    }
+
+    var nameEl = document.getElementById('roleName');
+    if (nameEl) {
+        nameEl.oninput = function () {
+            clearRoleError('#roleName', '#roleNameError');
+        };
+    }
 }
 
 function loadRoles() {
@@ -101,19 +116,67 @@ function clearRoleForm() {
     $('#roleCode').val('');
     $('#roleName').val('');
     $('#roleRemarks').val('');
+    clearRoleError('#roleCode', '#roleCodeError');
+    clearRoleError('#roleName', '#roleNameError');
+}
+
+function setRoleError(inputSelector, errorSelector, message) {
+    $(inputSelector).addClass('input-error');
+    $(errorSelector).removeClass('hidden').text(message);
+}
+
+function clearRoleError(inputSelector, errorSelector) {
+    $(inputSelector).removeClass('input-error');
+    $(errorSelector).addClass('hidden').text('');
 }
 
 function saveRole() {
+    clearRoleError('#roleCode', '#roleCodeError');
+    clearRoleError('#roleName', '#roleNameError');
+
+    var code = $('#roleCode').val();
+    if (code) {
+        code = code.toString().trim();
+    } else {
+        code = '';
+    }
+
+    var name = $('#roleName').val();
+    if (name) {
+        name = name.toString().trim();
+    } else {
+        name = '';
+    }
+
+    var firstInvalid = null;
+
+    if (!code) {
+        setRoleError('#roleCode', '#roleCodeError', 'Code is required');
+        firstInvalid = '#roleCode';
+    }
+
+    if (!name) {
+        setRoleError('#roleName', '#roleNameError', 'Name is required');
+        if (!firstInvalid) {
+            firstInvalid = '#roleName';
+        }
+    }
+
+    if (firstInvalid) {
+        $(firstInvalid).focus();
+        return;
+    }
+
     var role = {
-        Id: $('#roleId').val() || '',
-        Code: $('#roleCode').val() || '',
-        Name: $('#roleName').val() || '',
+        Id: $('#roleId').val() || 0,
+        Code: code,
+        Name: name,
         Remarks: $('#roleRemarks').val() || '',
         IsActive: true,
         IsDeleted: false,
-        CreatedBy: '',
+        CreatedBy: 0,
         CreatedDate: '',
-        UpdatedBy: '',
+        UpdatedBy: 0,
         UpdatedDate: ''
     };
 
@@ -141,6 +204,8 @@ function saveRole() {
 }
 
 function editRole(id) {
+    $('#model-title').html('Edit Role');
+
     $.ajax({
         url: '/Admin/Roles/get/' + id,
         type: 'GET',
