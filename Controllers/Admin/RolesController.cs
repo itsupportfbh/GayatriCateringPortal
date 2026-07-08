@@ -1,6 +1,7 @@
 using GayatriCateringPortal.Interfaces;
 using GayatriCateringPortal.Models;
 using Microsoft.AspNetCore.Mvc;
+using System.Diagnostics.Eventing.Reader;
 namespace GayatriCateringPortal.Controllers.Admin
 {
     [Route("Admin/Roles")]
@@ -16,11 +17,9 @@ namespace GayatriCateringPortal.Controllers.Admin
         [HttpGet("")]
         public IActionResult Index()
         {
-            //var items = _rolesRepository.GetAll();
-            //ViewData["Items"] = items;
             ViewData["Mode"] = "admin";
             ViewData["Page"] = "roles";
-            ViewData["Title"] = "Roles";
+            ViewData["Title"] = "Roles & Permissions";
             return View("~/Views/Admin/Roles.cshtml");
         }
 
@@ -42,6 +41,13 @@ namespace GayatriCateringPortal.Controllers.Admin
         [HttpPost("create")]
         public IActionResult Create([FromBody] RoleMaster item)
         {
+            if (!ModelState.IsValid)
+            {
+                var errors = string.Join("; ", ModelState.Values
+                .SelectMany(x => x.Errors)
+                .Select(x => x.ErrorMessage));
+            }
+
             if (item == null) return BadRequest();
             int newId = _rolesRepository.Create(item);
             return Ok(new { success = newId > 0, id = newId });
@@ -50,6 +56,13 @@ namespace GayatriCateringPortal.Controllers.Admin
         [HttpPost("update")]
         public IActionResult Update([FromBody] RoleMaster item)
         {
+            if (!ModelState.IsValid)
+            {
+                var errors = string.Join("; ", ModelState.Values
+                .SelectMany(x => x.Errors)
+                .Select(x => x.ErrorMessage));
+            }
+
             if (item == null) return BadRequest();
             bool updated = _rolesRepository.Update(item);
             return Ok(new { success = updated });

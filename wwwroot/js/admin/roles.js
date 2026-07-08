@@ -42,9 +42,9 @@ function loadRoles() {
             renderRolesList([]);
             showToast('Unable to load roles.', 3000, { type: 'error', title: 'Load failed' });
         },
-            complete: function () {
-                showRolesLoader(false);
-            }
+        complete: function () {
+            showRolesLoader(false);
+        }
     });
 }
 
@@ -59,14 +59,17 @@ function showRolesLoader(show) {
 }
 
 function renderRolesList(rows) {
+    debugger;
     rows = Array.isArray(rows) ? rows : [];
     var html = '';
     if (rows.length) {
-        html = rows.map(function (role) {
-            var id = role.id || role.Id || '';
-            var code = role.code || role.Code || '';
-            var name = role.name || role.Name || '';
-            var remarks = role.remarks || role.Remarks || '';
+        for (var i = 0; i < rows.length; i++) {
+            var role = rows[i];
+            var serial = i + 1;
+            var id = role.id || 0;
+            var code = role.code || '';
+            var name = role.name || '';
+            var remarks = role.remarks || '';
             var active = role.isActive;
 
             var actions;
@@ -84,9 +87,9 @@ function renderRolesList(rows) {
                 statusBadge = '<span class="badge-pill badge-pill--warning">Inactive</span>';
             }
 
-            return `
+            html += `
                 <tr>
-                    <td>${id}</td>
+                    <td>${serial}</td>
                     <td>${code}</td>
                     <td>${name}</td>
                     <td>${remarks || ''}</td>
@@ -102,7 +105,7 @@ function renderRolesList(rows) {
                         </div>
                     </td>
                 </tr>`;
-        }).join('');
+        }
     }
 
     $('#rolesList tbody').html(html);
@@ -111,8 +114,10 @@ function renderRolesList(rows) {
     }
 }
 
-function clearRoleForm() {
-    $('#roleId').val('');
+function clearRoleForm(keepId) {
+    if (!keepId) {
+        $('#roleId').val('');
+    }
     $('#roleCode').val('');
     $('#roleName').val('');
     $('#roleRemarks').val('');
@@ -167,17 +172,16 @@ function saveRole() {
         return;
     }
 
+    var roleId = $('#roleId').val();
     var role = {
-        Id: $('#roleId').val() || 0,
+        Id: roleId ? parseInt(roleId, 10) : 0,
         Code: code,
         Name: name,
         Remarks: $('#roleRemarks').val() || '',
         IsActive: true,
         IsDeleted: false,
         CreatedBy: 0,
-        CreatedDate: '',
         UpdatedBy: 0,
-        UpdatedDate: ''
     };
 
     var endpoint = role.Id ? '/Admin/Roles/update' : '/Admin/Roles/create';
@@ -188,17 +192,18 @@ function saveRole() {
         contentType: 'application/json',
         data: JSON.stringify(role),
         success: function (res) {
+            debugger;
             if (res && res.success) {
-                showToast('Role saved successfully.', 3000, { type: 'success', title: 'Saved' });
+                showToast(roleId == 0 ? 'Role saved successfully.' : 'Role updated successfully', 3000, { type: 'success', title: roleId == 0 ? 'Saved' : 'Updated' });
                 clearRoleForm();
                 $('#rolesModal').addClass('hidden');
                 loadRoles();
             } else {
-                showToast('Unable to save role.', 3000, { type: 'error', title: 'Save failed' });
+                showToast(roleId == 0 ? 'Unable to save role.' : 'Unable to update role', 3000, { type: 'error', title: roleId == 0 ? 'Save failed' : 'Update failed' });
             }
         },
         error: function () {
-            showToast('Save failed.', 3000, { type: 'error', title: 'Save failed' });
+            showToast(roleId == 0 ? 'Save failed.' : 'Update failed.', 3000, { type: 'error', title: roleId == 0 ? 'Save failed' : 'Update failed' });
         }
     });
 }

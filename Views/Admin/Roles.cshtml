@@ -1,5 +1,5 @@
 @{
-    ViewData["Title"] = "Roles & Permissions";
+    ViewData["Title"] = @ViewData["Title"];
 }
 
 @section Styles {
@@ -36,7 +36,7 @@
     <div class="table-wrap">
         <table class="tbl" id="rolesList" data-page-size="10">
             <thead>
-                <tr><th class="sortable">Id</th><th class="sortable">Code</th><th class="sortable">Name</th><th class="sortable">Remarks</th><th class="sortable">Status</th><th class="no-sort">Actions</th></tr>
+                <tr><th class="sortable">#</th><th class="sortable">Code</th><th class="sortable">Name</th><th class="sortable">Remarks</th><th class="sortable">Status</th><th class="no-sort">Actions</th></tr>
             </thead>
             <tbody>
             </tbody>
@@ -66,7 +66,7 @@
         </div>
         <input type="hidden" id="roleId" />
         <div class="actions">
-            <button type="button" class="btn btn-light" onclick="clearRoleForm()">Clear</button>
+            <button type="button" class="btn btn-light" onclick="clearRoleForm(true)">Clear</button>
             <button type="button" class="btn btn-primary" onclick="saveRole()">Save</button>
         </div>
     </div>

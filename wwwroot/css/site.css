@@ -924,6 +924,17 @@ label {
     box-shadow: 0 12px 44px rgba(0,0,0,.18)
 }
 
+
+
+@media (max-width: 768px) {
+    /* keep mobile friendly */
+    #rolesModal .modal-box {
+        width: calc(100vw - 40px);
+        max-height: 88vh;
+        padding: 20px;
+    }
+}
+
 .modal-header {
     display: flex;
     align-items: center;
