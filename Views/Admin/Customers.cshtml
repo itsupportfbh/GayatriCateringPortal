@@ -22,11 +22,11 @@
 
 
 
-
+<!-- List Customer Modal  -->
 <div class="table-wrap">
     <table class="tbl" id="customerList" data-page-size="10">
         <thead>
-            <tr><th class="sortable">Id</th><th class="sortable">Code</th><th class="sortable">Name</th><th class="sortable">Mobile</th><th class="sortable">Email</th><th class="sortable">Remarks</th><th class="sortable">Status</th><th class="no-sort">Actions</th></tr>
+            <tr><th class="sortable">S.NO</th><th class="sortable">Code</th><th class="sortable">Name</th><th class="sortable">Mobile</th><th class="sortable">Email</th><th class="sortable">Remarks</th><th class="sortable">Status</th><th class="no-sort">Actions</th></tr>
         </thead>
         <tbody>
 
@@ -34,7 +34,7 @@
         </tbody>
     </table>
 </div>
-
+<!-- Add Customer Modal ( per-view) -->
 <div class="modal-overlay hidden" id="customersModal">
     <div class="modal-box customer-modal-box">
 
@@ -221,22 +221,7 @@
 
 
 <!-- Add Customer Modal (static, per-view) -->
-<div class="modal-overlay hidden" id="customersModal">
-    <div class="modal-box">
-        <div class="modal-header">
-            <span class="modal-title">Create Customer</span>
-            <button class="modal-close">✕</button>
-        </div>
-        <div class="form-group"><label>Name</label><input type="text" id="newCustName" class="form-control"></div>
-        <div class="form-group"><label>Phone</label><input type="text" id="newCustPhone" class="form-control"></div>
-        <div class="form-group"><label>Email</label><input type="email" id="newCustEmail" class="form-control"></div>
-        @Html.AntiForgeryToken()
-        <div class="actions">
-            <button class="btn btn-secondary" id="btnClearCustomer">Clear</button>
-            <button class="btn btn-primary" id="btnSaveCustomer">Save</button>
-        </div>
-    </div>
-</div>
+
 
 @section Scripts {
     <script src="~/js/admin/table-utils.js" asp-append-version="true"></script>

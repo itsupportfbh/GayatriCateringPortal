@@ -65,7 +65,7 @@ namespace GayatriCateringPortal.Controllers.Admin
             return Ok(new { success = result });
         }
 
-        [HttpPost("activeinactive/{id}")]
+        [HttpPost("activeinactive")]
         public IActionResult ActiveInActive(int id,bool status)
         {
             bool result = _customers.ActiveInActive(id,status);

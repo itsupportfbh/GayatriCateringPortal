@@ -56,7 +56,7 @@ public class CustomerRepository : ICustomerRepository
             using (conn = DataFactory.CreateConnection())
             {
                 if (conn.State == ConnectionState.Closed) conn.Open();
-                using (cmd = DataFactory.CreateCommand("SP_GetRoleMasterByID", conn))
+                using (cmd = DataFactory.CreateCommand("[dbo].[SP_GetCustomerMasterById]", conn))
                 {
                     ((SqlCommand)cmd).CommandType = CommandType.StoredProcedure;
                     cmd.Parameters.Add(DataFactory.CreateParameter("@Id", id));
@@ -202,7 +202,7 @@ public class CustomerRepository : ICustomerRepository
             using (conn = DataFactory.CreateConnection())
             {
                 if (conn.State == ConnectionState.Closed) conn.Open();
-                using (cmd = DataFactory.CreateCommand("DeleteRoleMasterById", conn))
+                using (cmd = DataFactory.CreateCommand("[dbo].[DeleteCustomerMasterById]", conn))
                 {
                     ((SqlCommand)cmd).CommandType = CommandType.StoredProcedure;
                     cmd.Parameters.Add(DataFactory.CreateParameter("@Id", id));
@@ -238,7 +238,7 @@ public class CustomerRepository : ICustomerRepository
             using (conn = DataFactory.CreateConnection())
             {
                 if (conn.State == ConnectionState.Closed) conn.Open();
-                using (cmd = DataFactory.CreateCommand("ActiveInActiveRoleMasterById", conn))
+                using (cmd = DataFactory.CreateCommand("[dbo].[ActiveInActiveCustomerMasterById]", conn))
                 {
                     ((SqlCommand)cmd).CommandType = CommandType.StoredProcedure;
                     cmd.Parameters.Add(DataFactory.CreateParameter("@Id", id));

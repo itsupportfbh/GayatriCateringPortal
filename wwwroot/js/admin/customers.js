@@ -24,7 +24,10 @@ function loadCustomers() {
 function renderCustomerList(rows) {
     rows = Array.isArray(rows) ? rows : [];
 
-    var html = rows.map(function (customer) {
+    var html = rows.map(function (customer, index) {
+
+        var serial = index + 1;
+
         var id = customer.id ?? customer.Id ?? 0;
         var code = customer.code ?? customer.Code ?? '';
         var name = customer.name ?? customer.Name ?? '';
@@ -52,7 +55,7 @@ function renderCustomerList(rows) {
 
         return `
             <tr>
-                <td>${id}</td>
+                <td>${serial}</td>
                 <td>${code}</td>
                 <td>${name}</td>
                 <td>${mobile}</td>
@@ -73,6 +76,10 @@ function renderCustomerList(rows) {
     }).join('');
 
     $('#customerList tbody').html(html);
+
+    if (typeof renderDataTable === 'function') {
+        renderDataTable('customerList');
+    }
 }
 
 function clearCustomerForm() {
@@ -153,34 +160,49 @@ function saveCustomer() {
 }
 
 
-
-
-
 function editCustomer(id) {
+
     $.ajax({
         url: '/Admin/Customers/get/' + id,
         type: 'GET',
-        success: function (role) {
-            if (!role) {
-                showToast('Role not found.', 3000, { type: 'warning', title: 'Not found' });
+        success: function (customer) {
+            if (!customer) {
+                showToast('Customer not found.', 3000, { type: 'warning', title: 'Not found' });
                 return;
             }
-            $('#roleId').val(role.Id || role.id || '');
-            $('#roleCode').val(role.Code || role.code || '');
-            $('#roleName').val(role.Name || role.name || '');
-            $('#roleRemarks').val(role.Remarks || role.remarks || '');
-            hideRolePermission();
-            $('#rolesModal').removeClass('hidden');
+
+            $('#customerId').val(customer.Id || customer.id || '');
+            $('#customerCode').val(customer.Code || customer.code || '');
+            $('#customerName').val(customer.Name || customer.name || '');
+            $('#customerMobileNo').val(customer.MobileNo || customer.mobileNo || '');
+            $('#customerEmailId').val(customer.EmailId || customer.emailId || '');
+            $('#customerCompanyName').val(customer.CompanyName || customer.companyName || '');
+            $('#customerAddressLine1').val(customer.AddressLine1 || customer.addressLine1 || '');
+            $('#customerAddressLine2').val(customer.AddressLine2 || customer.addressLine2 || '');
+            $('#customerCityId').val(customer.CityId || customer.cityId || '');
+            $('#customerStateId').val(customer.StateId || customer.stateId || '');
+            $('#customerCountryId').val(customer.CountryId || customer.countryId || '');
+            $('#customerPincode').val(customer.Pincode || customer.pincode || '');
+
+            var dob = customer.DateOfBirth || customer.dateOfBirth || '';
+            $('#customerDateOfBirth').val(dob ? dob.substring(0, 10) : '');
+
+            $('#customerGender').val(customer.Gender || customer.gender || '');
+            $('#customerRemarks').val(customer.Remarks || customer.remarks || '');
+
+            $('#customersModal').removeClass('hidden');
         },
-        error: function () { showToast('Unable to load role.', 3000, { type: 'error', title: 'Load failed' }); }
+        error: function () {
+            showToast('Unable to load customer.', 3000, { type: 'error', title: 'Load failed' });
+        }
     });
 }
-
 function setCustomerActive(id, isActive) {
+    debugger;
     if (!id) return;
 
-    var confirmMessage = isActive ? 'Mark this role active?' : 'Mark this role inactive?';
-    var successMessage = isActive ? 'Role activated.' : 'Role marked inactive.';
+    var confirmMessage = isActive ? 'Mark this Customer active?' : 'Mark this Customer inactive?';
+    var successMessage = isActive ? 'Customer activated.' : 'Customer marked inactive.';
 
     showToast(confirmMessage, 0, {
         confirm: true,
@@ -190,17 +212,18 @@ function setCustomerActive(id, isActive) {
         noText: 'No',
         onYes: function () {
             $.ajax({
-                url: '/Admin/Roles/activeinactive?id=' + id + '&status=' + isActive,
+                url: '/Admin/Customers/activeinactive?id=' + id + '&status=' + isActive,
                 type: 'POST',
                 success: function (res) {
                     if (res && res.success) {
                         showToast(successMessage, 3000, { type: 'success', title: 'Updated' });
                     } else {
-                        showToast('Unable to update role status.', 3000, { type: 'error', title: 'Update failed' });
+                        showToast('Unable to update Customer status.', 3000, { type: 'error', title: 'Update failed' });
                     }
-                    setTimeout(loadRoles, 350);
+                    setTimeout(loadCustomers, 350);
                 },
                 error: function () {
+                   
                     showToast('Request failed.', 3000, { type: 'error', title: 'Request failed' });
                 }
             });
@@ -214,7 +237,7 @@ function setCustomerActive(id, isActive) {
 
 function deleteCustomer(id) {
     if (!id) return;
-    showToast('Delete this role?', 0, {
+    showToast('Delete this Customer?', 0, {
         confirm: true,
         type: 'warning',
         title: 'Confirm',
@@ -222,15 +245,15 @@ function deleteCustomer(id) {
         noText: 'Cancel',
         onYes: function () {
             $.ajax({
-                url: '/Admin/Roles/delete/' + id,
+                url: '/Admin/Customers/delete/' + id,
                 type: 'POST',
                 success: function (res) {
                     if (res && res.success) {
-                        showToast('Role deleted successfully.', 3000, { type: 'success', title: 'Deleted' });
+                        showToast('Customer deleted successfully.', 3000, { type: 'success', title: 'Deleted' });
                     } else {
-                        showToast('Unable to delete role.', 3000, { type: 'error', title: 'Delete failed' });
+                        showToast('Unable to delete Customer.', 3000, { type: 'error', title: 'Delete failed' });
                     }
-                    setTimeout(loadRoles, 300);
+                    setTimeout(loadCustomers, 300);
                 },
                 error: function () { showToast('Delete failed.', 3000, { type: 'error', title: 'Delete failed' }); }
             });
