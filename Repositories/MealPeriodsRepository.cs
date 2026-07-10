@@ -1,186 +1,463 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Data;
+﻿using System.Data;
 using Microsoft.Data.SqlClient;
+using GayatriCateringPortal.Models;
 using GayatriCateringPortal.Data;
 using GayatriCateringPortal.Interfaces;
-using GayatriCateringPortal.Models;
 
 namespace GayatriCateringPortal.Repositories;
 
-public class MealPeriodsRepository : IMealPeriodsRepository
+public class MealPeriodRepository : IMealPeriodsRepository
 {
     public List<MealPeriodMaster> GetAll()
     {
         List<MealPeriodMaster> list = new List<MealPeriodMaster>();
-        IDbConnection? conn = null;
-        IDbCommand? cmd = null;
-        IDataReader? reader = null;
+
         try
         {
-            using (conn = DataFactory.CreateConnection())
+            using (IDbConnection conn = DataFactory.CreateConnection())
             {
                 conn.Open();
-                using (cmd = DataFactory.CreateCommand("SELECT * FROM MealPeriodMaster WHERE IsDeleted = 0", conn))
+
+                using (IDbCommand cmd = DataFactory.CreateCommand(
+                    "[dbo].[GetMealPeriodMaster]", conn))
                 {
-                    reader = DataFactory.ExecuteReader(cmd);
-                    list = new List<MealPeriodMaster>();
-                    while (reader.Read()) list.Add(new MealPeriodMaster());
+                    ((SqlCommand)cmd).CommandType =  CommandType.StoredProcedure;
+
+                    using (IDataReader reader = DataFactory.ExecuteReader(cmd))
+                    {
+                        list = List(reader);
+                    }
                 }
             }
-            return list ?? new List<MealPeriodMaster>();
+
+            return list;
         }
-        catch (SqlException)
+        catch (SqlException ex)
         {
-            throw new Exception("Database error");
+            throw new Exception("Database error: " + ex.Message);
         }
         catch (Exception ex)
         {
-            throw new Exception(ex.StackTrace);
-        }
-        finally
-        {
-            if (conn != null && conn.State != ConnectionState.Closed) conn.Close();
+            throw new Exception(ex.Message);
         }
     }
+
 
     public MealPeriodMaster? GetById(int id)
     {
-        IDbConnection? conn = null;
-        IDbCommand? cmd = null;
-        try
-        {
-            conn = DataFactory.CreateConnection();
-            cmd = DataFactory.CreateCommand("SELECT * FROM MealPeriodMaster WHERE Id = @Id", conn);
-            cmd.Parameters.Add(DataFactory.CreateParameter("@Id", id));
-            conn.Open();
-            using IDataReader reader = DataFactory.ExecuteReader(cmd);
-            if (reader.Read()) return new MealPeriodMaster();
-            return null;
-        }
-        catch (SqlException)
-        {
-            throw new Exception("Database error");
-        }
-        catch (Exception ex)
-        {
-            throw new Exception(ex.StackTrace);
-        }
-        finally
-        {
-            if (conn != null && conn.State != ConnectionState.Closed) conn.Close();
-        }
-    }
+        MealPeriodMaster? item = null;
 
-    public int Create(MealPeriodMaster item)
-    {
-        IDbConnection? conn = null;
-        IDbCommand? cmd = null;
         try
         {
-            conn = DataFactory.CreateConnection();
-            cmd = DataFactory.CreateCommand("SP_CreateMealPeriodMaster", conn);
-            ((SqlCommand)cmd).CommandType = CommandType.StoredProcedure;
-            cmd.Parameters.Add(DataFactory.CreateParameter("@Id", item.Id));
-            conn.Open();
-            var rows = DataFactory.ExecuteNonQuery(cmd);
-            return rows > 0 ? 1 : 0;
-        }
-        catch (SqlException)
-        {
-            throw new Exception("Database error");
-        }
-        catch (Exception ex)
-        {
-            throw new Exception(ex.StackTrace);
-        }
-        finally
-        {
-            if (conn != null && conn.State != ConnectionState.Closed) conn.Close();
-        }
-    }
-
-    public bool Update(MealPeriodMaster item)
-    {
-        IDbConnection? conn = null;
-        IDbCommand? cmd = null;
-        try
-        {
-            conn = DataFactory.CreateConnection();
-            cmd = DataFactory.CreateCommand("SP_CreateMealPeriodMaster", conn);
-            ((SqlCommand)cmd).CommandType = CommandType.StoredProcedure;
-            cmd.Parameters.Add(DataFactory.CreateParameter("@Id", item.Id));
-            conn.Open();
-            return DataFactory.ExecuteNonQuery(cmd) > 0;
-        }
-        catch (SqlException)
-        {
-            throw new Exception("Database error");
-        }
-        catch (Exception ex)
-        {
-            throw new Exception(ex.StackTrace);
-        }
-        finally
-        {
-            if (conn != null && conn.State != ConnectionState.Closed) conn.Close();
-        }
-    }
-
-    public bool Delete(int id)
-    {
-        IDbConnection? conn = null;
-        IDbCommand? cmd = null;
-        try
-        {
-            conn = DataFactory.CreateConnection();
-            cmd = DataFactory.CreateCommand("UPDATE MealPeriodMaster SET IsDeleted = 1 WHERE Id = @Id", conn);
-            cmd.Parameters.Add(DataFactory.CreateParameter("@Id", id));
-            conn.Open();
-            return cmd.ExecuteNonQuery() > 0;
-        }
-        catch (SqlException)
-        {
-            throw new Exception("Database error");
-        }
-        catch (Exception ex)
-        {
-            throw new Exception(ex.StackTrace);
-        }
-        finally
-        {
-            if (conn != null && conn.State != ConnectionState.Closed) conn.Close();
-        }
-    }
-
-    public bool ActiveInActive(int id)
-    {
-        IDbConnection? conn = null;
-        IDbCommand? cmd = null;
-        try
-        {
-            using (conn = DataFactory.CreateConnection())
+            using (IDbConnection conn = DataFactory.CreateConnection())
             {
-                using (cmd = DataFactory.CreateCommand("UPDATE MealPeriodMaster SET IsActive = CASE WHEN IsActive = 1 THEN 0 ELSE 1 END WHERE Id = @Id", conn))
+                conn.Open();
+
+                using (IDbCommand cmd = DataFactory.CreateCommand(
+                    "[dbo].[SP_GetMealPeriodMasterById]", conn))
                 {
-                    cmd.Parameters.Add(DataFactory.CreateParameter("@Id", id));
-                    conn.Open();
-                    return cmd.ExecuteNonQuery() > 0;
+                    ((SqlCommand)cmd).CommandType =
+                        CommandType.StoredProcedure;
+
+                    cmd.Parameters.Add(
+                        DataFactory.CreateParameter("@Id", id));
+
+                    using (IDataReader reader =
+                        DataFactory.ExecuteReader(cmd))
+                    {
+                        var list = List(reader);
+
+                        if (list.Count > 0)
+                        {
+                            item = list[0];
+                        }
+                    }
                 }
             }
         }
-        catch (SqlException)
+        catch (SqlException ex)
         {
-            throw new Exception("Database error");
+            throw new Exception("Database error: " + ex.Message);
         }
         catch (Exception ex)
         {
-            throw new Exception(ex.StackTrace);
+            throw new Exception(ex.Message);
         }
-        finally
+
+        return item;
+    }
+
+
+    public int Create(MealPeriodMaster mealPeriod)
+    {
+        try
         {
-            if (conn != null && conn.State != ConnectionState.Closed) conn.Close();
+            using (IDbConnection conn = DataFactory.CreateConnection())
+            {
+                conn.Open();
+
+                using (IDbCommand cmd = DataFactory.CreateCommand(
+                    "[dbo].[SP_CreateMealPeriodMaster]", conn))
+                {
+                    ((SqlCommand)cmd).CommandType =
+                        CommandType.StoredProcedure;
+
+
+                    cmd.Parameters.Add(
+                        DataFactory.CreateParameter(
+                            "@Code",
+                            mealPeriod.Code ??
+                            (object)DBNull.Value));
+
+
+                    cmd.Parameters.Add(
+                        DataFactory.CreateParameter(
+                            "@MealPeriodName",
+                            mealPeriod.MealPeriodName ??
+                            (object)DBNull.Value));
+
+
+                    cmd.Parameters.Add(
+                        DataFactory.CreateParameter(
+                            "@StartTime",
+                            mealPeriod.StartTime ??
+                            (object)DBNull.Value));
+
+
+                    cmd.Parameters.Add(
+                        DataFactory.CreateParameter(
+                            "@EndTime",
+                            mealPeriod.EndTime ??
+                            (object)DBNull.Value));
+
+
+                    cmd.Parameters.Add(
+                        DataFactory.CreateParameter(
+                            "@DisplayOrder",
+                            mealPeriod.DisplayOrder ??
+                            (object)DBNull.Value));
+
+
+                    cmd.Parameters.Add(
+                        DataFactory.CreateParameter(
+                            "@IsActive",
+                            mealPeriod.IsActive ??
+                            (object)DBNull.Value));
+
+
+                    cmd.Parameters.Add(
+                        DataFactory.CreateParameter(
+                            "@IsDeleted",
+                            mealPeriod.IsDeleted ??
+                            (object)DBNull.Value));
+
+
+                    cmd.Parameters.Add(
+                        DataFactory.CreateParameter(
+                            "@CreatedBy",
+                            mealPeriod.CreatedBy ??
+                            (object)DBNull.Value));
+
+
+                    cmd.Parameters.Add(
+                        DataFactory.CreateParameter(
+                            "@CreatedDate",
+                            DateTime.Now));
+
+
+                    var result = DataFactory.ExecuteScalar(cmd);
+
+
+                    if (result != null &&
+                        result != DBNull.Value)
+                    {
+                        mealPeriod.Id =
+                            Convert.ToString(result) ?? "0";
+
+                        return Convert.ToInt32(result);
+                    }
+                }
+            }
+        }
+        catch (SqlException ex)
+        {
+            throw new Exception(
+                "Database error: " + ex.Message);
+        }
+        catch (Exception ex)
+        {
+            throw new Exception(ex.Message);
+        }
+
+        return 0;
+    }
+
+
+    public bool Update(MealPeriodMaster mealPeriod)
+    {
+        if (mealPeriod == null)
+            throw new ArgumentNullException(nameof(mealPeriod));
+
+        try
+        {
+            using (IDbConnection conn = DataFactory.CreateConnection())
+            {
+                conn.Open();
+
+                using (IDbCommand cmd = DataFactory.CreateCommand(
+                    "[dbo].[SP_UpdateMealPeriodMaster]", conn))
+                {
+                    ((SqlCommand)cmd).CommandType = CommandType.StoredProcedure;
+
+                    cmd.Parameters.Add( DataFactory.CreateParameter( "@Id",  mealPeriod.Id));
+
+                    cmd.Parameters.Add(DataFactory.CreateParameter( "@Code", string.IsNullOrWhiteSpace(mealPeriod.Code) ? (object)DBNull.Value : mealPeriod.Code.Trim()));
+
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@MealPeriodName",  string.IsNullOrWhiteSpace(mealPeriod.MealPeriodName) ? (object)DBNull.Value   : mealPeriod.MealPeriodName.Trim()));
+
+                    cmd.Parameters.Add( DataFactory.CreateParameter("@StartTime",   string.IsNullOrWhiteSpace(mealPeriod.StartTime) ? (object)DBNull.Value  : mealPeriod.StartTime));
+
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@EndTime", string.IsNullOrWhiteSpace(mealPeriod.EndTime)? (object)DBNull.Value               : mealPeriod.EndTime));
+
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@DisplayOrder",  string.IsNullOrWhiteSpace(mealPeriod.DisplayOrder)? (object)DBNull.Value : mealPeriod.DisplayOrder));
+
+                    cmd.Parameters.Add(   DataFactory.CreateParameter("@IsActive",   string.IsNullOrWhiteSpace(mealPeriod.IsActive)  ? (object)DBNull.Value  : mealPeriod.IsActive));
+
+                    cmd.Parameters.Add( DataFactory.CreateParameter( "@IsDeleted", string.IsNullOrWhiteSpace(mealPeriod.IsDeleted)      ? (object)DBNull.Value                                : mealPeriod.IsDeleted));
+
+                    cmd.Parameters.Add( DataFactory.CreateParameter("@UpdatedBy", string.IsNullOrWhiteSpace(mealPeriod.UpdatedBy) ? (object)DBNull.Value : mealPeriod.UpdatedBy));
+
+                    cmd.Parameters.Add( DataFactory.CreateParameter("@UpdatedDate", DateTime.Now));
+
+                    object result = DataFactory.ExecuteScalar(cmd);
+
+                    if (result == null || result == DBNull.Value)
+                    {
+                        throw new Exception(
+                            "No result was returned while updating Meal Period.");
+                    }
+
+                    int status = Convert.ToInt32(result);
+
+                    switch (status)
+                    {
+                        case -1:
+                            throw new Exception(
+                                "Meal Period Name already exists.");
+
+                        case -2:
+                            throw new Exception(
+                                "Display Order already exists.");
+
+                        case 0:
+                            throw new Exception(
+                                "Meal Period not found or no changes were made.");
+
+                        default:
+                            return status > 0;
+                    }
+                }
+            }
+        }
+        catch (SqlException ex) when (
+            ex.Number == 2601 ||
+            ex.Number == 2627)
+        {
+            throw new Exception(
+                "Meal Period Name or Display Order already exists.",
+                ex);
+        }
+        catch (SqlException ex)
+        {
+            throw new Exception(
+                "Database error: " + ex.Message,
+                ex);
+        }
+        catch
+        {
+            throw;
         }
     }
-}
 
+
+    public bool Delete(int id)
+    {
+        try
+        {
+            using (IDbConnection conn =
+                DataFactory.CreateConnection())
+            {
+                conn.Open();
+
+                using (IDbCommand cmd =
+                    DataFactory.CreateCommand(
+                        "[dbo].[DeleteMealPeriodMasterById]",
+                        conn))
+                {
+                    ((SqlCommand)cmd).CommandType =
+                        CommandType.StoredProcedure;
+
+                    cmd.Parameters.Add(
+                        DataFactory.CreateParameter("@Id", id));
+
+                    var result =
+                        DataFactory.ExecuteScalar(cmd);
+
+                    return result != null &&
+                           result != DBNull.Value &&
+                           Convert.ToInt32(result) > 0;
+                }
+            }
+        }
+        catch (SqlException ex)
+        {
+            throw new Exception(
+                "Database error: " + ex.Message);
+        }
+        catch (Exception ex)
+        {
+            throw new Exception(ex.Message);
+        }
+    }
+
+
+    public bool ActiveInActive(int id, bool status)
+    {
+        try
+        {
+            using (IDbConnection conn =
+                DataFactory.CreateConnection())
+            {
+                conn.Open();
+
+                using (IDbCommand cmd =
+                    DataFactory.CreateCommand(
+                        "[dbo].[ActiveInActiveMealPeriodMasterById]",
+                        conn))
+                {
+                    ((SqlCommand)cmd).CommandType =
+                        CommandType.StoredProcedure;
+
+
+                    cmd.Parameters.Add(
+                        DataFactory.CreateParameter(
+                            "@Id",
+                            id));
+
+
+                    cmd.Parameters.Add(
+                        DataFactory.CreateParameter(
+                            "@IsActive",
+                            status));
+
+
+                    var result =
+                        DataFactory.ExecuteScalar(cmd);
+
+
+                    return result != null &&
+                           result != DBNull.Value &&
+                           Convert.ToInt32(result) > 0;
+                }
+            }
+        }
+        catch (SqlException ex)
+        {
+            throw new Exception(
+                "Database error: " + ex.Message);
+        }
+        catch (Exception ex)
+        {
+            throw new Exception(ex.Message);
+        }
+    }
+
+
+    // COMMON DATA READER MAPPING
+
+    private List<MealPeriodMaster> List(IDataReader reader)
+    {
+        var list = new List<MealPeriodMaster>();
+
+        try
+        {
+            while (reader.Read())
+            {
+                var mealPeriod = new MealPeriodMaster();
+
+
+                if (reader["Id"] != DBNull.Value)    mealPeriod.Id =Convert.ToString(reader["Id"]) ?? "";
+
+
+                if (reader["Code"] != DBNull.Value) mealPeriod.Code = Convert.ToString(reader["Code"]) ?? "";
+
+
+                if (reader["MealPeriodName"] != DBNull.Value)mealPeriod.MealPeriodName = Convert.ToString(  reader["MealPeriodName"]) ?? "";
+
+
+                if (reader["StartTime"] != DBNull.Value)mealPeriod.StartTime = Convert.ToString(reader["StartTime"]);
+
+
+                if (reader["EndTime"] != DBNull.Value)mealPeriod.EndTime = Convert.ToString( reader["EndTime"]);
+
+
+                if (reader["DisplayOrder"] != DBNull.Value)
+                    mealPeriod.DisplayOrder =
+                        Convert.ToString(
+                            reader["DisplayOrder"]) ?? "";
+
+
+                if (reader["IsActive"] != DBNull.Value)
+                    mealPeriod.IsActive =
+                        Convert.ToString(
+                            reader["IsActive"]) ?? "";
+
+
+                //if (reader["CreatedBy"] != DBNull.Value)
+                //    mealPeriod.CreatedBy =
+                //        Convert.ToString(
+                //            reader["CreatedBy"]);
+
+
+                //if (reader["CreatedDate"] != DBNull.Value)
+                //    mealPeriod.CreatedDate =
+                //        Convert.ToString(
+                //            reader["CreatedDate"]) ?? "";
+
+
+                //if (reader["UpdatedBy"] != DBNull.Value)
+                //    mealPeriod.UpdatedBy =
+                //        Convert.ToString(
+                //            reader["UpdatedBy"]);
+
+
+                //if (reader["UpdatedDate"] != DBNull.Value)
+                //    mealPeriod.UpdatedDate =
+                //        Convert.ToString(
+                //            reader["UpdatedDate"]);
+
+
+                if (reader["IsDeleted"] != DBNull.Value)
+                    mealPeriod.IsDeleted =
+                        Convert.ToString(
+                            reader["IsDeleted"]);
+
+
+                list.Add(mealPeriod);
+            }
+        }
+        catch (SqlException ex)
+        {
+            throw new Exception(
+                "Database error: " + ex.Message);
+        }
+        catch (Exception ex)
+        {
+            throw new Exception(
+                "Meal Period mapping error: " +
+                ex.Message);
+        }
+
+        return list;
+    }
+}

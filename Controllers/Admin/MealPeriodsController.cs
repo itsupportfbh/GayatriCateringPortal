@@ -6,68 +6,106 @@ namespace GayatriCateringPortal.Controllers.Admin
     [Route("Admin/MealPeriods")]
     public class MealPeriodsController : Controller
     {
-        private readonly IMealPeriodsRepository _mealPeriodsRepository;
+        private readonly IMealPeriodsRepository _mealPeriods;
 
         public MealPeriodsController(IMealPeriodsRepository mealPeriodsRepository)
         {
-            _mealPeriodsRepository = mealPeriodsRepository;
+            _mealPeriods = mealPeriodsRepository;
         }
 
         [HttpGet("")]
         public IActionResult Index()
         {
-            var items = _mealPeriodsRepository.GetAll();
-            ViewData["Items"] = items;
             ViewData["Mode"] = "admin";
             ViewData["Page"] = "mealperiods";
             ViewData["Title"] = "Meal Periods";
+
             return View("~/Views/Admin/MealPeriods.cshtml");
         }
 
-        [HttpGet("get")]
+
+
+        [HttpGet("getAll")]
         public IActionResult GetAll()
         {
-            var items = _mealPeriodsRepository.GetAll();
+            var items = _mealPeriods.GetAll();
+
             return Ok(items);
         }
+
+
 
         [HttpGet("get/{id}")]
         public IActionResult Get(int id)
         {
-            var item = _mealPeriodsRepository.GetById(id);
-            if (item == null) return NotFound();
+            var item = _mealPeriods.GetById(id);
+
+            if (item == null)
+                return NotFound();
+
             return Ok(item);
         }
 
-        [HttpPost("save")]
-        public IActionResult Save([FromBody] MealPeriodMaster item)
+
+       
+
+        [HttpPost("create")]
+        public IActionResult Create([FromBody] MealPeriodMaster item)
         {
-            if (item == null) return BadRequest();
-            var idValue = 0;
-            if (!string.IsNullOrWhiteSpace(item.Id)) int.TryParse(item.Id, out idValue);
+            if (item == null)
+                return BadRequest();
 
-            if (idValue == 0)
+            int newId = _mealPeriods.Create(item);
+
+            return Ok(new
             {
-                int newId = _mealPeriodsRepository.Create(item);
-                return Ok(new { success = newId > 0, id = newId });
-            }
-
-            bool result = _mealPeriodsRepository.Update(item);
-            return Ok(new { success = result });
+                success = newId > 0,
+                id = newId
+            });
         }
+
+
+       
+
+        [HttpPost("update")]
+        public IActionResult Update([FromBody] MealPeriodMaster item)
+        {
+            if (item == null)
+                return BadRequest();
+
+            bool updated = _mealPeriods.Update(item);
+
+            return Ok(new
+            {
+                success = updated
+            });
+        }
+
+
 
         [HttpPost("delete/{id}")]
         public IActionResult Delete(int id)
         {
-            bool result = _mealPeriodsRepository.Delete(id);
-            return Ok(new { success = result });
+            bool result = _mealPeriods.Delete(id);
+
+            return Ok(new
+            {
+                success = result
+            });
         }
 
-        [HttpPost("activeinactive/{id}")]
-        public IActionResult ActiveInActive(int id)
+
+        
+
+        [HttpPost("activeinactive")]
+        public IActionResult ActiveInActive(int id, bool status)
         {
-            bool result = _mealPeriodsRepository.ActiveInActive(id);
-            return Ok(new { success = result });
+            bool result = _mealPeriods.ActiveInActive(id, status);
+
+            return Ok(new
+            {
+                success = result
+            });
         }
     }
 }

@@ -331,41 +331,7 @@ public class CustomerRepository : ICustomerRepository
     }
 
 
-    //public List<coun> GetAllCountry()
-    //{
-    //    List<CustomerMaster> list = new List<CustomerMaster>();
-    //    IDbConnection conn = null;
-    //    IDbCommand cmd = null;
-    //    IDataReader reader = null;
-
-    //    try
-    //    {
-    //        using (conn = DataFactory.CreateConnection())
-    //        {
-    //            conn.Open();
-    //            using (cmd = DataFactory.CreateCommand("[dbo].[SP_GetCustomerMaster]", conn))
-    //            {
-    //                ((SqlCommand)cmd).CommandType = CommandType.StoredProcedure;
-    //                reader = DataFactory.ExecuteReader(cmd);
-    //                list = this.List(reader);
-    //            }
-    //        }
-
-    //        return list ?? new List<CustomerMaster>();
-    //    }
-    //    catch (SqlException)
-    //    {
-    //        throw new Exception("Database error");
-    //    }
-    //    catch (Exception ex)
-    //    {
-    //        throw new Exception(ex.StackTrace);
-    //    }
-    //    finally
-    //    {
-    //        if (conn != null && conn.State != ConnectionState.Closed) conn.Close();
-    //    }
-    //}
+   
 
 
 
