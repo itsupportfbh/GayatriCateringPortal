@@ -60,11 +60,11 @@ namespace GayatriCateringPortal.Controllers.Customer
             return Ok(new { success = result });
         }
 
-        [HttpPost("activeinactive/{id}")]
-        public IActionResult ActiveInActive(int id)
-        {
-            bool result = _locations.ActiveInActive(id);
-            return Ok(new { success = result });
-        }
+        //[HttpPost("activeinactive/{id}")]
+        //public IActionResult ActiveInActive(int id)
+        //{
+        //    bool result = _locations.ActiveInActive(id);
+        //    return Ok(new { success = result });
+        //}
     }
 }

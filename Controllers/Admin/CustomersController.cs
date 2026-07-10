@@ -1,5 +1,6 @@
 using GayatriCateringPortal.Interfaces;
 using GayatriCateringPortal.Models;
+using GayatriCateringPortal.Repositories;
 using Microsoft.AspNetCore.Mvc;
 namespace GayatriCateringPortal.Controllers.Admin
 {
@@ -16,15 +17,15 @@ namespace GayatriCateringPortal.Controllers.Admin
         [HttpGet("")]
         public IActionResult Index()
         {
-            var list = _customers.GetAll();
-            ViewData["Customers"] = list;
+           // var list = _customers.GetAll();
+           // ViewData["Customers"] = list;
             ViewData["Mode"] = "admin";
             ViewData["Page"] = "customers";
             ViewData["Title"] = "Customers";
             return View("~/Views/Admin/Customers.cshtml");
         }
 
-        [HttpGet("get")]
+        [HttpGet("getAll")]
         public IActionResult GetAll()
         {
             var items = _customers.GetAll();
@@ -39,19 +40,23 @@ namespace GayatriCateringPortal.Controllers.Admin
             return Ok(item);
         }
 
-        [HttpPost("save")]
-        public IActionResult Save([FromBody] CustomerMaster item)
+
+        [HttpPost("create")]
+        public IActionResult Create([FromBody] CustomerMaster item)
         {
             if (item == null) return BadRequest();
-            if (item.Id == 0)
-            {
-                int newId = _customers.Create(item);
-                return Ok(new { success = newId > 0, id = newId });
-            }
-
-            bool result = _customers.Update(item);
-            return Ok(new { success = result });
+            int newId = _customers.Create(item);
+            return Ok(new { success = newId > 0, id = newId });
         }
+
+        [HttpPost("update")]
+        public IActionResult Update([FromBody] CustomerMaster item)
+        {
+            if (item == null) return BadRequest();
+            bool updated = _customers.Update(item);
+            return Ok(new { success = updated });
+        }
+
 
         [HttpPost("delete/{id}")]
         public IActionResult Delete(int id)
@@ -60,10 +65,10 @@ namespace GayatriCateringPortal.Controllers.Admin
             return Ok(new { success = result });
         }
 
-        [HttpPost("activeinactive/{id}")]
-        public IActionResult ActiveInActive(int id)
+        [HttpPost("activeinactive")]
+        public IActionResult ActiveInActive(int id,bool status)
         {
-            bool result = _customers.ActiveInActive(id);
+            bool result = _customers.ActiveInActive(id,status);
             return Ok(new { success = result });
         }
     }

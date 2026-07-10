@@ -1,14 +1,92 @@
-.permission-grid{display:grid;grid-template-columns:200px repeat(5,1fr);gap:0;border:1px solid var(--gray-200);border-radius:var(--radius);overflow:hidden}.permission-grid .ph{background:var(--gray-50);padding:10px 12px;font-size:11px;font-weight:700;text-transform:uppercase;color:var(--gray-500);border-bottom:1px solid var(--gray-200)}.permission-grid .pc{padding:10px 12px;border-bottom:1px solid var(--gray-100);display:flex;align-items:center;justify-content:center}.permission-grid .pl{padding:10px 12px;border-bottom:1px solid var(--gray-100);font-size:13px;font-weight:600;color:var(--gray-700)}
+.permission-grid {
+    display: grid;
+    grid-template-columns: 200px repeat(5,1fr);
+    gap: 0;
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius);
+    overflow: hidden
+}
 
-.panel-header{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:16px}
-.panel-header .panel-title{font-size:18px;font-weight:700;margin:0}
-.panel-actions{display:flex;align-items:center;gap:10px}
-#btnBackToRoles{margin:0;padding:10px 18px}
+    .permission-grid .ph {
+        background: var(--gray-50);
+        padding: 10px 12px;
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+        color: var(--gray-500);
+        border-bottom: 1px solid var(--gray-200)
+    }
+
+    .permission-grid .pc {
+        padding: 10px 12px;
+        border-bottom: 1px solid var(--gray-100);
+        display: flex;
+        align-items: center;
+        justify-content: center
+    }
+
+    .permission-grid .pl {
+        padding: 10px 12px;
+        border-bottom: 1px solid var(--gray-100);
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--gray-700)
+    }
+
+.panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-bottom: 16px
+}
+
+    .panel-header .panel-title {
+        font-size: 18px;
+        font-weight: 700;
+        margin: 0
+    }
+
+.panel-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px
+}
+
+#btnBackToRoles {
+    margin: 0;
+    padding: 10px 18px
+}
 
 /* panel-specific positioning is kept here */
-#rolesListPanel{position:relative;}
+#rolesListPanel {
+    position: relative;
+}
 
 /* migrated loader styles now live in site.css as .pageloaderpanel and .pageloaderfull */
 
 /* Role list badges */
 /* role-specific styles remain here; badge styles are shared in site.css */
+
+/* validation helpers (role modal) */
+.field-error {
+    color: var(--red);
+    font-size: 13px;
+    margin-top: 8px
+}
+
+.input-error {
+    border-color: var(--red) !important;
+    box-shadow: 0 0 0 3px rgba(220,38,38,.06)
+}
+
+
+/* Roles modal: larger size than default modal-box */
+/*#rolesModal .modal-box {
+    width: 820px;*/ /* desktop width */
+    /*max-width: 96vw;
+    max-height: 92vh;
+    padding: 28px;
+    overflow: auto;
+}*/
