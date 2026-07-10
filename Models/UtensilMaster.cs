@@ -7,13 +7,13 @@ namespace GayatriCateringPortal.Models
         public string Id { get; set; } = null!;
         public string UtensilName { get; set; } = null!;
         public string UnitType { get; set; } = null!;
-        public string Price { get; set; } = null!;
-        public string DepositAmount { get; set; } = null!;
-        public string IsDeleted { get; set; } = null!;
-        public string? CreatedBy { get; set; }
+        public decimal Price { get; set; }
+        public decimal DepositAmount { get; set; }
+        public bool IsDeleted { get; set; }
+        public int CreatedBy { get; set; }
         public string CreatedDate { get; set; } = null!;
-        public string? UpdatedBy { get; set; }
+        public int UpdatedBy { get; set; }
         public string? UpdatedDate { get; set; }
-        public string? IsActive { get; set; }
+        public bool IsActive { get; set; }
     }
 }

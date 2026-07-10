@@ -23,6 +23,7 @@ builder.Services.AddScoped<GayatriCateringPortal.Interfaces.IReportsRepository, 
 builder.Services.AddScoped<GayatriCateringPortal.Interfaces.IUtensilsRepository, GayatriCateringPortal.Repositories.UtensilsRepository>();
 builder.Services.AddScoped<GayatriCateringPortal.Interfaces.ISettingsRepository, GayatriCateringPortal.Repositories.SettingsRepository>();
 builder.Services.AddScoped<GayatriCateringPortal.Interfaces.IOrdersRepository, GayatriCateringPortal.Repositories.OrdersRepository>();
+builder.Services.AddScoped<GayatriCateringPortal.Interfaces.IFoodMenuRepository, GayatriCateringPortal.Repositories.FoodMenuRepository>();
 
 var app = builder.Build();
 
