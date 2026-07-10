@@ -1,5 +1,6 @@
 ﻿$(document).ready(function () {
     loadMenus();
+    loadCategories();
 });
 
 function closeMenuModal() {
@@ -27,6 +28,45 @@ function loadMenus() {
         },
         complete: function () {
             showMenuLoader(false);
+        }
+    });
+}
+
+function loadCategories(selectedId) {
+
+    $.ajax({
+        url: '/Admin/Category/GetCategories',
+        type: 'GET',
+        dataType: 'json',
+        success: function (categories) {
+
+            var            lddl = $('#CategoryId');
+            ddl.empty();
+
+            ddl.append('<option value="">Select Category</option>');
+
+            $.each(categories, function (i, item) {
+
+                var id = item.id || item.Id;
+                var name = item.categoryName || item.CategoryName;
+
+                ddl.append(
+                    $('<option>', {
+                        value: id,
+                        text: name
+                    })
+                );
+            });
+
+            if (selectedId) {
+                ddl.val(selectedId);
+            }
+        },
+        error: function () {
+            showToast('Unable to load categories.', 3000, {
+                type: 'error',
+                title: 'Load Failed'
+            });
         }
     });
 }
@@ -152,6 +192,8 @@ function editRole(id) {
                 showToast('Menu not found.', 3000, { type: 'warning', title: 'Not found' });
                 return;
             }
+
+            loadCategories(data.categoryId);
             $('#menuId').val(role.Id || role.id || '');
             $('#ItemCode').val(role.Code || role.code || '');
             $('#ItemName').val(role.Name || role.name || '');
