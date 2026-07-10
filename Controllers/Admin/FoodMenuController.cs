@@ -2,71 +2,72 @@
 using GayatriCateringPortal.Models;
 using GayatriCateringPortal.Repositories;
 using Microsoft.AspNetCore.Mvc;
+
 namespace GayatriCateringPortal.Controllers.Admin
 {
-    [Route("Admin/Utensils")]
-    public class UtensilsController : Controller
+    [Route("Admin/FoodMenus")]
+    public class FoodMenuController : Controller
     {
-        private readonly IUtensilsRepository _repo;
+        private readonly IFoodMenuRepository _menusRepository;
 
-        public UtensilsController(IUtensilsRepository repo)
+        public FoodMenuController(IFoodMenuRepository menusRepository)
         {
-            _repo = repo;
+            _menusRepository = menusRepository;
         }
 
         [HttpGet("")]
         public IActionResult Index()
         {
-            var list = _repo.GetAll();
-            ViewData["Utensils"] = list;
+            var items = _menusRepository.GetAll();
+            ViewData["Items"] = items;
             ViewData["Mode"] = "admin";
-            ViewData["Page"] = "utensils";
-            ViewData["Title"] = "Utensils";
-            return View("~/Views/Admin/Utensils.cshtml");
+            ViewData["Page"] = "menus";
+            ViewData["Title"] = "Menus";
+            return View("~/Views/Admin/FoodMenus.cshtml");
         }
 
         [HttpGet("get")]
         public IActionResult GetAll()
         {
-            var items = _repo.GetAll();
+            var items = _menusRepository.GetAll();
             return Ok(items);
         }
 
         [HttpGet("get/{id}")]
         public IActionResult Get(int id)
         {
-            var item = _repo.GetById(id);
+            var item = _menusRepository.GetById(id);
             if (item == null) return NotFound();
             return Ok(item);
         }
 
         [HttpPost("create")]
-        public IActionResult Create([FromBody] UtensilMaster item)
+        public IActionResult Create([FromBody] FoodMenu item)
         {
             if (item == null) return BadRequest();
-            int newId = _repo.Create(item);
+            int newId = _menusRepository.Create(item);
             return Ok(new { success = newId > 0, id = newId });
         }
 
         [HttpPost("update")]
-        public IActionResult Update([FromBody] UtensilMaster item)
+        public IActionResult Update([FromBody] FoodMenu item)
         {
             if (item == null) return BadRequest();
-            bool updated = _repo.Update(item);
+            bool updated = _menusRepository.Update(item);
             return Ok(new { success = updated });
         }
 
         [HttpPost("delete/{id}")]
         public IActionResult Delete(int id)
         {
-            bool result = _repo.Delete(id);
+            bool result = _menusRepository.Delete(id);
             return Ok(new { success = result });
         }
 
         [HttpPost("activeinactive/{id}")]
         public IActionResult ActiveInActive(int id, [FromQuery] bool status)
         {
-            bool result = _repo.ActiveInActive(id, status);
+            bool result = _menusRepository.ActiveInActive(id, status);
             return Ok(new { success = result });
         }
     }

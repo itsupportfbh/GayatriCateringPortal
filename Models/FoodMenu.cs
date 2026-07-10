@@ -10,13 +10,13 @@ namespace GayatriCateringPortal.Models
         public string CategoryId { get; set; } = null!;
         public string? Price { get; set; }
         public string? PreparationTime { get; set; }
-        public string? FoodType { get; set; }
+        public int? FoodType { get; set; }
         public string? Servicecharge { get; set; }
-        public string IsActive { get; set; } = null!;
-        public string IsDeleted { get; set; } = null!;
-        public string CreatedBy { get; set; } = null!;
+        public bool IsActive { get; set; }
+        public bool IsDeleted { get; set; }
+        public int CreatedBy { get; set; }
         public string CreatedDate { get; set; } = null!;
-        public string? UpdatedBy { get; set; }
+        public int UpdatedBy { get; set; }
         public string? UpdatedDate { get; set; }
     }
 }

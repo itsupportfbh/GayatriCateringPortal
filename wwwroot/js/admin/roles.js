@@ -1,5 +1,4 @@
 $(document).ready(function () {
-    // Load role list on initial page open
     loadRoles();
 });
 

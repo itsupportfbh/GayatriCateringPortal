@@ -1,56 +1,55 @@
-$(document).ready(function () {
-    loadUtensils();
+﻿$(document).ready(function () {
+    loadMenus();
 });
 
 function closeMenuModal() {
-    $('#utensilsModal').addClass('hidden');
+    $('#MenuModal').addClass('hidden');
 }
 
 function openMenuModal() {
-    clearUtensilForm();
-    $('#utensilsModal').removeClass('hidden');
+    clearMenuForm();
+    $('#MenuModal').removeClass('hidden');
 }
 
-function loadUtensils() {
-    showutensilLoader(true);
+function loadMenus() {
+    showMenuLoader(true);
 
     $.ajax({
-        url: '/Admin/Utensils/get',
+        url: '/Admin/FoodMenus/get',
         type: 'GET',
         dataType: 'json',
         success: function (rows) {
-            renderUtensilList(Array.isArray(rows) ? rows : []);
+            renderMenuList(Array.isArray(rows) ? rows : []);
         },
         error: function () {
-            renderUtensilList([]);
-            showToast('Unable to load Utensil.', 3000, { type: 'error', title: 'Load failed' });
+            renderMenuList([]);
+            showToast('Unable to load Menus.', 3000, { type: 'error', title: 'Load failed' });
         },
         complete: function () {
-            showutensilLoader(false);
+            showMenuLoader(false);
         }
     });
 }
 
-function showutensilLoader(show) {
+function showMenuLoader(show) {
     var $panel = $('.pageloaderpanel');
     if ($panel.length) {
-        $('#utensilListPanel .table-wrap').toggleClass('hidden', show);
+        $('#menusListPanel .table-wrap').toggleClass('hidden', show);
         $panel.toggleClass('hidden', !show);
         return;
     }
 }
 
-function renderUtensilList(rows) {
+function renderMenuList(rows) {
     rows = Array.isArray(rows) ? rows : [];
     var html = '';
     if (rows.length) {
-        html = rows.map(function (utensil) {
-            var id = utensil.id || utensil.Id || '';
-            var utensilName = utensil.utensilName || utensil.UtensilName || '';
-            var unitType = utensil.unitType || utensil.UnitType || '';
-            var price = utensil.price || utensil.Price || '';
-            var depAmt = utensil.depositAmount || utensil.DepositAmount || '';
-            var active = utensil.isActive;
+        html = rows.map(function (menu) {
+            var id = menu.id || menu.Id || '';
+            var code = menu.code || menu.Code || '';
+            var name = menu.name || menu.Name || '';
+            var CategoryId = menu.categoryId || menu.CategoryId || '';
+            var active = menu.isActive;
 
             var actions;
             if (active) {
@@ -70,10 +69,9 @@ function renderUtensilList(rows) {
             return `
                 <tr>
                     <td>${id}</td>
-                    <td>${utensilName}</td>
-                    <td>${unitType}</td>
-                    <td>${price || ''}</td>
-                    <td>${depAmt || ''}</td>
+                    <td>${code}</td>
+                    <td>${name}</td>
+                    <td>${CategoryId || ''}</td>
                     <td>${statusBadge}</td>
                     <td>
                         <div class="row-actions">
@@ -88,26 +86,32 @@ function renderUtensilList(rows) {
         }).join('');
     }
 
-    $('#utensilList tbody').html(html);
+    $('#menusList tbody').html(html);
     if (typeof renderDataTable === 'function') {
-        renderDataTable('utensilList');
+        renderDataTable('menusList');
     }
 }
 
-function clearUtensilForm() {
-    $('#utName').val('');
-    $('#utType').val('');
-    $('#utPrice').val('');
-    $('#utDepAmt').val('0.00');
+function clearMenuForm() {
+    $('#ItemCode').val('');
+    $('#ItemName').val('');
+    $('#CategoryId').val('');
+    $('#Price').val('');
+    $('#PreparationTime').val('');
+    $('#FoodType').val('1');
+    $('#ServiceCharge').val('');
 }
 
-function saveutensil() {
+function saveMenu() {
     var menu = {
-        Id: $('#utensilId').val() || '',
-        UtensilName: $('#utName').val() || '',
-        UnitType: $('#utType').val() || '',
-        Price: $('#utPrice').val() || '',
-        DepositAmount: $('#utDepAmt').val() || '',
+        Id: $('#menuId').val() || '',
+        Code: $('#ItemCode').val() || '',
+        Name: $('#ItemName').val() || '',
+        CategoryId: $('#CategoryId').val() || '',
+        Price: $('#Price').val() || '',
+        PreparationTime: $('#PreparationTime').val() || '',
+        FoodType: $('#FoodType').val() || '',
+        Servicecharge: $('#ServiceCharge').val() || '',
         IsActive: true,
         IsDeleted: false,
         CreatedBy: 1,
@@ -116,7 +120,7 @@ function saveutensil() {
         UpdatedDate: ''
     };
 
-    var endpoint = menu.Id ? '/Admin/Utensils/update' : '/Admin/Utensils/create';
+    var endpoint = menu.Id ? '/Admin/FoodMenus/update' : '/Admin/FoodMenus/create';
 
     $.ajax({
         url: endpoint,
@@ -125,12 +129,12 @@ function saveutensil() {
         data: JSON.stringify(menu),
         success: function (res) {
             if (res && res.success) {
-                showToast('Utensils saved successfully.', 3000, { type: 'success', title: 'Saved' });
-                clearUtensilForm();
-                $('#utensilsModal').addClass('hidden');
-                loadUtensils();
+                showToast('FoodMenu saved successfully.', 3000, { type: 'success', title: 'Saved' });
+                clearMenuForm();
+                $('#MenuModal').addClass('hidden');
+                loadMenus();
             } else {
-                showToast('Unable to save Utensils.', 3000, { type: 'error', title: 'Save failed' });
+                showToast('Unable to save Menus.', 3000, { type: 'error', title: 'Save failed' });
             }
         },
         error: function () {
@@ -141,27 +145,30 @@ function saveutensil() {
 
 function editRole(id) {
     $.ajax({
-        url: '/Admin/Utensils/get/' + id,
+        url: '/Admin/FoodMenus/get/' + id,
         type: 'GET',
         success: function (role) {
             if (!role) {
-                showToast('Utensils not found.', 3000, { type: 'warning', title: 'Not found' });
+                showToast('Menu not found.', 3000, { type: 'warning', title: 'Not found' });
                 return;
             }
-            $('#utensilId').val(role.Id || role.id || '');
-            $('#utName').val(role.UtensilName || role.utensilName || '');
-            $('#utType').val(role.UnitType || role.unitType || '');
-            $('#utPrice').val(role.Price || role.price || '');
-            $('#utDepAmt').val(role.DepositAmount || role.depositAmount || '');
-            $('#utensilsModal').removeClass('hidden');
+            $('#menuId').val(role.Id || role.id || '');
+            $('#ItemCode').val(role.Code || role.code || '');
+            $('#ItemName').val(role.Name || role.name || '');
+            $('#CategoryId').val(role.categoryId || role.CategoryId || '');           
+            $('#Price').val(role.price || role.Price || '');
+            $('#PreparationTime').val(role.preparationTime || role.PreparationTime || '');
+            $('#FoodType').val(role.foodType || role.FoodType || '');
+            $('#ServiceCharge').val(role.servicecharge || role.Servicecharge || '');
+            $('#MenuModal').removeClass('hidden');
         },
-        error: function () { showToast('Unable to load Utensils.', 3000, { type: 'error', title: 'Load failed' }); }
+        error: function () { showToast('Unable to load Menu.', 3000, { type: 'error', title: 'Load failed' }); }
     });
-}
+}  
 
 function deleteRole(id) {
     if (!id) return;
-    showToast('Delete this Utensil?', 0, {
+    showToast('Delete this Menu?', 0, {
         confirm: true,
         type: 'warning',
         title: 'Confirm',
@@ -169,15 +176,15 @@ function deleteRole(id) {
         noText: 'Cancel',
         onYes: function () {
             $.ajax({
-                url: '/Admin/Utensils/delete/' + id,
+                url: '/Admin/FoodMenus/delete/' + id,
                 type: 'POST',
                 success: function (res) {
                     if (res && res.success) {
-                        showToast('Utensils deleted successfully.', 3000, { type: 'success', title: 'Deleted' });
+                        showToast('Menu deleted successfully.', 3000, { type: 'success', title: 'Deleted' });
                     } else {
-                        showToast('Unable to delete Utensils.', 3000, { type: 'error', title: 'Delete failed' });
+                        showToast('Unable to delete Menu.', 3000, { type: 'error', title: 'Delete failed' });
                     }
-                    setTimeout(loadUtensils, 300);
+                    setTimeout(loadMenus, 300);
                 },
                 error: function () { showToast('Delete failed.', 3000, { type: 'error', title: 'Delete failed' }); }
             });
@@ -191,8 +198,8 @@ function deleteRole(id) {
 function setRoleActive(id, isActive) {
     if (!id) return;
 
-    var confirmMessage = isActive ? 'Mark this Utensils active?' : 'Mark this Utensils inactive?';
-    var successMessage = isActive ? 'Utensils activated.' : 'Utensils marked inactive.';
+    var confirmMessage = isActive ? 'Mark this Menu active?' : 'Mark this Menu inactive?';
+    var successMessage = isActive ? 'Menu activated.' : 'Menu marked inactive.';
 
     showToast(confirmMessage, 0, {
         confirm: true,
@@ -202,15 +209,15 @@ function setRoleActive(id, isActive) {
         noText: 'No',
         onYes: function () {
             $.ajax({
-                url: '/Admin/Utensils/activeinactive/' + id + '?status=' + isActive,
+                url: '/Admin/FoodMenus/activeinactive/' + id + '?status=' + isActive,
                 type: 'POST',
                 success: function (res) {
                     if (res && res.success) {
                         showToast(successMessage, 3000, { type: 'success', title: 'Updated' });
                     } else {
-                        showToast('Unable to update Utensils status.', 3000, { type: 'error', title: 'Update failed' });
+                        showToast('Unable to update Menu status.', 3000, { type: 'error', title: 'Update failed' });
                     }
-                    setTimeout(loadUtensils, 350);
+                    setTimeout(loadMenus, 350);
                 },
                 error: function () {
                     showToast('Request failed.', 3000, { type: 'error', title: 'Request failed' });
@@ -221,4 +228,5 @@ function setRoleActive(id, isActive) {
             showToast('Action cancelled.', 3000, { type: 'info', title: 'Cancelled' });
         }
     });
-} 
+}
+
