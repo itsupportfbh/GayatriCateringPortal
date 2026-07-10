@@ -13,16 +13,28 @@
     </div>
     <div class="page-header-actions">
         <div class="app-header-filter">
-            <input type="text" id="locationsSearch" data-table="locationsTable" placeholder="Search locations...">
+            <input type="text" id="locationsSearch" data-table="locationList" placeholder="Search locations...">
         </div>
-        <button class="btn btn-orange btn-add" id="btnAddLocation">+ Add Location</button>
+        <button class="btn btn-orange btn-add" id="btnAddLocation" onclick="openLocationModal()">+ Add Location</button>
     </div>
 </div>
 
 <div class="card">
     <div class="table-wrap">
-        <table class="tbl" id="locationsTable">
-            <thead><tr><th>Location</th><th>Address</th><th>Capacity</th><th>Type</th><th>Active</th><th>Actions</th></tr></thead>
+        <table class="tbl" id="locationList">
+            <thead>
+                <tr>
+                    <th>S.No</th>
+                    <th>Code</th>
+                    <th>Location</th>
+                    <th>Delivery Fee</th>
+                    <th>Minimum Pax</th>
+                    <th>Lead Time Days</th>
+                    <th>Remarks</th>
+                    <th>Active</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
             <tbody>
                 <!-- rows rendered by ~/js/admin/locations.js -->
             </tbody>
@@ -30,18 +42,65 @@
     </div>
 </div>
 
-<!-- Per-view Locations modal -->
+
+<!-- Add Location Modal -->
 <div class="modal-overlay hidden" id="locationsModal">
-    <div class="modal-box">
+    <div class="modal-box customer-modal-box">
+
         <div class="modal-header">
-            <span class="modal-title">Create Location</span>
-            <button class="modal-close">✕</button>
+            <span class="modal-title">Create / Edit Location</span>
+
+            <button class="modal-close" type="button" onclick="closeLocationModal()">
+                ✕
+            </button>
         </div>
-        <div class="form-group"><label>Location</label><input id="locNameField" class="form-control"></div>
-        <div class="form-group"><label>Address</label><input id="locAddressField" class="form-control"></div>
-        <div class="form-row col2"><div class="form-group"><label>Capacity</label><input id="locCapacityField" type="number" class="form-control"></div><div class="form-group"><label>Type</label><input id="locTypeField" class="form-control"></div></div>
-        @Html.AntiForgeryToken()
-        <div class="actions"><button class="btn btn-secondary" id="btnClearLocation">Clear</button> <button class="btn btn-primary" id="btnSaveLocation">Save</button></div>
+
+        <input type="hidden" id="locationId" />
+
+        <div class="customer-form-grid">
+
+            <div class="form-group">
+                <label>Code</label>
+                <input type="text" id="locationCode" class="form-control" placeholder="Location code" />
+            </div>
+
+            <div class="form-group">
+                <label>Location Name<span class="field-required">*</span></label>
+                <input type="text" id="locationName" class="form-control" placeholder="Location name" />
+            </div>
+
+            <div class="form-group">
+                <label>Delivery Fee<span class="field-required">*</span></label>
+                <input type="number" id="locationDeliveryFee" class="form-control" placeholder="Delivery fee" />
+            </div>
+
+            <div class="form-group">
+                <label>Minimum Pax<span class="field-required">*</span></label>
+                <input type="number" id="locationMinimumPax" class="form-control" placeholder="Minimum pax" />
+            </div>
+
+            <div class="form-group">
+                <label>Lead Time Days</label>
+                <input type="number" id="locationLeadTimeDays" class="form-control" placeholder="Lead time days" />
+            </div>
+
+            <div class="form-group">
+                <label>Remarks</label>
+                <input type="text" id="locationRemarks" class="form-control" placeholder="Remarks" />
+            </div>
+
+        </div>
+
+        <div class="actions customer-modal-actions">
+            <button type="button" class="btn btn-light" onclick="clearLocationForm()">
+                Clear
+            </button>
+
+            <button type="button" class="btn btn-primary" onclick="saveLocation()">
+                Save
+            </button>
+        </div>
+
     </div>
 </div>
 

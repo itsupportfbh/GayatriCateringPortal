@@ -1,71 +1,118 @@
 using GayatriCateringPortal.Interfaces;
 using GayatriCateringPortal.Models;
 using Microsoft.AspNetCore.Mvc;
+
 namespace GayatriCateringPortal.Controllers.Admin
 {
     [Route("Admin/Locations")]
     public class LocationsController : Controller
     {
-        private readonly ILocationsRepository _locationsRepository;
+        private readonly ILocationsRepository _locations;
 
-        public LocationsController(ILocationsRepository locationsRepository)
+        public LocationsController(ILocationsRepository locations)
         {
-            _locationsRepository = locationsRepository;
+            _locations = locations;
         }
 
         [HttpGet("")]
         public IActionResult Index()
         {
-            var items = _locationsRepository.GetAll();
-            ViewData["Items"] = items;
             ViewData["Mode"] = "admin";
             ViewData["Page"] = "locations";
             ViewData["Title"] = "Locations";
+
             return View("~/Views/Admin/Locations.cshtml");
         }
 
-        [HttpGet("get")]
+              
+
+        [HttpGet("getAll")]
         public IActionResult GetAll()
         {
-            var items = _locationsRepository.GetAll();
+            var items = _locations.GetAll();
+
             return Ok(items);
         }
 
         [HttpGet("get/{id}")]
         public IActionResult Get(int id)
         {
-            var item = _locationsRepository.GetById(id);
-            if (item == null) return NotFound();
+            var item = _locations.GetById(id);
+
+            if (item == null)
+                return NotFound();
+
             return Ok(item);
         }
 
-        [HttpPost("save")]
-        public IActionResult Save([FromBody] LocationMaster item)
+        [HttpPost("create")]
+        public IActionResult Create([FromBody] LocationMaster item)
         {
-            if (item == null) return BadRequest();
+            if (item == null)
+                return BadRequest(new { success = false, message = "Invalid Location details." });
 
-            if (item.Id == 0)
+            try
             {
-                int newId = _locationsRepository.Create(item);
-                return Ok(new { success = newId > 0, id = newId });
+                int newId = _locations.Create(item);
+                return Ok(new
+                {
+                    success = newId > 0,
+                    id = newId,
+                    message = newId > 0 ? "Location created successfully." : "Location was not saved."
+                });
             }
-
-            bool result = _locationsRepository.Update(item);
-            return Ok(new { success = result });
+            catch (Exception ex)
+            {
+                return BadRequest(new { success = false, message = ex.Message });
+            }
         }
+
+        [HttpPost("update")]
+        public IActionResult Update([FromBody] LocationMaster item)
+        {
+            if (item == null)
+                return BadRequest(new { success = false, message = "Invalid Location details." });
+
+            try
+            {
+                bool updated = _locations.Update(item);
+                return Ok(new
+                {
+                    success = updated,
+                    message = updated ? "Location updated successfully." : "Location was not updated."
+                });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { success = false, message = ex.Message });
+            }
+        }
+
+
+      
 
         [HttpPost("delete/{id}")]
         public IActionResult Delete(int id)
         {
-            bool result = _locationsRepository.Delete(id);
-            return Ok(new { success = result });
+            bool result = _locations.Delete(id);
+
+            return Ok(new
+            {
+                success = result
+            });
         }
 
-        [HttpPost("activeinactive/{id}")]
-        public IActionResult ActiveInActive(int id)
+
+
+        [HttpPost("activeinactive")]
+        public IActionResult ActiveInActive(int id, bool status)
         {
-            bool result = _locationsRepository.ActiveInActive(id);
-            return Ok(new { success = result });
+            bool result = _locations.ActiveInActive(id, status);
+
+            return Ok(new
+            {
+                success = result
+            });
         }
     }
 }

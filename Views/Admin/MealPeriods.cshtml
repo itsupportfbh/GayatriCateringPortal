@@ -13,35 +13,157 @@
     </div>
     <div class="page-header-actions">
         <div class="app-header-filter">
-            <input type="text" id="mealPeriodsSearch" data-table="mealPeriodsTable" placeholder="Search meal periods...">
+            <input type="text" id="mealPeriodsSearch" class="tbl-search" data-table="mealPeriodList" placeholder="Search meal periods...">
         </div>
-        <button class="btn btn-orange btn-add" id="btnAddPeriod">+ Add Period</button>
+        <button class="btn btn-orange btn-add" id="btnAddPeriod" onclick="openMealPeriodModal()">+ Add MealPeriod</button>
     </div>
 </div>
 
 <div class="card">
     <div class="table-wrap">
-        <table class="tbl" id="mealPeriodsTable">
-            <thead><tr><th>Period</th><th>Start Time</th><th>End Time</th><th>Active</th><th>Actions</th></tr></thead>
+
+        <table class="tbl" id="mealPeriodList">
+
+            <thead>
+                <tr>
+                    <th>S.No</th>
+                    <th>Code</th>
+                    <th>Meal Period Name</th>
+                    <th>Start Time</th>
+                    <th>End Time</th>
+                    <th>Display Order</th>
+                    <th>Active</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+
             <tbody>
                 <!-- rows rendered by ~/js/admin/mealperiods.js -->
             </tbody>
+
         </table>
+
     </div>
 </div>
 
-<!-- Per-view Meal Periods modal -->
+
+<!-- Add Meal Period Modal -->
 <div class="modal-overlay hidden" id="mealPeriodsModal">
-    <div class="modal-box">
+
+    <div class="modal-box customer-modal-box">
+
+        <!-- Header -->
         <div class="modal-header">
-            <span class="modal-title">Create Period</span>
-            <button class="modal-close">✕</button>
+
+            <span class="modal-title">
+                Create / Edit Meal Period
+            </span>
+
+            <button class="modal-close"
+                    type="button"
+                    onclick="closeMealPeriodModal()">
+                ✕
+            </button>
+
         </div>
-        <div class="form-group"><label>Period</label><input id="mpNameField" class="form-control"></div>
-        <div class="form-row col2"><div class="form-group"><label>Start</label><input id="mpStartField" type="time" class="form-control" value="00:00"></div><div class="form-group"><label>End</label><input id="mpEndField" type="time" class="form-control" value="00:00"></div></div>
-        @Html.AntiForgeryToken()
-        <div class="actions"><button class="btn btn-secondary" id="btnClearPeriod">Clear</button> <button class="btn btn-primary" id="btnSavePeriod">Save</button></div>
+
+
+        <!-- Hidden Id -->
+        <input type="hidden"
+               id="mealPeriodId" />
+
+
+        <!-- Meal Period Form -->
+        <div class="customer-form-grid">
+
+
+            <!-- Code -->
+            <div class="form-group">
+
+                <label>Code</label>
+
+                <input type="text"
+                       id="mealPeriodCode"
+                       class="form-control"
+                       placeholder="Meal period code" />
+
+            </div>
+
+
+            <!-- Meal Period Name -->
+            <div class="form-group">
+
+                <label>Meal Period Name<span class="field-required">*</span></label>
+
+                <input type="text"
+                       id="mealPeriodName"
+                       class="form-control"
+                       placeholder="Meal period name" />
+
+            </div>
+
+
+            <!-- Start Time -->
+            <div class="form-group">
+
+                <label>Start Time<span class="field-required">*</span></label>
+
+                <input type="time"
+                       id="mealPeriodStartTime"
+                       class="form-control" />
+
+            </div>
+
+
+            <!-- End Time -->
+            <div class="form-group">
+
+                <label>End Time<span class="field-required">*</span></label>
+
+                <input type="time"
+                       id="mealPeriodEndTime"
+                       class="form-control" />
+
+            </div>
+
+
+            <!-- Display Order -->
+            <div class="form-group">
+
+                <label>Display Order<span class="field-required">*</span></label>
+
+                <input type="number"
+                       id="mealPeriodDisplayOrder"
+                       class="form-control"
+                       min="1"
+                       placeholder="Display order" />
+
+            </div>
+
+
+        </div>
+
+
+        <!-- Footer Actions -->
+        <div class="actions customer-modal-actions">
+
+            <button type="button"
+                    class="btn btn-light"
+                    onclick="clearMealPeriodForm()">
+                Clear
+            </button>
+
+
+            <button type="button"
+                    class="btn btn-primary"
+                    onclick="saveMealPeriod()">
+                Save
+            </button>
+
+        </div>
+
     </div>
+
 </div>
 
 @section Scripts {

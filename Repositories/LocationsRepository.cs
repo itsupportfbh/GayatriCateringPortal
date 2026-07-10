@@ -1,203 +1,499 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Data;
+﻿using System.Data;
 using Microsoft.Data.SqlClient;
+using GayatriCateringPortal.Models;
 using GayatriCateringPortal.Data;
 using GayatriCateringPortal.Interfaces;
-using GayatriCateringPortal.Models;
 
 namespace GayatriCateringPortal.Repositories;
 
-public class LocationsRepository : ILocationsRepository
+public class LocationRepository :ILocationsRepository
 {
     public List<LocationMaster> GetAll()
     {
         List<LocationMaster> list = new List<LocationMaster>();
-        IDbConnection? conn = null;
-        IDbCommand? cmd = null;
-        IDataReader? reader = null;
+        IDbConnection conn = null;
+        IDbCommand cmd = null;
+        IDataReader reader = null;
+
         try
         {
             using (conn = DataFactory.CreateConnection())
             {
                 conn.Open();
-                using (cmd = DataFactory.CreateCommand("SELECT * FROM LocationMaster WHERE IsDeleted = 0", conn))
+
+                using (cmd = DataFactory.CreateCommand(
+                    "[dbo].[SP_GetLocationMaster]", conn))
                 {
+                    ((SqlCommand)cmd).CommandType =
+                        CommandType.StoredProcedure;
+
                     reader = DataFactory.ExecuteReader(cmd);
-                    list = new List<LocationMaster>();
-                    while (reader.Read()) list.Add(new LocationMaster());
+
+                    list = this.List(reader);
                 }
             }
+
             return list ?? new List<LocationMaster>();
         }
-        catch (SqlException)
+        catch (SqlException ex)
         {
-            throw new Exception("Database error");
+            throw new Exception(
+                "Database error: " + ex.Message);
         }
         catch (Exception ex)
         {
-            throw new Exception(ex.StackTrace);
+            throw new Exception(ex.Message);
         }
         finally
         {
-            if (conn != null && conn.State != ConnectionState.Closed) conn.Close();
+            if (conn != null &&
+                conn.State != ConnectionState.Closed)
+            {
+                conn.Close();
+            }
         }
     }
+
 
     public LocationMaster? GetById(int id)
     {
-        IDbConnection? conn = null;
-        IDbCommand? cmd = null;
-        IDataReader? reader = null;
+        IDbConnection conn = null;
+        IDbCommand cmd = null;
+        IDataReader reader = null;
+
+        LocationMaster? item = null;
+
         try
         {
             using (conn = DataFactory.CreateConnection())
             {
-                using (cmd = DataFactory.CreateCommand("SELECT * FROM LocationMaster WHERE Id = @Id", conn))
+                if (conn.State == ConnectionState.Closed)
+                    conn.Open();
+
+                using (cmd = DataFactory.CreateCommand(
+                    "[dbo].[SP_GetLocationMasterById]", conn))
                 {
-                    cmd.Parameters.Add(DataFactory.CreateParameter("@Id", id));
-                    if (conn.State == ConnectionState.Closed) conn.Open();
+                    ((SqlCommand)cmd).CommandType =
+                        CommandType.StoredProcedure;
+
+                    cmd.Parameters.Add(
+                        DataFactory.CreateParameter("@Id", id));
+
                     reader = DataFactory.ExecuteReader(cmd);
-                    if (reader.Read()) return new LocationMaster();
+
+                    var list = this.List(reader);
+
+                    if (list != null && list.Count > 0)
+                    {
+                        item = list[0];
+                    }
                 }
             }
-            return null;
         }
-        catch (SqlException)
+        catch (SqlException ex)
         {
-            throw new Exception("Database error");
+            throw new Exception(
+                "Database error: " + ex.Message);
         }
         catch (Exception ex)
         {
-            throw new Exception(ex.StackTrace);
+            throw new Exception(ex.Message);
         }
         finally
         {
-            if (conn != null && conn.State != ConnectionState.Closed) conn.Close();
+            if (conn != null &&
+                conn.State != ConnectionState.Closed)
+            {
+                conn.Close();
+            }
+        }
+
+        return item;
+    }
+
+
+    public int Create(LocationMaster location)
+    {
+        if (string.IsNullOrWhiteSpace(location.LocationName))
+            throw new ArgumentException("Location Name is required.");
+
+        try
+        {
+            using (IDbConnection conn =
+                DataFactory.CreateConnection())
+            {
+                conn.Open();
+
+                EnsureLocationNameAvailable(conn, location.LocationName, 0);
+
+                using (IDbCommand cmd = DataFactory.CreateCommand("[dbo].[SP_CreateLocationMaster]", conn))
+                {
+                    ((SqlCommand)cmd).CommandType = CommandType.StoredProcedure;
+
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@Code",location.Code ??(object)DBNull.Value));
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@LocationName", location.LocationName));
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@DeliveryFee", location.DeliveryFee));
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@MinimumPax",location.MinimumPax));
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@LeadTimeDays",location.LeadTimeDays));
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@IsActive",location.IsActive));
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@Remarks",location.Remarks ?? (object)DBNull.Value));
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@IsDeleted",location.IsDeleted));
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@CreatedBy",location.CreatedBy ??(object)DBNull.Value));
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@CreatedDate",DateTime.Now));
+
+
+                    var result = DataFactory.ExecuteScalar(cmd);
+
+
+                    if (result != null &&
+                        result != DBNull.Value)
+                    {
+                        location.Id =
+                            Convert.ToInt32(result);
+
+                        return location.Id;
+                    }
+                }
+            }
+        }
+        catch (SqlException ex)
+        {
+            throw new Exception(
+                "Database error: " + ex.Message);
+        }
+        catch (Exception ex)
+        {
+            throw new Exception(ex.Message);
+        }
+
+        return 0;
+    }
+
+
+    public bool Update(LocationMaster location)
+    {
+        if (string.IsNullOrWhiteSpace(location.LocationName))
+            throw new ArgumentException("Location Name is required.");
+
+        try
+        {
+            using (IDbConnection conn =
+                DataFactory.CreateConnection())
+            {
+                conn.Open();
+
+                EnsureLocationNameAvailable(conn, location.LocationName, location.Id);
+
+                using (IDbCommand cmd =
+                    DataFactory.CreateCommand( "[dbo].[SP_UpdateLocationMaster]",        conn))
+                {
+                    ((SqlCommand)cmd).CommandType =  CommandType.StoredProcedure;
+
+
+                    cmd.Parameters.Add(DataFactory.CreateParameter(    "@Id",  location.Id));
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@Code",location.Code ?? (object)DBNull.Value));
+                    cmd.Parameters.Add( DataFactory.CreateParameter("@LocationName", location.LocationName));
+                    cmd.Parameters.Add( DataFactory.CreateParameter("@DeliveryFee",location.DeliveryFee));
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@MinimumPax",location.MinimumPax));
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@LeadTimeDays", location.LeadTimeDays));
+                    cmd.Parameters.Add( DataFactory.CreateParameter("@IsActive",  location.IsActive));
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@Remarks", location.Remarks ??(object)DBNull.Value));
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@IsDeleted",location.IsDeleted));
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@UpdatedBy",location.UpdatedBy ??(object)DBNull.Value));
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@UpdatedDate", DateTime.Now));
+
+
+                    var result = DataFactory.ExecuteScalar(cmd);
+
+
+                    return result != null &&
+                           result != DBNull.Value &&
+                           Convert.ToInt32(result) > 0;
+                }
+            }
+        }
+        catch (SqlException ex)
+        {
+            throw new Exception(
+                "Database error: " + ex.Message);
+        }
+        catch (Exception ex)
+        {
+            throw new Exception(ex.Message);
         }
     }
 
-    public int Create(LocationMaster item)
+
+    private static void EnsureLocationNameAvailable(
+        IDbConnection conn,
+        string locationName,
+        int currentId)
     {
-        IDbConnection? conn = null;
-        IDbCommand? cmd = null;
-        try
+        using (IDbCommand cmd = DataFactory.CreateCommand(
+            @"SELECT COUNT(1)
+              FROM dbo.LocationMaster
+              WHERE LTRIM(RTRIM(LocationName)) = LTRIM(RTRIM(@LocationName))
+                AND Id <> @CurrentId
+                AND ISNULL(IsDeleted, 0) = 0",
+            conn))
         {
-            using (conn = DataFactory.CreateConnection())
-            {
-                using (cmd = DataFactory.CreateCommand("SP_CreateLocationMaster", conn))
-                {
-                    ((SqlCommand)cmd).CommandType = CommandType.StoredProcedure;
-                    cmd.Parameters.Add(DataFactory.CreateParameter("@Id", item.Id));
-                    conn.Open();
-                    var rows = DataFactory.ExecuteNonQuery(cmd);
-                    return rows > 0 ? 1 : 0;
-                }
-            }
-        }
-        catch (SqlException)
-        {
-            throw new Exception("Database error");
-        }
-        catch (Exception ex)
-        {
-            throw new Exception(ex.StackTrace);
-        }
-        finally
-        {
-            if (conn != null && conn.State != ConnectionState.Closed) conn.Close();
+            cmd.Parameters.Add(DataFactory.CreateParameter(
+                "@LocationName", locationName.Trim()));
+            cmd.Parameters.Add(DataFactory.CreateParameter("@CurrentId", currentId));
+
+            if (Convert.ToInt32(DataFactory.ExecuteScalar(cmd)) > 0)
+                throw new ArgumentException("Location Name already exists.");
         }
     }
 
-    public bool Update(LocationMaster item)
-    {
-        IDbConnection? conn = null;
-        IDbCommand? cmd = null;
-        try
-        {
-            using (conn = DataFactory.CreateConnection())
-            {
-                using (cmd = DataFactory.CreateCommand("SP_CreateLocationMaster", conn))
-                {
-                    ((SqlCommand)cmd).CommandType = CommandType.StoredProcedure;
-                    cmd.Parameters.Add(DataFactory.CreateParameter("@Id", item.Id));
-                    conn.Open();
-                    return DataFactory.ExecuteNonQuery(cmd) > 0;
-                }
-            }
-        }
-        catch (SqlException)
-        {
-            throw new Exception("Database error");
-        }
-        catch (Exception ex)
-        {
-            throw new Exception(ex.StackTrace);
-        }
-        finally
-        {
-            if (conn != null && conn.State != ConnectionState.Closed) conn.Close();
-        }
-    }
 
     public bool Delete(int id)
     {
-        IDbConnection? conn = null;
-        IDbCommand? cmd = null;
+        IDbConnection conn = null;
+        IDbCommand cmd = null;
+
+        bool taskStatus = false;
+
         try
         {
-            using (conn = DataFactory.CreateConnection())
+            using (conn =
+                DataFactory.CreateConnection())
             {
-                using (cmd = DataFactory.CreateCommand("UPDATE LocationMaster SET IsDeleted = 1 WHERE Id = @Id", conn))
+                if (conn.State ==
+                    ConnectionState.Closed)
                 {
-                    cmd.Parameters.Add(DataFactory.CreateParameter("@Id", id));
                     conn.Open();
-                    return cmd.ExecuteNonQuery() > 0;
+                }
+
+
+                using (cmd =
+                    DataFactory.CreateCommand(
+                        "[dbo].[DeleteLocationMasterById]",
+                        conn))
+                {
+                    ((SqlCommand)cmd).CommandType =
+                        CommandType.StoredProcedure;
+
+
+                    cmd.Parameters.Add(
+                        DataFactory.CreateParameter(
+                            "@Id",
+                            id));
+
+
+                    var result =
+                        DataFactory.ExecuteScalar(cmd);
+
+
+                    if (result != null &&
+                        result != DBNull.Value &&
+                        Convert.ToInt32(result) > 0)
+                    {
+                        taskStatus = true;
+                    }
                 }
             }
         }
-        catch (SqlException)
+        catch (SqlException ex)
         {
-            throw new Exception("Database error");
+            throw new Exception(
+                "Database error: " + ex.Message);
         }
         catch (Exception ex)
         {
-            throw new Exception(ex.StackTrace);
+            throw new Exception(ex.Message);
         }
         finally
         {
-            if (conn != null && conn.State != ConnectionState.Closed) conn.Close();
+            if (conn != null &&
+                conn.State != ConnectionState.Closed)
+            {
+                conn.Close();
+            }
+        }
+
+        return taskStatus;
+    }
+
+
+    public bool ActiveInActive(
+        int id,
+        bool status)
+    {
+        IDbConnection conn = null;
+        IDbCommand cmd = null;
+
+        try
+        {
+            using (conn =
+                DataFactory.CreateConnection())
+            {
+                if (conn.State ==
+                    ConnectionState.Closed)
+                {
+                    conn.Open();
+                }
+
+
+                using (cmd =
+                    DataFactory.CreateCommand(
+                        "[dbo].[ActiveInActiveLocationMasterById]",
+                        conn))
+                {
+                    ((SqlCommand)cmd).CommandType =
+                        CommandType.StoredProcedure;
+
+
+                    cmd.Parameters.Add(
+                        DataFactory.CreateParameter(
+                            "@Id",
+                            id));
+
+
+                    cmd.Parameters.Add(
+                        DataFactory.CreateParameter(
+                            "@IsActive",
+                            status));
+
+
+                    var result =
+                        DataFactory.ExecuteScalar(cmd);
+
+
+                    return result != null &&
+                           result != DBNull.Value &&
+                           Convert.ToInt32(result) > 0;
+                }
+            }
+        }
+        catch (SqlException ex)
+        {
+            throw new Exception(
+                "Database error: " + ex.Message);
+        }
+        catch (Exception ex)
+        {
+            throw new Exception(ex.Message);
+        }
+        finally
+        {
+            if (conn != null &&
+                conn.State != ConnectionState.Closed)
+            {
+                conn.Close();
+            }
         }
     }
 
-    public bool ActiveInActive(int id)
+
+    // COMMON DATA READER MAPPING
+    private List<LocationMaster> List(
+        IDataReader reader)
     {
-        IDbConnection? conn = null;
-        IDbCommand? cmd = null;
+        var list =
+            new List<LocationMaster>();
+
         try
         {
-            using (conn = DataFactory.CreateConnection())
+            while (reader.Read())
             {
-                using (cmd = DataFactory.CreateCommand("UPDATE LocationMaster SET IsActive = CASE WHEN IsActive = 1 THEN 0 ELSE 1 END WHERE Id = @Id", conn))
-                {
-                    cmd.Parameters.Add(DataFactory.CreateParameter("@Id", id));
-                    conn.Open();
-                    return cmd.ExecuteNonQuery() > 0;
-                }
+                var location =
+                    new LocationMaster();
+
+
+                if (reader["Id"] != DBNull.Value)
+                    location.Id =
+                        Convert.ToInt32(
+                            reader["Id"]);
+
+
+                if (reader["Code"] != DBNull.Value)
+                    location.Code =
+                        Convert.ToString(
+                            reader["Code"]);
+
+
+                if (reader["LocationName"] != DBNull.Value)
+                    location.LocationName =
+                        Convert.ToString(
+                            reader["LocationName"]) ?? string.Empty;
+
+
+                if (reader["DeliveryFee"] != DBNull.Value)
+                    location.DeliveryFee =
+                        Convert.ToDecimal(
+                            reader["DeliveryFee"]);
+
+
+                if (reader["MinimumPax"] != DBNull.Value)
+                    location.MinimumPax =
+                        Convert.ToInt32(
+                            reader["MinimumPax"]);
+
+
+                if (reader["LeadTimeDays"] != DBNull.Value)
+                    location.LeadTimeDays =
+                        Convert.ToInt32(
+                            reader["LeadTimeDays"]);
+
+
+                if (reader["IsActive"] != DBNull.Value)
+                    location.IsActive =
+                        Convert.ToBoolean(
+                            reader["IsActive"]);
+
+
+                if (reader["Remarks"] != DBNull.Value)
+                    location.Remarks =
+                        Convert.ToString(
+                            reader["Remarks"]);
+
+
+                if (reader["IsDeleted"] != DBNull.Value)
+                    location.IsDeleted =
+                        Convert.ToBoolean(
+                            reader["IsDeleted"]);
+
+
+                if (reader["CreatedBy"] != DBNull.Value)
+                    location.CreatedBy =
+                        Convert.ToInt32(
+                            reader["CreatedBy"]);
+
+
+                if (reader["CreatedDate"] != DBNull.Value)
+                    location.CreatedDate =
+                        Convert.ToDateTime(
+                            reader["CreatedDate"]);
+
+
+                if (reader["UpdatedBy"] != DBNull.Value)
+                    location.UpdatedBy =
+                        Convert.ToInt32(
+                            reader["UpdatedBy"]);
+
+
+                if (reader["UpdatedDate"] != DBNull.Value)
+                    location.UpdatedDate =
+                        Convert.ToDateTime(
+                            reader["UpdatedDate"]);
+
+
+                list.Add(location);
             }
         }
-        catch (SqlException)
+        catch (SqlException ex)
         {
-            throw new Exception("Database error");
+            throw new Exception(
+                "Database error: " + ex.Message);
         }
         catch (Exception ex)
         {
-            throw new Exception(ex.StackTrace);
+            throw new Exception(
+                "Location mapping error: " +
+                ex.Message);
         }
-        finally
-        {
-            if (conn != null && conn.State != ConnectionState.Closed) conn.Close();
-        }
+
+        return list;
     }
 }
-

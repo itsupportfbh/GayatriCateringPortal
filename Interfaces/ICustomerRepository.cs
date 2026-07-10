@@ -10,5 +10,5 @@ public interface ICustomerRepository
     int Create(CustomerMaster customer);
     bool Update(CustomerMaster customer);
     bool Delete(int id);
-    bool ActiveInActive(int id);
+    public bool ActiveInActive(int id, bool status);
 }

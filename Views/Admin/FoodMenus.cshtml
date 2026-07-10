@@ -1,0 +1,135 @@
+@{
+    ViewData["Title"] = "Menu Master";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/admin/menus.css" asp-append-version="true">
+    }
+
+    <div class="page-header">
+        <div>
+            <div class="page-title">Menu Master</div>
+            <div class="page-subtitle">Manage all menu items, categories, prices and availability</div>
+        </div>
+        <div class="page-header-actions">
+            <div class="app-header-filter">
+                <input type="text" id="menuSearch" placeholder="Search menu items...">
+                <select id="catFilter">
+                    <option value="">All Categories</option>
+                    <option>Rice & Breads</option>
+                    <option>Vegetarian</option>
+                    <option>Non-Vegetarian</option>
+                    <option>Snacks</option>
+                    <option>Desserts</option>
+                    <option>Drinks</option>
+                </select>
+            </div>
+            <button class="btn btn-orange" id="btnAddMenu" onclick="openMenuModal()">+ Add Item</button>
+        </div>
+    </div>
+
+    <div class="pageloaderfull hidden">
+        <div class="spinner"></div>
+        <div class="loader-text">Loading menus...</div>
+    </div>
+
+    <div id="menusListPanel" class="card">
+        <div class="panel-header">
+            <div class="panel-title">Manage Menus</div>
+        </div>
+        <div class="muted" style="margin-bottom:16px">Create, edit and manage menus.</div>
+        <div class="pageloaderpanel hidden">
+            <div class="spinner"></div>
+            <div class="loader-text">Loading menus...</div>
+        </div>
+        <div class="table-wrap">
+            <table class="tbl" id="menusList" data-page-size="10">
+                <thead>
+                    <tr>
+                        <th class="sortable">Id</th>
+                        <th class="sortable">Code</th>
+                        <th class="sortable">Name</th>
+                        <th class="sortable">Category</th>
+                        <th class="sortable">Status</th>
+                        <th class="no-sort">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                </tbody>
+            </table>
+        </div>
+    </div>    
+
+    <!-- Add Menu Modal -->
+    <div class="modal-overlay hidden" id="MenuModal">
+        <div class="modal-box">
+            <div class="modal-header">
+                <span class="modal-title">Add Menu Item</span>
+                <button class="modal-close" type="button" onclick="closeMenuModal()">✕</button>
+            </div>
+            <div class="form-row col2">
+                <div class="form-group">
+                    <label>Code *</label>
+                    <input type="text" id="ItemCode" placeholder="e.g. M001">
+                </div>
+                <div class="form-group">
+                    <label>Item Name *</label>
+                    <input type="text" id="ItemName" placeholder="e.g. Paneer Tikka">
+                </div>
+            </div>
+            <div class="form-row col2">
+                <div class="form-group">
+                    <label>Category</label>
+                    <select id="CategoryId">
+                        <option value="">All Categories</option>
+                        <option value="1">Rice & Breads</option>
+                        <option value="2">Vegetarian</option>
+                        <option value="3">Non-Vegetarian</option>
+                        <option value="4">Snacks</option>
+                        <option value="5">Desserts</option>
+                        <option value="6">Drinks</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Price (S$)</label>
+                    <input type="number" id="ItemPrice" min="0" step="0.01" placeholder="0.00">
+                </div>
+            </div>
+
+            <div class="form-row col2">
+                <div class="form-group">
+                    <label>Preparation Time (mins)</label>
+                    <input type="number" id="PreparationTime" min="0" placeholder="15">
+                </div>
+
+                <div class="form-group">
+                    <label>Food Type</label>
+                    <select id="FoodType">
+                        <option value="1" >Veg</option>
+                        <option value="2">Non-Veg</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Service Charge</label>
+                <input type="number"
+                       id="ServiceCharge"
+                       min="0"
+                       step="0.01"
+                       placeholder="0.00">
+            </div>
+            <input type="hidden" id="menuId" />
+            <div class="actions">
+                <button class="btn btn-primary" id="btnSaveMenu" onclick="saveMenu()">Save Item</button>
+                <button type="button" class="btn btn-light" onclick="clearMenuForm()">Clear</button>
+            </div>
+
+        </div>
+    </div>
+
+    @section Scripts {
+        <script src="~/js/admin/table-utils.js" asp-append-version="true"></script>
+        <script src="~/js/admin/foodmenu.js" asp-append-version="true"></script>
+    }
