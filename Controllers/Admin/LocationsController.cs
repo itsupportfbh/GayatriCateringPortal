@@ -14,11 +14,6 @@ namespace GayatriCateringPortal.Controllers.Admin
             _locations = locations;
         }
 
-        // ==========================================
-        // PAGE
-        // GET: /Admin/Locations
-        // ==========================================
-
         [HttpGet("")]
         public IActionResult Index()
         {
@@ -29,11 +24,7 @@ namespace GayatriCateringPortal.Controllers.Admin
             return View("~/Views/Admin/Locations.cshtml");
         }
 
-
-        // ==========================================
-        // GET ALL LOCATIONS
-        // GET: /Admin/Locations/getAll
-        // ==========================================
+              
 
         [HttpGet("getAll")]
         public IActionResult GetAll()
@@ -42,12 +33,6 @@ namespace GayatriCateringPortal.Controllers.Admin
 
             return Ok(items);
         }
-
-
-        // ==========================================
-        // GET LOCATION BY ID
-        // GET: /Admin/Locations/get/1
-        // ==========================================
 
         [HttpGet("get/{id}")]
         public IActionResult Get(int id)
@@ -60,52 +45,51 @@ namespace GayatriCateringPortal.Controllers.Admin
             return Ok(item);
         }
 
-
-        // ==========================================
-        // CREATE LOCATION
-        // POST: /Admin/Locations/create
-        // ==========================================
-
         [HttpPost("create")]
         public IActionResult Create([FromBody] LocationMaster item)
         {
             if (item == null)
-                return BadRequest();
+                return BadRequest(new { success = false, message = "Invalid Location details." });
 
-            int newId = _locations.Create(item);
-
-            return Ok(new
+            try
             {
-                success = newId > 0,
-                id = newId
-            });
+                int newId = _locations.Create(item);
+                return Ok(new
+                {
+                    success = newId > 0,
+                    id = newId,
+                    message = newId > 0 ? "Location created successfully." : "Location was not saved."
+                });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { success = false, message = ex.Message });
+            }
         }
-
-
-        // ==========================================
-        // UPDATE LOCATION
-        // POST: /Admin/Locations/update
-        // ==========================================
 
         [HttpPost("update")]
         public IActionResult Update([FromBody] LocationMaster item)
         {
             if (item == null)
-                return BadRequest();
+                return BadRequest(new { success = false, message = "Invalid Location details." });
 
-            bool updated = _locations.Update(item);
-
-            return Ok(new
+            try
             {
-                success = updated
-            });
+                bool updated = _locations.Update(item);
+                return Ok(new
+                {
+                    success = updated,
+                    message = updated ? "Location updated successfully." : "Location was not updated."
+                });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { success = false, message = ex.Message });
+            }
         }
 
 
-        // ==========================================
-        // DELETE LOCATION
-        // POST: /Admin/Locations/delete/1
-        // ==========================================
+      
 
         [HttpPost("delete/{id}")]
         public IActionResult Delete(int id)
@@ -119,12 +103,6 @@ namespace GayatriCateringPortal.Controllers.Admin
         }
 
 
-        // ==========================================
-        // ACTIVE / INACTIVE LOCATION
-        //
-        // POST:
-        // /Admin/Locations/activeinactive?id=1&status=false
-        // ==========================================
 
         [HttpPost("activeinactive")]
         public IActionResult ActiveInActive(int id, bool status)

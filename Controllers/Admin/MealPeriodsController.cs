@@ -53,15 +53,23 @@ namespace GayatriCateringPortal.Controllers.Admin
         public IActionResult Create([FromBody] MealPeriodMaster item)
         {
             if (item == null)
-                return BadRequest();
+                return BadRequest(new { success = false, message = "Invalid Meal Period details." });
 
-            int newId = _mealPeriods.Create(item);
-
-            return Ok(new
-            {
-                success = newId > 0,
-                id = newId
-            });
+            
+                int newId = _mealPeriods.Create(item);
+                return Ok(new
+                {
+                    success = newId > 0,
+                    id = newId > 0 ? newId : 0,
+                    message = newId switch
+                    {
+                        > 0 => "Meal Period created successfully.",
+                        -1 => "Meal Period Name already exists.",
+                        -2 => "Display Order already exists.",
+                        _ => "Meal Period was not saved."
+                    }
+                });
+            
         }
 
 
@@ -71,14 +79,23 @@ namespace GayatriCateringPortal.Controllers.Admin
         public IActionResult Update([FromBody] MealPeriodMaster item)
         {
             if (item == null)
-                return BadRequest();
+                return BadRequest(new { success = false, message = "Invalid Meal Period details." });
 
-            bool updated = _mealPeriods.Update(item);
-
-            return Ok(new
+            try
             {
-                success = updated
-            });
+                bool updated = _mealPeriods.Update(item);
+                return Ok(new
+                {
+                    success = updated,
+                    message = updated
+                        ? "Meal Period updated successfully."
+                        : "Meal Period was not updated."
+                });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { success = false, message = ex.Message });
+            }
         }
 
 

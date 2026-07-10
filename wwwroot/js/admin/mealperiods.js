@@ -31,8 +31,8 @@ function renderMealPeriodList(rows) {
         var id = meal.id ?? meal.Id ?? '';
         var code = meal.code ?? meal.Code ?? '';
         var mealPeriodName = meal.mealPeriodName ?? meal.MealPeriodName ?? '';
-        var startTime = meal.startTime ?? meal.StartTime ?? '';
-        var endTime = meal.endTime ?? meal.EndTime ?? '';
+        var startTime = formatTime12Hour(meal.startTime ?? meal.StartTime ?? '');
+        var endTime = formatTime12Hour(meal.endTime ?? meal.EndTime ?? '');
         var displayOrder = meal.displayOrder ?? meal.DisplayOrder ?? '';
         var activeValue = meal.isActive ?? meal.IsActive ?? false;
 
@@ -117,8 +117,8 @@ function openMealPeriodModal() {
 
 
 function saveMealPeriod() {
-
-    var id = $('#mealPeriodId').val() || '0';
+    
+    var id = parseInt($('#mealPeriodId').val(), 10) || 0;
 
     var mealPeriod = {
         Id: id,
@@ -126,28 +126,19 @@ function saveMealPeriod() {
         MealPeriodName: ($('#mealPeriodName').val() || '').trim(),
         StartTime: $('#mealPeriodStartTime').val() || null,
         EndTime: $('#mealPeriodEndTime').val() || null,
-        DisplayOrder: $('#mealPeriodDisplayOrder').val() || '0',
-        IsActive: 'true',
-        IsDeleted: 'false',
-
-        CreatedBy: id === '0' ? '1' : null,
-        CreatedDate: id === '0'
-            ? new Date().toISOString()
-            : '',
-
-        UpdatedBy: id !== '0' ? '1' : null,
-        UpdatedDate: id !== '0'
-            ? new Date().toISOString()
-            : null
+        DisplayOrder:parseInt($('#mealPeriodDisplayOrder').val(), 10) || 0,
+        IsActive: true,
+        IsDeleted: false,
+        CreatedBy: id === 0 ? 1 : null,
+        CreatedDate: id === 0? new Date().toISOString() : new Date().toISOString(),
+        UpdatedBy: id > 0 ? 1 : null,
+        UpdatedDate: id > 0? new Date().toISOString() : null
     };
 
 
-    // VALIDATION
-
-  
-
-
+    // Meal Period Name validation
     if (!mealPeriod.MealPeriodName) {
+
         showToast(
             'Meal Period Name is required.',
             3000,
@@ -157,11 +148,14 @@ function saveMealPeriod() {
             });
 
         $('#mealPeriodName').focus();
+
         return;
     }
 
 
+    // Start Time validation
     if (!mealPeriod.StartTime) {
+
         showToast(
             'Start Time is required.',
             3000,
@@ -171,11 +165,14 @@ function saveMealPeriod() {
             });
 
         $('#mealPeriodStartTime').focus();
+
         return;
     }
 
 
+    // End Time validation
     if (!mealPeriod.EndTime) {
+
         showToast(
             'End Time is required.',
             3000,
@@ -185,11 +182,14 @@ function saveMealPeriod() {
             });
 
         $('#mealPeriodEndTime').focus();
+
         return;
     }
 
 
-    if (parseInt(mealPeriod.DisplayOrder) <= 0) {
+    // Display Order validation
+    if (mealPeriod.DisplayOrder <= 0) {
+
         showToast(
             'Display Order must be greater than zero.',
             3000,
@@ -199,11 +199,14 @@ function saveMealPeriod() {
             });
 
         $('#mealPeriodDisplayOrder').focus();
+
         return;
     }
 
 
+    // Time validation
     if (mealPeriod.StartTime >= mealPeriod.EndTime) {
+
         showToast(
             'End Time must be greater than Start Time.',
             3000,
@@ -213,11 +216,12 @@ function saveMealPeriod() {
             });
 
         $('#mealPeriodEndTime').focus();
+
         return;
     }
 
 
-    var endpoint = id !== '0'
+    var endpoint = id > 0
         ? '/Admin/MealPeriods/update'
         : '/Admin/MealPeriods/create';
 
@@ -225,64 +229,58 @@ function saveMealPeriod() {
     $.ajax({
         url: endpoint,
         type: 'POST',
-        contentType: 'application/json',
+        contentType: 'application/json; charset=utf-8',
+
         data: JSON.stringify(mealPeriod),
 
         success: function (res) {
 
             if (res && res.success) {
 
-                var message = id !== '0'
+                var message = id > 0
                     ? 'Meal Period updated successfully.'
                     : 'Meal Period created successfully.';
 
                 showToast(
-                    message,
+                    res.message || message,
                     3000,
                     {
                         type: 'success',
                         title: 'Saved'
                     });
 
-                clearMealPeriodForm();
+                closeMealPeriodModal();
 
-                $('#mealPeriodsModal')
-                    .addClass('hidden');
+                clearMealPeriodForm();
 
                 loadMealPeriod();
 
-            } else {
-
-                var message =
-                    res && res.message
-                        ? res.message
-                        : 'Unable to save Meal Period.';
-
-                showToast(
-                    message,
-                    3000,
-                    {
-                        type: 'error',
-                        title: 'Save failed'
-                    });
+                return;
             }
+
+
+            showToast(
+                res && res.message
+                    ? res.message
+                    : 'Unable to save Meal Period.',
+                3000,
+                {
+                    type: 'error',
+                    title: 'Save failed'
+                });
         },
 
 
         error: function (xhr) {
 
-            var message = 'Save failed.';
+            var message = 'Unable to save Meal Period.';
 
             if (xhr.responseJSON) {
 
-                if (xhr.responseJSON.message) {
-                    message =
-                        xhr.responseJSON.message;
-                }
-                else if (xhr.responseJSON.title) {
-                    message =
-                        xhr.responseJSON.title;
-                }
+                message =
+                    xhr.responseJSON.message ||
+                    xhr.responseJSON.title ||
+                    message;
             }
 
             showToast(
@@ -297,31 +295,169 @@ function saveMealPeriod() {
 }
 
 function editMealPeriod(id) {
+
+    if (!id)
+        return;
+
+
     $.ajax({
         url: '/Admin/MealPeriods/get/' + id,
         type: 'GET',
+
         success: function (meal) {
+
             if (!meal) {
-                showToast('Meal Period not found.', 3000, { type: 'warning', title: 'Not found' });
+
+                showToast(
+                    'Meal Period not found.',
+                    3000,
+                    {
+                        type: 'warning',
+                        title: 'Not found'
+                    });
+
                 return;
             }
 
-            $('#mealPeriodId').val(meal.Id || meal.id || '');
-            $('#mealPeriodCode').val(meal.Code || meal.code || '');
-            $('#mealPeriodName').val(meal.MealPeriodName || meal.mealPeriodName || '');
-            $('#mealPeriodStartTime').val(meal.StartTime || meal.startTime || '');
-            $('#mealPeriodEndTime').val(meal.EndTime || meal.endTime || '');
-            $('#mealPeriodDisplayOrder').val(meal.DisplayOrder || meal.displayOrder || '');
 
-            $('#mealPeriodsModal').removeClass('hidden');
+            var mealId =
+                meal.id ?? meal.Id ?? 0;
+
+            var code =
+                meal.code ?? meal.Code ?? '';
+
+            var name =
+                meal.mealPeriodName ??
+                meal.MealPeriodName ??
+                '';
+
+            var startTime =
+                meal.startTime ??
+                meal.StartTime ??
+                '';
+
+            var endTime =
+                meal.endTime ??
+                meal.EndTime ??
+                '';
+
+            var displayOrder =
+                meal.displayOrder ??
+                meal.DisplayOrder ??
+                '';
+
+            var isActive =
+                meal.isActive ??
+                meal.IsActive ??
+                false;
+
+
+            /*
+                HTML input type="time" normally expects:
+
+                HH:mm
+                or
+                HH:mm:ss
+
+                Remove fractional seconds if API returns:
+                07:00:00.0000000
+            */
+
+            startTime = normalizeTime(startTime);
+
+            endTime = normalizeTime(endTime);
+
+
+            $('#mealPeriodId')
+                .val(mealId);
+
+            $('#mealPeriodCode')
+                .val(code);
+
+            $('#mealPeriodName')
+                .val(name);
+
+            $('#mealPeriodStartTime')
+                .val(startTime);
+
+            $('#mealPeriodEndTime')
+                .val(endTime);
+
+            $('#mealPeriodDisplayOrder')
+                .val(displayOrder);
+
+            $('#mealPeriodIsActive')
+                .prop('checked', toBoolean(isActive));
+
+
+            $('#mealPeriodsModal')
+                .removeClass('hidden');
         },
-        error: function () {
-            showToast('Unable to load Meal Period.', 3000, { type: 'error', title: 'Load failed' });
+
+
+        error: function (xhr) {
+
+            var message =
+                xhr.responseJSON?.message ||
+                'Unable to load Meal Period.';
+
+            showToast(
+                message,
+                3000,
+                {
+                    type: 'error',
+                    title: 'Load failed'
+                });
         }
     });
 }
 
+function normalizeTime(value) {
 
+    if (!value)
+        return '';
+
+    value = value.toString();
+
+    // Example:
+    // 07:00:00.0000000 -> 07:00:00
+
+    if (value.includes('.')) {
+        value = value.split('.')[0];
+    }
+
+    return value;
+}
+
+
+function formatTime12Hour(value) {
+    var time = normalizeTime(value);
+
+    if (!time)
+        return '';
+
+    var parts = time.split(':');
+    var hour = parseInt(parts[0], 10);
+    var minute = parts[1] || '00';
+
+    if (Number.isNaN(hour))
+        return value;
+
+    var period = hour >= 12 ? 'PM' : 'AM';
+    var displayHour = hour % 12 || 12;
+
+    return displayHour + ':' + minute + ' ' + period;
+}
+
+
+function toBoolean(value) {
+
+    return value === true ||
+        value === 1 ||
+        value === '1' ||
+        value === 'true' ||
+        value === 'True';
+}
 function setMealPeriodActive(id, isActive) {
     if (!id) return;
 

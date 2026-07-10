@@ -142,16 +142,16 @@ function saveLocation() {
         data: JSON.stringify(location),
         success: function (res) {
             if (res && res.success) {
-                showToast('Location saved successfully.', 3000, { type: 'success', title: 'Saved' });
+                showToast(res.message || 'Location saved successfully.', 3000, { type: 'success', title: 'Saved' });
                 clearLocationForm();
                 $('#locationsModal').addClass('hidden');
                 loadLocation();
             } else {
-                showToast('Unable to save Location.', 3000, { type: 'error', title: 'Save failed' });
+                showToast(res?.message || 'Unable to save Location.', 3000, { type: 'error', title: 'Save failed' });
             }
         },
-        error: function () {
-            showToast('Save failed.', 3000, { type: 'error', title: 'Save failed' });
+        error: function (xhr) {
+            showToast(xhr.responseJSON?.message || 'Save failed.', 3000, { type: 'error', title: 'Save failed' });
         }
     });
 }

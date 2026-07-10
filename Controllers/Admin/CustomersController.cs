@@ -44,17 +44,44 @@ namespace GayatriCateringPortal.Controllers.Admin
         [HttpPost("create")]
         public IActionResult Create([FromBody] CustomerMaster item)
         {
-            if (item == null) return BadRequest();
-            int newId = _customers.Create(item);
-            return Ok(new { success = newId > 0, id = newId });
+            if (item == null)
+                return BadRequest(new { success = false, message = "Invalid Customer details." });
+
+            try
+            {
+                int newId = _customers.Create(item);
+                return Ok(new
+                {
+                    success = newId > 0,
+                    id = newId,
+                    message = newId > 0 ? "Customer created successfully." : "Customer was not saved."
+                });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { success = false, message = ex.Message });
+            }
         }
 
         [HttpPost("update")]
         public IActionResult Update([FromBody] CustomerMaster item)
         {
-            if (item == null) return BadRequest();
-            bool updated = _customers.Update(item);
-            return Ok(new { success = updated });
+            if (item == null)
+                return BadRequest(new { success = false, message = "Invalid Customer details." });
+
+            try
+            {
+                bool updated = _customers.Update(item);
+                return Ok(new
+                {
+                    success = updated,
+                    message = updated ? "Customer updated successfully." : "Customer was not updated."
+                });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { success = false, message = ex.Message });
+            }
         }
 
 

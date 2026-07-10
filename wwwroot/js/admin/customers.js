@@ -110,7 +110,6 @@ function openCustomerModal() {
     $('#customersModal').removeClass('hidden');
 }
 function saveCustomer() {
-    debugger;
     var customer = {
         Id: parseInt($('#customerId').val()) || 0,
         Code: $('#customerCode').val() || '',
@@ -145,16 +144,16 @@ function saveCustomer() {
         data: JSON.stringify(customer),
         success: function (res) {
             if (res && res.success) {
-                showToast('Customers saved successfully.', 3000, { type: 'success', title: 'Saved' });
+                showToast(res.message || 'Customer saved successfully.', 3000, { type: 'success', title: 'Saved' });
                 clearCustomerForm();
                 $('#customersModal').addClass('hidden');
                 loadCustomers();
             } else {
-                showToast('Unable to save Customers.', 3000, { type: 'error', title: 'Save failed' });
+                showToast(res?.message || 'Unable to save Customer.', 3000, { type: 'error', title: 'Save failed' });
             }
         },
-        error: function () {
-            showToast('Save failed.', 3000, { type: 'error', title: 'Save failed' });
+        error: function (xhr) {
+            showToast(xhr.responseJSON?.message || 'Save failed.', 3000, { type: 'error', title: 'Save failed' });
         }
     });
 }
