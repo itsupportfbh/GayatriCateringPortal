@@ -90,6 +90,8 @@ public class CustomerRepository : ICustomerRepository
             {
                 conn.Open();
 
+                EnsureEmailAndMobileAvailable(conn, customer.EmailId, customer.MobileNo, 0);
+
                 using (IDbCommand cmd = DataFactory.CreateCommand("[dbo].[SP_CreateCustomerMaster]", conn))
                 {
                     ((SqlCommand)cmd).CommandType = CommandType.StoredProcedure;
@@ -147,6 +149,8 @@ public class CustomerRepository : ICustomerRepository
             {
                 conn.Open();
 
+                EnsureEmailAndMobileAvailable(conn, customer.EmailId, customer.MobileNo, customer.Id);
+
                 using (IDbCommand cmd = DataFactory.CreateCommand("[dbo].[SP_UpdateCustomerMaster]", conn))
                 {
                     ((SqlCommand)cmd).CommandType = CommandType.StoredProcedure;
@@ -154,7 +158,6 @@ public class CustomerRepository : ICustomerRepository
                     cmd.Parameters.Add(DataFactory.CreateParameter("@Id", customer.Id));
                     cmd.Parameters.Add(DataFactory.CreateParameter("@Code", customer.Code ?? (object)DBNull.Value));
                     cmd.Parameters.Add(DataFactory.CreateParameter("@Name", customer.Name ?? (object)DBNull.Value));
-
                     cmd.Parameters.Add(DataFactory.CreateParameter("@MobileNo", customer.MobileNo ?? (object)DBNull.Value));
                     cmd.Parameters.Add(DataFactory.CreateParameter("@EmailId", customer.EmailId ?? (object)DBNull.Value));
                     cmd.Parameters.Add(DataFactory.CreateParameter("@CompanyName", customer.CompanyName ?? (object)DBNull.Value));
@@ -190,6 +193,48 @@ public class CustomerRepository : ICustomerRepository
             throw new Exception(ex.Message);
         }
     }
+
+    private static void EnsureEmailAndMobileAvailable(
+        IDbConnection conn,
+        string? emailId,
+        string? mobileNo,
+        int currentId)
+    {
+        if (!string.IsNullOrWhiteSpace(emailId))
+        {
+            using IDbCommand emailCmd = DataFactory.CreateCommand(
+                @"SELECT COUNT(1)
+                  FROM dbo.CustomerMaster
+                  WHERE LTRIM(RTRIM(EmailId)) = LTRIM(RTRIM(@EmailId))
+                    AND Id <> @CurrentId
+                    AND ISNULL(IsDeleted, 0) = 0",
+                conn);
+
+            emailCmd.Parameters.Add(DataFactory.CreateParameter("@EmailId", emailId.Trim()));
+            emailCmd.Parameters.Add(DataFactory.CreateParameter("@CurrentId", currentId));
+
+            if (Convert.ToInt32(DataFactory.ExecuteScalar(emailCmd)) > 0)
+                throw new ArgumentException("Email ID already exists.");
+        }
+
+        if (!string.IsNullOrWhiteSpace(mobileNo))
+        {
+            using IDbCommand mobileCmd = DataFactory.CreateCommand(
+                @"SELECT COUNT(1)
+                  FROM dbo.CustomerMaster
+                  WHERE LTRIM(RTRIM(MobileNo)) = LTRIM(RTRIM(@MobileNo))
+                    AND Id <> @CurrentId
+                    AND ISNULL(IsDeleted, 0) = 0",
+                conn);
+
+            mobileCmd.Parameters.Add(DataFactory.CreateParameter("@MobileNo", mobileNo.Trim()));
+            mobileCmd.Parameters.Add(DataFactory.CreateParameter("@CurrentId", currentId));
+
+            if (Convert.ToInt32(DataFactory.ExecuteScalar(mobileCmd)) > 0)
+                throw new ArgumentException("Mobile Number already exists.");
+        }
+    }
+
 
     public bool Delete(int id)
     {

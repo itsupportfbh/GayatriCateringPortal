@@ -12,19 +12,11 @@ function openRolesModal() {
     $('#model-title').html('Create Role');
     $('#rolesModal').removeClass('hidden');
 
-    var codeEl = document.getElementById('roleCode');
-    if (codeEl) {
-        codeEl.oninput = function () {
-            clearRoleError('#roleCode', '#roleCodeError');
-        };
-    }
-
-    var nameEl = document.getElementById('roleName');
-    if (nameEl) {
-        nameEl.oninput = function () {
-            clearRoleError('#roleName', '#roleNameError');
-        };
-    }
+    initRoleField('#roleCode', '#roleCodeError');
+    initRoleField('#roleName', '#roleNameError');
+    
+    // Change button text to "Save" for create mode
+    $('#saveRoleBtn').text('Save');
 }
 
 function loadRoles() {
@@ -116,6 +108,8 @@ function renderRolesList(rows) {
 function clearRoleForm(keepId) {
     if (!keepId) {
         $('#roleId').val('');
+        // Reset button text to "Save" when clearing the form in create mode
+        $('#saveRoleBtn').text('Save');
     }
     $('#roleCode').val('');
     $('#roleName').val('');
@@ -132,6 +126,17 @@ function setRoleError(inputSelector, errorSelector, message) {
 function clearRoleError(inputSelector, errorSelector) {
     $(inputSelector).removeClass('input-error');
     $(errorSelector).addClass('hidden').text('');
+}
+
+// Initialize role input field: clear error and attach input handler
+function initRoleField(inputSelector, errorSelector) {
+    clearRoleError(inputSelector, errorSelector);
+    var el = document.querySelector(inputSelector);
+    if (el) {
+        el.oninput = function () {
+            clearRoleError(inputSelector, errorSelector);
+        };
+    }
 }
 
 function saveRole() {
@@ -173,7 +178,7 @@ function saveRole() {
 
     var roleId = $('#roleId').val();
     var role = {
-        Id: roleId ? parseInt(roleId, 10) : 0,
+        Id: roleId ? parseInt(roleId) : 0,
         Code: code,
         Name: name,
         Remarks: $('#roleRemarks').val() || '',
@@ -198,7 +203,8 @@ function saveRole() {
                 $('#rolesModal').addClass('hidden');
                 loadRoles();
             } else {
-                showToast(roleId == 0 ? 'Unable to save role.' : 'Unable to update role', 3000, { type: 'error', title: roleId == 0 ? 'Save failed' : 'Update failed' });
+                var errorMsg = res && res.message ? res.message : (roleId == 0 ? 'Unable to save role.' : 'Unable to update role');
+                showToast(errorMsg, 3000, { type: 'error', title: roleId == 0 ? 'Save failed' : 'Update failed' });
             }
         },
         error: function () {
@@ -218,12 +224,19 @@ function editRole(id) {
                 showToast('Role not found.', 3000, { type: 'warning', title: 'Not found' });
                 return;
             }
-            $('#roleId').val(role.Id || role.id || '');
-            $('#roleCode').val(role.Code || role.code || '');
-            $('#roleName').val(role.Name || role.name || '');
-            $('#roleRemarks').val(role.Remarks || role.remarks || '');
-            hideRolePermission();
-            $('#rolesModal').removeClass('hidden');
+                $('#roleId').val(role.Id || role.id || '');
+                $('#roleCode').val(role.Code || role.code || '');
+                $('#roleName').val(role.Name || role.name || '');
+                $('#roleRemarks').val(role.Remarks || role.remarks || '');
+                // initialize fields (clear validation and attach handlers)
+                initRoleField('#roleCode', '#roleCodeError');
+                initRoleField('#roleName', '#roleNameError');
+
+                hideRolePermission();
+                $('#rolesModal').removeClass('hidden');
+                
+                // Change button text to "Update" for edit mode
+                $('#saveRoleBtn').text('Update');
         },
         error: function () { showToast('Unable to load role.', 3000, { type: 'error', title: 'Load failed' }); }
     });

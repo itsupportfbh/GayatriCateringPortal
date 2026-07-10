@@ -114,6 +114,9 @@ public class LocationRepository :ILocationsRepository
 
     public int Create(LocationMaster location)
     {
+        if (string.IsNullOrWhiteSpace(location.LocationName))
+            throw new ArgumentException("Location Name is required.");
+
         try
         {
             using (IDbConnection conn =
@@ -121,80 +124,25 @@ public class LocationRepository :ILocationsRepository
             {
                 conn.Open();
 
-                using (IDbCommand cmd =
-                    DataFactory.CreateCommand(
-                        "[dbo].[SP_CreateLocationMaster]",
-                        conn))
+                EnsureLocationNameAvailable(conn, location.LocationName, 0);
+
+                using (IDbCommand cmd = DataFactory.CreateCommand("[dbo].[SP_CreateLocationMaster]", conn))
                 {
-                    ((SqlCommand)cmd).CommandType =
-                        CommandType.StoredProcedure;
+                    ((SqlCommand)cmd).CommandType = CommandType.StoredProcedure;
+
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@Code",location.Code ??(object)DBNull.Value));
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@LocationName", location.LocationName));
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@DeliveryFee", location.DeliveryFee));
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@MinimumPax",location.MinimumPax));
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@LeadTimeDays",location.LeadTimeDays));
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@IsActive",location.IsActive));
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@Remarks",location.Remarks ?? (object)DBNull.Value));
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@IsDeleted",location.IsDeleted));
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@CreatedBy",location.CreatedBy ??(object)DBNull.Value));
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@CreatedDate",DateTime.Now));
 
 
-                    cmd.Parameters.Add(
-                        DataFactory.CreateParameter(
-                            "@Code",
-                            location.Code ??
-                            (object)DBNull.Value));
-
-
-                    cmd.Parameters.Add(
-                        DataFactory.CreateParameter(
-                            "@LocationName",
-                            location.LocationName));
-
-
-                    cmd.Parameters.Add(
-                        DataFactory.CreateParameter(
-                            "@DeliveryFee",
-                            location.DeliveryFee));
-
-
-                    cmd.Parameters.Add(
-                        DataFactory.CreateParameter(
-                            "@MinimumPax",
-                            location.MinimumPax));
-
-
-                    cmd.Parameters.Add(
-                        DataFactory.CreateParameter(
-                            "@LeadTimeDays",
-                            location.LeadTimeDays));
-
-
-                    cmd.Parameters.Add(
-                        DataFactory.CreateParameter(
-                            "@IsActive",
-                            location.IsActive));
-
-
-                    cmd.Parameters.Add(
-                        DataFactory.CreateParameter(
-                            "@Remarks",
-                            location.Remarks ??
-                            (object)DBNull.Value));
-
-
-                    cmd.Parameters.Add(
-                        DataFactory.CreateParameter(
-                            "@IsDeleted",
-                            location.IsDeleted));
-
-
-                    cmd.Parameters.Add(
-                        DataFactory.CreateParameter(
-                            "@CreatedBy",
-                            location.CreatedBy ??
-                            (object)DBNull.Value));
-
-
-                    cmd.Parameters.Add(
-                        DataFactory.CreateParameter(
-                            "@CreatedDate",
-                            DateTime.Now));
-
-
-                    var result =
-                        DataFactory.ExecuteScalar(cmd);
+                    var result = DataFactory.ExecuteScalar(cmd);
 
 
                     if (result != null &&
@@ -224,6 +172,9 @@ public class LocationRepository :ILocationsRepository
 
     public bool Update(LocationMaster location)
     {
+        if (string.IsNullOrWhiteSpace(location.LocationName))
+            throw new ArgumentException("Location Name is required.");
+
         try
         {
             using (IDbConnection conn =
@@ -231,86 +182,28 @@ public class LocationRepository :ILocationsRepository
             {
                 conn.Open();
 
+                EnsureLocationNameAvailable(conn, location.LocationName, location.Id);
+
                 using (IDbCommand cmd =
-                    DataFactory.CreateCommand(
-                        "[dbo].[SP_UpdateLocationMaster]",
-                        conn))
+                    DataFactory.CreateCommand( "[dbo].[SP_UpdateLocationMaster]",        conn))
                 {
-                    ((SqlCommand)cmd).CommandType =
-                        CommandType.StoredProcedure;
+                    ((SqlCommand)cmd).CommandType =  CommandType.StoredProcedure;
 
 
-                    cmd.Parameters.Add(
-                        DataFactory.CreateParameter(
-                            "@Id",
-                            location.Id));
+                    cmd.Parameters.Add(DataFactory.CreateParameter(    "@Id",  location.Id));
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@Code",location.Code ?? (object)DBNull.Value));
+                    cmd.Parameters.Add( DataFactory.CreateParameter("@LocationName", location.LocationName));
+                    cmd.Parameters.Add( DataFactory.CreateParameter("@DeliveryFee",location.DeliveryFee));
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@MinimumPax",location.MinimumPax));
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@LeadTimeDays", location.LeadTimeDays));
+                    cmd.Parameters.Add( DataFactory.CreateParameter("@IsActive",  location.IsActive));
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@Remarks", location.Remarks ??(object)DBNull.Value));
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@IsDeleted",location.IsDeleted));
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@UpdatedBy",location.UpdatedBy ??(object)DBNull.Value));
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@UpdatedDate", DateTime.Now));
 
 
-                    cmd.Parameters.Add(
-                        DataFactory.CreateParameter(
-                            "@Code",
-                            location.Code ??
-                            (object)DBNull.Value));
-
-
-                    cmd.Parameters.Add(
-                        DataFactory.CreateParameter(
-                            "@LocationName",
-                            location.LocationName));
-
-
-                    cmd.Parameters.Add(
-                        DataFactory.CreateParameter(
-                            "@DeliveryFee",
-                            location.DeliveryFee));
-
-
-                    cmd.Parameters.Add(
-                        DataFactory.CreateParameter(
-                            "@MinimumPax",
-                            location.MinimumPax));
-
-
-                    cmd.Parameters.Add(
-                        DataFactory.CreateParameter(
-                            "@LeadTimeDays",
-                            location.LeadTimeDays));
-
-
-                    cmd.Parameters.Add(
-                        DataFactory.CreateParameter(
-                            "@IsActive",
-                            location.IsActive));
-
-
-                    cmd.Parameters.Add(
-                        DataFactory.CreateParameter(
-                            "@Remarks",
-                            location.Remarks ??
-                            (object)DBNull.Value));
-
-
-                    cmd.Parameters.Add(
-                        DataFactory.CreateParameter(
-                            "@IsDeleted",
-                            location.IsDeleted));
-
-
-                    cmd.Parameters.Add(
-                        DataFactory.CreateParameter(
-                            "@UpdatedBy",
-                            location.UpdatedBy ??
-                            (object)DBNull.Value));
-
-
-                    cmd.Parameters.Add(
-                        DataFactory.CreateParameter(
-                            "@UpdatedDate",
-                            DateTime.Now));
-
-
-                    var result =
-                        DataFactory.ExecuteScalar(cmd);
+                    var result = DataFactory.ExecuteScalar(cmd);
 
 
                     return result != null &&
@@ -327,6 +220,29 @@ public class LocationRepository :ILocationsRepository
         catch (Exception ex)
         {
             throw new Exception(ex.Message);
+        }
+    }
+
+
+    private static void EnsureLocationNameAvailable(
+        IDbConnection conn,
+        string locationName,
+        int currentId)
+    {
+        using (IDbCommand cmd = DataFactory.CreateCommand(
+            @"SELECT COUNT(1)
+              FROM dbo.LocationMaster
+              WHERE LTRIM(RTRIM(LocationName)) = LTRIM(RTRIM(@LocationName))
+                AND Id <> @CurrentId
+                AND ISNULL(IsDeleted, 0) = 0",
+            conn))
+        {
+            cmd.Parameters.Add(DataFactory.CreateParameter(
+                "@LocationName", locationName.Trim()));
+            cmd.Parameters.Add(DataFactory.CreateParameter("@CurrentId", currentId));
+
+            if (Convert.ToInt32(DataFactory.ExecuteScalar(cmd)) > 0)
+                throw new ArgumentException("Location Name already exists.");
         }
     }
 

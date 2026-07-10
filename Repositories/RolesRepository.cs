@@ -106,18 +106,18 @@ public class RolesRepository : IRolesRepository
                     var result = DataFactory.ExecuteScalar(cmd);
                     if (result != null)
                     {
-                        return Convert.ToInt32(result);
+                        return Convert.ToInt32(result);  // Returns -1 if duplicate, > 0 if success, 0 if error
                     }
                 }
             }
         }
         catch (SqlException)
         {
-            throw new Exception("Database error");
+            return 0;  // Return 0 on database error
         }
         catch (Exception ex)
         {
-            throw new Exception(ex.StackTrace);
+            return 0;  // Return 0 on any other error
         }
         finally
         {
@@ -127,7 +127,7 @@ public class RolesRepository : IRolesRepository
         return 0;
     }
 
-    public bool Update(RoleMaster item)
+    public int Update(RoleMaster item)
     {
         IDbConnection conn = null;
         IDbCommand cmd = null;
@@ -148,22 +148,27 @@ public class RolesRepository : IRolesRepository
                     cmd.Parameters.Add(DataFactory.CreateParameter("@UpdatedBy", item.UpdatedBy));
 
                     var result = DataFactory.ExecuteScalar(cmd);
-                    return result != null && Convert.ToInt32(result) > 0;
+                    if (result != null)
+                    {
+                        int status = Convert.ToInt32(result);
+                        return status;  // Returns -1 if duplicate, > 0 if success, 0 if error
+                    }
                 }
             }
         }
         catch (SqlException)
         {
-            throw new Exception("Database error");
+            return 0;  // Return 0 on database error
         }
         catch (Exception ex)
         {
-            throw new Exception(ex.StackTrace);
+            return 0;  // Return 0 on any other error
         }
         finally
         {
             if (conn != null && conn.State != ConnectionState.Closed) conn.Close();
         }
+        return 0;
     }
 
     public bool Delete(int id)

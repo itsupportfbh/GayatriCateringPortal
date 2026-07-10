@@ -12,7 +12,7 @@ public class PackagesRepository : IPackagesRepository
 {
     public List<Packages> GetAll()
     {
-        List<Packages> list = new List<Packages>();
+        var list = new List<Packages>();
         IDbConnection? conn = null;
         IDbCommand? cmd = null;
         IDataReader? reader = null;
@@ -21,14 +21,30 @@ public class PackagesRepository : IPackagesRepository
             using (conn = DataFactory.CreateConnection())
             {
                 conn.Open();
-                using (cmd = DataFactory.CreateCommand("SELECT * FROM Packages WHERE IsDeleted = 0", conn))
+                using (cmd = DataFactory.CreateCommand("GetPackages", conn))
                 {
                     reader = DataFactory.ExecuteReader(cmd);
-                    list = new List<Packages>();
-                    while (reader.Read()) list.Add(new Packages());
+                    while (reader.Read())
+                    {
+                        list.Add(new Packages
+                        {
+                            Id = reader["Id"] != DBNull.Value ? Convert.ToInt32(reader["Id"]) : 0,
+                            Name = reader["Name"] != DBNull.Value ? Convert.ToString(reader["Name"]) ?? string.Empty : string.Empty,
+                            Description = reader["Description"] != DBNull.Value ? Convert.ToString(reader["Description"]) : null,
+                            Price = reader["Price"] != DBNull.Value ? Convert.ToDecimal(reader["Price"]) : 0,
+                            MinPersons = reader["MinPersons"] != DBNull.Value ? Convert.ToInt32(reader["MinPersons"]) : 0,
+                            MaxPersons = reader["MaxPersons"] != DBNull.Value ? Convert.ToInt32(reader["MaxPersons"]) : null,
+                            IsActive = reader["IsActive"] != DBNull.Value && Convert.ToBoolean(reader["IsActive"]),
+                            CreatedBy = reader["CreatedBy"] != DBNull.Value ? Convert.ToInt32(reader["CreatedBy"]) : 0,
+                            CreatedDate = reader["CreatedDate"] != DBNull.Value ? Convert.ToDateTime(reader["CreatedDate"]) : DateTime.MinValue,
+                            UpdatedBy = reader["UpdatedBy"] != DBNull.Value ? Convert.ToInt32(reader["UpdatedBy"]) : null,
+                            UpdatedDate = reader["UpdatedDate"] != DBNull.Value ? Convert.ToDateTime(reader["UpdatedDate"]) : null,
+                            IsDeleted = reader["IsDeleted"] != DBNull.Value && Convert.ToBoolean(reader["IsDeleted"])
+                        });
+                    }
                 }
             }
-            return list ?? new List<Packages>();
+            return list;
         }
         catch (SqlException)
         {
@@ -48,14 +64,39 @@ public class PackagesRepository : IPackagesRepository
     {
         IDbConnection? conn = null;
         IDbCommand? cmd = null;
+        IDataReader? reader = null;
         try
         {
-            conn = DataFactory.CreateConnection();
-            cmd = DataFactory.CreateCommand("SELECT * FROM Packages WHERE Id = @Id", conn);
-            cmd.Parameters.Add(DataFactory.CreateParameter("@Id", id));
-            conn.Open();
-            using IDataReader reader = DataFactory.ExecuteReader(cmd);
-            if (reader.Read()) return new Packages();
+            using (conn = DataFactory.CreateConnection())
+            {
+                if (conn.State == ConnectionState.Closed) conn.Open();
+                using (cmd = DataFactory.CreateCommand("SP_GetPackagesById", conn))
+                {
+                    ((SqlCommand)cmd).CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@Id", id));
+                    reader = DataFactory.ExecuteReader(cmd);
+                    if (reader.Read())
+                    {
+                        var package = new Packages
+                        {
+                            Id = reader["Id"] != DBNull.Value ? Convert.ToInt32(reader["Id"]) : 0,
+                            Name = reader["Name"] != DBNull.Value ? Convert.ToString(reader["Name"]) ?? string.Empty : string.Empty,
+                            Description = reader["Description"] != DBNull.Value ? Convert.ToString(reader["Description"]) : null,
+                            Price = reader["Price"] != DBNull.Value ? Convert.ToDecimal(reader["Price"]) : 0,
+                            MinPersons = reader["MinPersons"] != DBNull.Value ? Convert.ToInt32(reader["MinPersons"]) : 0,
+                            MaxPersons = reader["MaxPersons"] != DBNull.Value ? Convert.ToInt32(reader["MaxPersons"]) : null,
+                            IsActive = reader["IsActive"] != DBNull.Value && Convert.ToBoolean(reader["IsActive"]),
+                            CreatedBy = reader["CreatedBy"] != DBNull.Value ? Convert.ToInt32(reader["CreatedBy"]) : 0,
+                            CreatedDate = reader["CreatedDate"] != DBNull.Value ? Convert.ToDateTime(reader["CreatedDate"]) : DateTime.MinValue,
+                            UpdatedBy = reader["UpdatedBy"] != DBNull.Value ? Convert.ToInt32(reader["UpdatedBy"]) : null,
+                            UpdatedDate = reader["UpdatedDate"] != DBNull.Value ? Convert.ToDateTime(reader["UpdatedDate"]) : null,
+                            IsDeleted = reader["IsDeleted"] != DBNull.Value && Convert.ToBoolean(reader["IsDeleted"])
+                        };
+
+                        return package;
+                    }
+                }
+            }
             return null;
         }
         catch (SqlException)
@@ -78,53 +119,91 @@ public class PackagesRepository : IPackagesRepository
         IDbCommand? cmd = null;
         try
         {
-            conn = DataFactory.CreateConnection();
-            cmd = DataFactory.CreateCommand("SP_CreatePackages", conn);
-            ((SqlCommand)cmd).CommandType = CommandType.StoredProcedure;
-            cmd.Parameters.Add(DataFactory.CreateParameter("@Id", item.Id));
-            conn.Open();
-            var rows = DataFactory.ExecuteNonQuery(cmd);
-            return rows > 0 ? 1 : 0;
+            using (conn = DataFactory.CreateConnection())
+            {
+                conn.Open();
+                using (cmd = DataFactory.CreateCommand("SP_CreatePackages", conn))
+                {
+                    ((SqlCommand)cmd).CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@Name", item.Name));
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@Description", item.Description ?? string.Empty));
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@Price", item.Price));
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@MinPersons", item.MinPersons));
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@MaxPersons", item.MaxPersons ?? (object)DBNull.Value));
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@IsActive", item.IsActive));
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@CreatedBy", item.CreatedBy));
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@IsDeleted", item.IsDeleted));
+
+                    var result = DataFactory.ExecuteScalar(cmd);
+                    if (result != null)
+                    {
+                        int id = Convert.ToInt32(result);
+                        return id;  // Returns -1 if already exists, or the new ID if created
+                    }
+                }
+            }
+          
         }
         catch (SqlException)
         {
-            throw new Exception("Database error");
+            return 0;  // Return 0 on database error
         }
         catch (Exception ex)
         {
-            throw new Exception(ex.StackTrace);
+            return 0;  // Return 0 on any other error
         }
         finally
         {
             if (conn != null && conn.State != ConnectionState.Closed) conn.Close();
         }
+        return 0;
     }
+        
 
-    public bool Update(Packages item)
+    public int Update(Packages item)
     {
         IDbConnection? conn = null;
         IDbCommand? cmd = null;
         try
         {
-            conn = DataFactory.CreateConnection();
-            cmd = DataFactory.CreateCommand("SP_CreatePackages", conn);
-            ((SqlCommand)cmd).CommandType = CommandType.StoredProcedure;
-            cmd.Parameters.Add(DataFactory.CreateParameter("@Id", item.Id));
-            conn.Open();
-            return DataFactory.ExecuteNonQuery(cmd) > 0;
+            using (conn = DataFactory.CreateConnection())
+            {
+                conn.Open();
+                using (cmd = DataFactory.CreateCommand("SP_UpdatePackages", conn))
+                {
+                    ((SqlCommand)cmd).CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@Id", item.Id));
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@Name", item.Name));
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@Description", item.Description ?? string.Empty));
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@Price", item.Price));
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@MinPersons", item.MinPersons));
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@MaxPersons", item.MaxPersons ?? (object)DBNull.Value));
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@IsActive", item.IsActive));
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@UpdatedBy", item.UpdatedBy ?? (object)DBNull.Value));
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@IsDeleted", item.IsDeleted));
+
+                    var result = DataFactory.ExecuteScalar(cmd);
+                    if (result != null)
+                    {
+                        int status = Convert.ToInt32(result);
+                        return status;  // Returns -1 if duplicate, > 0 if success, 0 if error
+                    }
+                }
+            }
         }
         catch (SqlException)
         {
-            throw new Exception("Database error");
+            return 0;  // Return 0 on database error
         }
         catch (Exception ex)
         {
-            throw new Exception(ex.StackTrace);
+            return 0;  // Return 0 on any other error
         }
         finally
         {
             if (conn != null && conn.State != ConnectionState.Closed) conn.Close();
         }
+        return 0;
     }
 
     public bool Delete(int id)
@@ -133,11 +212,17 @@ public class PackagesRepository : IPackagesRepository
         IDbCommand? cmd = null;
         try
         {
-            conn = DataFactory.CreateConnection();
-            cmd = DataFactory.CreateCommand("UPDATE Packages SET IsDeleted = 1 WHERE Id = @Id", conn);
-            cmd.Parameters.Add(DataFactory.CreateParameter("@Id", id));
-            conn.Open();
-            return cmd.ExecuteNonQuery() > 0;
+            using (conn = DataFactory.CreateConnection())
+            {
+                if (conn.State == ConnectionState.Closed) conn.Open();
+                using (cmd = DataFactory.CreateCommand("DeletePackagesById", conn))
+                {
+                    ((SqlCommand)cmd).CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@Id", id));
+                    var r = DataFactory.ExecuteScalar(cmd);
+                    return r != null && Convert.ToInt32(r) > 0;
+                }
+            }
         }
         catch (SqlException)
         {
@@ -153,19 +238,23 @@ public class PackagesRepository : IPackagesRepository
         }
     }
 
-    public bool ActiveInActive(int id)
+    public bool ActiveInActive(int id, bool status)
     {
-        IDbConnection? conn = null;
-        IDbCommand? cmd = null;
+
+        IDbConnection conn = null;
+        IDbCommand cmd = null;
         try
         {
             using (conn = DataFactory.CreateConnection())
             {
-                using (cmd = DataFactory.CreateCommand("UPDATE Packages SET IsActive = CASE WHEN IsActive = 1 THEN 0 ELSE 1 END WHERE Id = @Id", conn))
+                if (conn.State == ConnectionState.Closed) conn.Open();
+                using (cmd = DataFactory.CreateCommand("ActiveInActivePackagesById", conn))
                 {
+                    ((SqlCommand)cmd).CommandType = CommandType.StoredProcedure;
                     cmd.Parameters.Add(DataFactory.CreateParameter("@Id", id));
-                    conn.Open();
-                    return cmd.ExecuteNonQuery() > 0;
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@IsActive", status));
+                    var r = DataFactory.ExecuteScalar(cmd);
+                    return r != null && Convert.ToInt32(r) > 0;
                 }
             }
         }
