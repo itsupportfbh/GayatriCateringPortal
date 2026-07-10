@@ -54,10 +54,10 @@ function renderUtensilList(rows) {
 
             var actions;
             if (active) {
-                actions = `<button type="button" class="action-item btn-edit" data-id="${id}" onclick="editRole(this.dataset.id)"><span class="action-icon p-p-pencil"></span>Edit</button>
-                           <button type="button" class="action-item btn-set-inactive" data-id="${id}" onclick="setRoleActive(this.dataset.id, false)"><span class="action-icon p-p-lock"></span>Inactive</button>`;
+                actions = `<button type="button" class="action-item btn-edit" data-id="${id}" onclick="editUtensil(this.dataset.id)"><span class="action-icon p-p-pencil"></span>Edit</button>
+                           <button type="button" class="action-item btn-set-inactive" data-id="${id}" onclick="setUtensilActive(this.dataset.id, false)"><span class="action-icon p-p-lock"></span>Inactive</button>`;
             } else {
-                actions = `<button type="button" class="action-item btn-set-active" data-id="${id}" onclick="setRoleActive(this.dataset.id, true)"><span class="action-icon p-p-unlock"></span>Active</button>`;
+                actions = `<button type="button" class="action-item btn-set-active" data-id="${id}" onclick="setUtensilActive(this.dataset.id, true)"><span class="action-icon p-p-unlock"></span>Active</button>`;
             }
 
             var statusBadge;
@@ -80,7 +80,7 @@ function renderUtensilList(rows) {
                             <button class="dots-btn" title="Actions">⋯</button>
                             <div class="actions-menu hidden">
                                 ${actions}
-                                <button type="button" class="action-item btn-delete" data-id="${id}" onclick="deleteRole(this.dataset.id)"><span class="action-icon p-p-trash"></span>Delete</button>
+                                <button type="button" class="action-item btn-delete" data-id="${id}" onclick="deleteUtensil(this.dataset.id)"><span class="action-icon p-p-trash"></span>Delete</button>
                             </div>
                         </div>
                     </td>
@@ -139,7 +139,7 @@ function saveutensil() {
     });
 }
 
-function editRole(id) {
+function editUtensil(id) {
     $.ajax({
         url: '/Admin/Utensils/get/' + id,
         type: 'GET',
@@ -159,7 +159,7 @@ function editRole(id) {
     });
 }
 
-function deleteRole(id) {
+function deleteUtensil(id) {
     if (!id) return;
     showToast('Delete this Utensil?', 0, {
         confirm: true,
@@ -188,7 +188,7 @@ function deleteRole(id) {
     });
 }
 
-function setRoleActive(id, isActive) {
+function setUtensilActive(id, isActive) {
     if (!id) return;
 
     var confirmMessage = isActive ? 'Mark this Utensils active?' : 'Mark this Utensils inactive?';
