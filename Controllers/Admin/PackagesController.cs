@@ -7,21 +7,46 @@ namespace GayatriCateringPortal.Controllers.Admin
     public class PackagesController : Controller
     {
         private readonly IPackagesRepository _packagesRepository;
+        private readonly IPackageItemsRepository _packageItemsRepository;
+        private readonly IFoodMenuCategoryRepository _categoryRepository;
 
-        public PackagesController(IPackagesRepository packagesRepository)
+        public PackagesController(IPackagesRepository packagesRepository, IPackageItemsRepository packageItemsRepository, IFoodMenuCategoryRepository categoryRepository)
         {
             _packagesRepository = packagesRepository;
+            _packageItemsRepository = packageItemsRepository;
+            _categoryRepository = categoryRepository;
         }
 
         [HttpGet("")]
         public IActionResult Index()
         {
-            var items = _packagesRepository.GetAll();
-            ViewData["Items"] = items;
             ViewData["Mode"] = "admin";
             ViewData["Page"] = "packages";
             ViewData["Title"] = "Packages";
             return View("~/Views/Admin/Packages.cshtml");
+        }
+
+        [HttpGet("create")]
+        public IActionResult Create()
+        {
+            var categories = _categoryRepository.GetAll();
+            ViewData["Mode"] = "admin";
+            ViewData["Page"] = "packages";
+            ViewData["Title"] = "Create Package";
+            ViewData["Categories"] = categories;
+            return View("~/Views/Admin/CreatePackage.cshtml");
+        }
+
+        [HttpGet("edit")]
+        public IActionResult Edit([FromQuery] int packageId)
+        {
+            var categories = _categoryRepository.GetAll();
+            ViewData["Mode"] = "admin";
+            ViewData["Page"] = "packages";
+            ViewData["Title"] = "Edit Package";
+            ViewData["Categories"] = categories;
+            ViewData["PackageId"] = packageId;
+            return View("~/Views/Admin/CreatePackage.cshtml");
         }
 
         [HttpGet("get")]
@@ -39,21 +64,48 @@ namespace GayatriCateringPortal.Controllers.Admin
             return Ok(item);
         }
 
-        [HttpPost("save")]
-        public IActionResult Save([FromBody] Packages item)
+        [HttpPost("create")]
+        public IActionResult Create([FromBody] Packages item)
         {
-            if (item == null) return BadRequest();
-            var idValue = 0;
-            if (!string.IsNullOrWhiteSpace(item.Id)) int.TryParse(item.Id, out idValue);
-
-            if (idValue == 0)
+            if (!ModelState.IsValid)
             {
-                int newId = _packagesRepository.Create(item);
-                return Ok(new { success = newId > 0, id = newId });
+                var errors = string.Join("; ", ModelState.Values
+                    .SelectMany(x => x.Errors)
+                    .Select(x => x.ErrorMessage));
             }
 
-            bool result = _packagesRepository.Update(item);
-            return Ok(new { success = result });
+            if (item == null) return BadRequest();
+
+            int newId = _packagesRepository.Create(item);
+            
+            if (newId == -1)
+            {
+                return Ok(new { success = false, message = "Package with this name already exists" });
+            }
+            
+            return Ok(new { success = newId > 0, id = newId });
+        }
+
+        [HttpPost("update")]
+        public IActionResult Update([FromBody] Packages item)
+        {
+            if (!ModelState.IsValid)
+            {
+                var errors = string.Join("; ", ModelState.Values
+                    .SelectMany(x => x.Errors)
+                    .Select(x => x.ErrorMessage));
+            }
+
+            if (item == null || item.Id <= 0) return BadRequest();
+            
+            int result = _packagesRepository.Update(item);
+            
+            if (result == -1)
+            {
+                return Ok(new { success = false, message = "Package with this name already exists" });
+            }
+            
+            return Ok(new { success = result > 0 });
         }
 
         [HttpPost("delete/{id}")]
@@ -63,10 +115,10 @@ namespace GayatriCateringPortal.Controllers.Admin
             return Ok(new { success = result });
         }
 
-        [HttpPost("activeinactive/{id}")]
-        public IActionResult ActiveInActive(int id)
+        [HttpPost("activeinactive")]
+        public IActionResult ActiveInActive(int id, bool status)
         {
-            bool result = _packagesRepository.ActiveInActive(id);
+            bool result = _packagesRepository.ActiveInActive(id, status);
             return Ok(new { success = result });
         }
     }

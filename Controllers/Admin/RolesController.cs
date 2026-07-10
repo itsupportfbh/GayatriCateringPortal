@@ -50,6 +50,12 @@ namespace GayatriCateringPortal.Controllers.Admin
 
             if (item == null) return BadRequest();
             int newId = _rolesRepository.Create(item);
+            
+            if (newId == -1)
+            {
+                return Ok(new { success = false, message = "Role already exists" });
+            }
+            
             return Ok(new { success = newId > 0, id = newId });
         }
 
@@ -64,8 +70,14 @@ namespace GayatriCateringPortal.Controllers.Admin
             }
 
             if (item == null) return BadRequest();
-            bool updated = _rolesRepository.Update(item);
-            return Ok(new { success = updated });
+            int result = _rolesRepository.Update(item);
+            
+            if (result == -1)
+            {
+                return Ok(new { success = false, message = "Role already exists" });
+            }
+            
+            return Ok(new { success = result > 0 });
         }
 
         [HttpPost("delete/{id}")]
