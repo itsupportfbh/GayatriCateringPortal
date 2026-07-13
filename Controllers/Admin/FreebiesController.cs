@@ -6,68 +6,272 @@ namespace GayatriCateringPortal.Controllers.Admin
     [Route("Admin/Freebies")]
     public class FreebiesController : Controller
     {
-        private readonly IFreebiesRepository _freebiesRepository;
+        private readonly IFreebiesRepository _popularFreebies;
 
         public FreebiesController(IFreebiesRepository freebiesRepository)
         {
-            _freebiesRepository = freebiesRepository;
+            _popularFreebies = freebiesRepository;
         }
 
         [HttpGet("")]
         public IActionResult Index()
         {
-            var items = _freebiesRepository.GetAll();
-            ViewData["Items"] = items;
+                      
             ViewData["Mode"] = "admin";
             ViewData["Page"] = "freebies";
             ViewData["Title"] = "Popular & Freebies";
             return View("~/Views/Admin/Freebies.cshtml");
         }
 
-        [HttpGet("get")]
+        [HttpGet("getAll")]
         public IActionResult GetAll()
         {
-            var items = _freebiesRepository.GetAll();
-            return Ok(items);
+            try
+            {
+                var items = _popularFreebies.GetAll();
+
+                return Ok(items);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new
+                {
+                    success = false,
+                    message = ex.Message
+                });
+            }
         }
 
-        [HttpGet("get/{id}")]
+
+        [HttpGet("get/{id:int}")]
         public IActionResult Get(int id)
         {
-            var item = _freebiesRepository.GetById(id);
-            if (item == null) return NotFound();
-            return Ok(item);
-        }
-
-        [HttpPost("save")]
-        public IActionResult Save([FromBody] PopularFreebieMaster item)
-        {
-            if (item == null) return BadRequest();
-            var idValue = 0;
-            if (!string.IsNullOrWhiteSpace(item.Id)) int.TryParse(item.Id, out idValue);
-
-            if (idValue == 0)
+            if (id <= 0)
             {
-                int newId = _freebiesRepository.Create(item);
-                return Ok(new { success = newId > 0, id = newId });
+                return BadRequest(new
+                {
+                    success = false,
+                    message = "Invalid Popular Freebie Id."
+                });
             }
 
-            bool result = _freebiesRepository.Update(item);
-            return Ok(new { success = result });
+            try
+            {
+                var item = _popularFreebies.GetById(id);
+
+                if (item == null)
+                {
+                    return NotFound(new
+                    {
+                        success = false,
+                        message = "Popular Freebie not found."
+                    });
+                }
+
+                return Ok(item);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new
+                {
+                    success = false,
+                    message = ex.Message
+                });
+            }
         }
 
-        [HttpPost("delete/{id}")]
+
+        [HttpPost("create")]
+        public IActionResult Create(
+            [FromBody] PopularFreebieMaster item)
+        {
+            if (item == null)
+            {
+                return BadRequest(new
+                {
+                    success = false,
+                    message = "Invalid Popular Freebie details."
+                });
+            }
+
+            try
+            {
+                item.Id = 0;
+                item.IsDeleted = false;
+                item.CreatedDate = DateTime.Now;
+                item.UpdatedBy = null;
+                item.UpdatedDate = null;
+
+                int newId = _popularFreebies.Create(item);
+
+                return Ok(new
+                {
+                    success = newId > 0,
+                    id = newId,
+                    message = newId > 0
+                        ? "Popular Freebie created successfully."
+                        : "Popular Freebie was not saved."
+                });
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new
+                {
+                    success = false,
+                    message = ex.Message
+                });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new
+                {
+                    success = false,
+                    message = ex.Message
+                });
+            }
+        }
+
+
+        [HttpPost("update")]
+        public IActionResult Update(
+            [FromBody] PopularFreebieMaster item)
+        {
+            if (item == null)
+            {
+                return BadRequest(new
+                {
+                    success = false,
+                    message = "Invalid Popular Freebie details."
+                });
+            }
+
+            if (item.Id <= 0)
+            {
+                return BadRequest(new
+                {
+                    success = false,
+                    message = "Valid Popular Freebie Id is required."
+                });
+            }
+
+            try
+            {
+                var existing = _popularFreebies.GetById(item.Id);
+
+                if (existing == null)
+                {
+                    return NotFound(new
+                    {
+                        success = false,
+                        message = "Popular Freebie not found."
+                    });
+                }
+
+                item.CreatedBy = existing.CreatedBy;
+                item.CreatedDate = existing.CreatedDate;
+                item.UpdatedDate = DateTime.Now;
+
+                bool updated = _popularFreebies.Update(item);
+
+                return Ok(new
+                {
+                    success = updated,
+                    message = updated
+                        ? "Popular Freebie updated successfully."
+                        : "Popular Freebie was not updated."
+                });
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new
+                {
+                    success = false,
+                    message = ex.Message
+                });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new
+                {
+                    success = false,
+                    message = ex.Message
+                });
+            }
+        }
+
+
+        [HttpPost("delete/{id:int}")]
         public IActionResult Delete(int id)
         {
-            bool result = _freebiesRepository.Delete(id);
-            return Ok(new { success = result });
+            if (id <= 0)
+            {
+                return BadRequest(new
+                {
+                    success = false,
+                    message = "Invalid Popular Freebie Id."
+                });
+            }
+
+            try
+            {
+                bool result = _popularFreebies.Delete(id);
+
+                return Ok(new
+                {
+                    success = result,
+                    message = result
+                        ? "Popular Freebie deleted successfully."
+                        : "Popular Freebie was not deleted."
+                });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new
+                {
+                    success = false,
+                    message = ex.Message
+                });
+            }
         }
 
-        [HttpPost("activeinactive/{id}")]
-        public IActionResult ActiveInActive(int id)
+
+        [HttpPost("activeinactive")]
+        public IActionResult ActiveInActive(
+            int id,
+            bool status)
         {
-            bool result = _freebiesRepository.ActiveInActive(id);
-            return Ok(new { success = result });
+            if (id <= 0)
+            {
+                return BadRequest(new
+                {
+                    success = false,
+                    message = "Invalid Popular Freebie Id."
+                });
+            }
+
+            try
+            {
+                bool result =
+                    _popularFreebies.ActiveInActive(id, status);
+
+                return Ok(new
+                {
+                    success = result,
+                    message = result
+                        ? status
+                            ? "Popular Freebie activated successfully."
+                            : "Popular Freebie marked inactive successfully."
+                        : "Popular Freebie status was not updated."
+                });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new
+                {
+                    success = false,
+                    message = ex.Message
+                });
+            }
         }
     }
 }

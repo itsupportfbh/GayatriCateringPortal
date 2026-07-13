@@ -2,6 +2,10 @@
     ViewData["Title"] = "Packages";
 }
 
+@section Styles {
+    <link rel="stylesheet" href="~/css/admin/packages.css" asp-append-version="true">
+}
+
 <div class="page-header">
     <div>
         <div class="page-title">Package Configuration</div>
@@ -19,10 +23,6 @@
     <div class="spinner"></div>
     <div class="loader-text">Loading packages...</div>
 </div>
-
-@section Styles {
-    <link rel="stylesheet" href="~/css/admin/packages.css" asp-append-version="true">
-}
 
 <div id="packagesListPanel" class="card">
     <div class="panel-header">

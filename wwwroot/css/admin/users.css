@@ -1,0 +1,103 @@
+/* Users Admin Page Styles */
+
+/* panel-specific positioning */
+#usersListPanel {
+    position: relative;
+}
+
+/* users modal is wider because it contains more fields */
+#usersModal .modal-box {
+    width: 1100px;
+    max-width: 96vw;
+    max-height: 88vh;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+#userImagePreview {
+    display: block;
+    margin-top: 4px;
+    object-fit: cover;
+}
+
+/* roles multiselect dropdown styling */
+#usersModal .select2-container {
+    width: 100% !important;
+}
+
+#usersModal .select2-container--default .select2-selection--multiple {
+    min-height: 42px;
+    border: 1px solid var(--gray-300);
+    border-radius: 10px;
+    padding: 5px 8px;
+    background: #fff;
+}
+
+#usersModal .select2-container--default .select2-selection--multiple .select2-selection__rendered {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+    padding: 0;
+}
+
+#usersModal .select2-container--default.select2-container--focus .select2-selection--multiple {
+    border-color: var(--green);
+    box-shadow: 0 0 0 3px rgba(26,110,60,.1);
+}
+
+#usersModal .select2-container--default .select2-selection--multiple .select2-selection__choice {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--green-light);
+    border: 1px solid #cbe7d8;
+    color: var(--green-dark);
+    border-radius: 999px;
+    padding: 2px 10px;
+    margin: 0;
+}
+
+#usersModal .select2-container--default .select2-selection--multiple .select2-selection__choice__remove {
+    position: static;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: #5f8f76;
+    font-size: 16px;
+    line-height: 1;
+    order: 2;
+}
+
+#usersModal .select2-container--default .select2-selection--multiple .select2-selection__choice__remove:hover {
+    color: #2f6d4a;
+    background: transparent;
+}
+
+#usersModal .select2-container--default .select2-selection--multiple .select2-selection__choice__display {
+    order: 1;
+}
+
+#usersModal .select2-container--default .select2-search--inline .select2-search__field {
+    margin-top: 0;
+    margin-left: 0;
+}
+
+#usersModal .select2-dropdown {
+    border: 1px solid var(--gray-300);
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+@media (max-width: 900px) {
+    #usersModal .form-row.col3 {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 640px) {
+    #usersModal .form-row.col3 {
+        grid-template-columns: 1fr;
+    }
+}

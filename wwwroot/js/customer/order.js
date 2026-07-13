@@ -5,9 +5,10 @@ $(function () {
     var state = {
         pax: 50,
         gstMode: 'apply',
-        selectedPackage: 'nonveg-buffet',
-        packageName: 'Non-Vegetarian Indian Buffet',
-        packagePrice: 22,
+        selectedPackage: '',
+        packageName: '-',
+        packagePrice: 0,
+        step1View: 'packages',
         extraItems: { 'Vegetable Samosa': 1 },
         addons: { 'Table Setting': 1 },
         utensils: { 'Fork': 49 },
@@ -157,8 +158,21 @@ $(function () {
     }
 
     function renderStep1() {
-        var html = '<div class="card order-card">' +
+        var html = '';
+
+        if (state.step1View === 'packages') {
+            html = '<div class="card order-card">' +
+                '<div class="section-label">All Package Types</div>' +
+                '<div class="muted" style="font-size:13px;margin-bottom:12px">Select one package to continue to Step 1 form.</div>' +
+                '<div class="pkg-grid">' + packages.map(renderPackageCard).join('') + '</div>' +
+                '</div>';
+            $('#orderStepContent').html(html);
+            return;
+        }
+
+        html = '<div class="card order-card">' +
             '<div class="section-label">Step 1 - Select Indian Package</div>' +
+            '<div class="actions" style="justify-content:flex-end;margin-bottom:10px"><button class="btn btn-light btn-sm" id="btnChangePackage">Change Package</button></div>' +
             '<div class="order-fields">' +
             '<div><label>No. of Pax</label><input type="number" id="paxCount" min="1" value="' + state.pax + '"></div>' +
             '<div><label>Package Type</label><select id="packageSelect">' + packages.map(function (p) { return '<option value="' + p.id + '"' + (p.id === state.selectedPackage ? ' selected' : '') + '>' + p.name + ' - S$' + p.price + '/pax</option>'; }).join('') + '</select></div>' +
@@ -169,8 +183,6 @@ $(function () {
             '<div class="muted" style="font-size:13px">Choose only the dishes included in this package. Dish prices are not shown here because these selections are already covered by the package value above. Additional chargeable items with prices are in Step 2.</div>' +
             Object.keys(includedChoices).map(function (key, idx) { return renderChoiceBlock(key, includedChoices[key], idx === 0 ? 'Required: choose 2' : 'Required: choose 1'); }).join('') +
             '</div>' +
-            '<div class="section-label" style="margin-top:18px">All Package Types</div>' +
-            '<div class="pkg-grid">' + packages.map(renderPackageCard).join('') + '</div>' +
             '</div>';
         $('#orderStepContent').html(html);
     }
@@ -328,6 +340,10 @@ $(function () {
     });
 
     $('#summaryNextBtn').on('click', function () {
+        if (currentStep === 1 && state.step1View === 'packages') {
+            showToast('Select a package to continue.');
+            return;
+        }
         if (currentStep < 6) {
             currentStep += 1;
             renderStep();
@@ -347,9 +363,19 @@ $(function () {
 
     $('#btnResetOrder').on('click', function () {
         currentStep = 1;
+        state.step1View = 'packages';
+        state.selectedPackage = '';
+        state.packageName = '-';
+        state.packagePrice = 0;
         state.extraItems = { 'Vegetable Samosa': 1 };
         state.addons = { 'Table Setting': 1 };
         state.utensils = { 'Fork': 49 };
+        renderStep();
+    });
+
+    $(document).on('click', '#btnChangePackage', function () {
+        state.step1View = 'packages';
+        currentStep = 1;
         renderStep();
     });
 
@@ -380,6 +406,8 @@ $(function () {
         state.selectedPackage = pkg.id;
         state.packageName = pkg.name;
         state.packagePrice = pkg.price;
+        state.step1View = 'form';
+        currentStep = 1;
         renderStep();
     }
 

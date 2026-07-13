@@ -31,27 +31,6 @@
         font-size: 13px;
         font-weight: 600;
         color: var(--gray-700)
-    }
-
-.panel-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 16px;
-    flex-wrap: wrap;
-    margin-bottom: 16px
-}
-
-    .panel-header .panel-title {
-        font-size: 18px;
-        font-weight: 700;
-        margin: 0
-    }
-
-.panel-actions {
-    display: flex;
-    align-items: center;
-    gap: 10px
 }
 
 #btnBackToRoles {
@@ -68,18 +47,6 @@
 
 /* Role list badges */
 /* role-specific styles remain here; badge styles are shared in site.css */
-
-/* validation helpers (role modal) */
-.field-error {
-    color: var(--red);
-    font-size: 13px;
-    margin-top: 8px
-}
-
-.input-error {
-    border-color: var(--red) !important;
-    box-shadow: 0 0 0 3px rgba(220,38,38,.06)
-}
 
 
 /* Roles modal: larger size than default modal-box */

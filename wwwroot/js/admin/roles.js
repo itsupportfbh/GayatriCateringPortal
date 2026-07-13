@@ -81,8 +81,8 @@ function renderRolesList(rows) {
             html += `
                 <tr>
                     <td>${serial}</td>
-                    <td>${code}</td>
-                    <td>${name}</td>
+                    <td><strong>${code}</strong></td>
+                    <td><strong>${name}</strong></td>
                     <td>${remarks || ''}</td>
                     <td>${statusBadge}</td>
                     <td>

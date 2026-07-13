@@ -11,12 +11,16 @@
         <div class="page-title">Settings</div>
         <div class="page-subtitle">System configuration, company details and portal settings</div>
     </div>
-    <button class="btn btn-primary" id="btnSaveSettings">💾 Save Settings</button>
+    <div class="page-header-actions">
+        <button class="btn btn-primary" id="btnSaveSettings">Save Settings</button>
+    </div>
 </div>
 
 <div class="two-col">
     <div class="card">
-        <div class="section-label">Company Details</div>
+        <div class="panel-header">
+            <div class="panel-title">Company Details</div>
+        </div>
         <div class="form-group"><label>Company Name</label><input type="text" value="Gayatri Restaurant Pte Ltd"></div>
         <div class="form-group"><label>UEN</label><input type="text" value="201234567A"></div>
         <div class="form-group"><label>Address</label><input type="text" value="2 Tessensohn Road, Singapore 217664"></div>
@@ -25,7 +29,9 @@
         <div class="form-group"><label>WhatsApp</label><input type="tel" value="+65 9123 4567"></div>
     </div>
     <div class="card">
-        <div class="section-label">Portal Settings</div>
+        <div class="panel-header">
+            <div class="panel-title">Portal Settings</div>
+        </div>
         <div class="form-group"><label>Default Deposit %</label><input type="number" value="50" min="0" max="100"></div>
         <div class="form-group"><label>Quotation Validity (days)</label><input type="number" value="14" min="1"></div>
         <div class="form-group"><label>Min Order Pax</label><input type="number" value="20" min="1"></div>

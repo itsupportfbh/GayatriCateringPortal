@@ -1,1 +1,52 @@
 .freebie-tag{background:var(--gold-light);border:1px solid var(--gold);border-radius:20px;padding:3px 10px;font-size:12px;font-weight:700;color:var(--gold);display:inline-block;margin:2px}
+
+.freebies-modal-box {
+    width: 760px;
+    max-width: calc(100vw - 32px);
+    max-height: 88vh;
+    padding: 28px 30px 24px;
+}
+
+.freebies-modal-box .modal-header {
+    margin-bottom: 24px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--gray-200);
+}
+
+.freebies-modal-box .modal-title {
+    font-size: 21px;
+}
+
+.freebies-modal-box .form-row {
+    margin-bottom: 18px;
+}
+
+.freebies-modal-box .form-group {
+    margin-bottom: 0;
+}
+
+.freebies-modal-box .form-control {
+    min-height: 46px;
+}
+
+.freebies-modal-box textarea.form-control {
+    min-height: 92px;
+    resize: vertical;
+}
+
+.freebies-modal-box .actions {
+    margin-top: 22px;
+    padding-top: 18px;
+    border-top: 1px solid var(--gray-200);
+}
+
+@media (max-width: 700px) {
+    .freebies-modal-box {
+        padding: 22px 20px 20px;
+    }
+
+    .freebies-modal-box .col2,
+    .freebies-modal-box .col3 {
+        grid-template-columns: 1fr;
+    }
+}
