@@ -225,23 +225,30 @@ public class LocationRepository :ILocationsRepository
 
 
     private static void EnsureLocationNameAvailable(
-        IDbConnection conn,
-        string locationName,
-        int currentId)
+    IDbConnection conn,
+    string locationName,
+    int currentId = 0)
     {
+        if (string.IsNullOrWhiteSpace(locationName))
+            throw new ArgumentException("Location Name is required.");
+
         using (IDbCommand cmd = DataFactory.CreateCommand(
             @"SELECT COUNT(1)
-              FROM dbo.LocationMaster
-              WHERE LTRIM(RTRIM(LocationName)) = LTRIM(RTRIM(@LocationName))
-                AND Id <> @CurrentId
-                AND ISNULL(IsDeleted, 0) = 0",
+          FROM dbo.LocationMaster
+          WHERE LTRIM(RTRIM(LocationName)) = LTRIM(RTRIM(@LocationName))
+            AND (@CurrentId = 0 OR Id <> @CurrentId)
+            AND ISNULL(IsDeleted, 0) = 0",
             conn))
         {
-            cmd.Parameters.Add(DataFactory.CreateParameter(
-                "@LocationName", locationName.Trim()));
-            cmd.Parameters.Add(DataFactory.CreateParameter("@CurrentId", currentId));
+            cmd.Parameters.Add(
+                DataFactory.CreateParameter("@LocationName", locationName.Trim()));
 
-            if (Convert.ToInt32(DataFactory.ExecuteScalar(cmd)) > 0)
+            cmd.Parameters.Add(
+                DataFactory.CreateParameter("@CurrentId", currentId));
+
+            int count = Convert.ToInt32(DataFactory.ExecuteScalar(cmd));
+
+            if (count > 0)
                 throw new ArgumentException("Location Name already exists.");
         }
     }
