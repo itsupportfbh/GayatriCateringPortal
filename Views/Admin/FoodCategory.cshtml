@@ -36,7 +36,13 @@
     <div class="table-wrap">
         <table class="tbl" id="foodCategoryList" data-page-size="10">
             <thead>
-                <tr><th class="sortable">#</th><th class="sortable">Code</th><th class="sortable">Name</th><th class="sortable">Status</th><th class="no-sort">Actions</th></tr>
+                <tr>
+                    <th class="sortable">#</th>
+                    <th class="sortable">Code</th>
+                    <th class="sortable">Name</th>
+                    <th class="sortable">Status</th>
+                    <th class="no-sort">Actions</th>
+                </tr>
             </thead>
             <tbody>
             </tbody>
@@ -52,12 +58,12 @@
         </div>
         <div class="form-group">
             <label>Code <span class="field-required">*</span></label>
-            <input type="text" id="categoryCode" class="form-control" placeholder="Category code (eg. VEG)" />
+                <input type="text" id="categoryCode" maxlength="50" class="form-control" placeholder="Category code (eg. VEG)" />
             <div class="field-error hidden" id="categoryCodeError"></div>
         </div>
         <div class="form-group">
             <label>Name <span class="field-required">*</span></label>
-            <input type="text" id="categoryName" class="form-control" placeholder="Category name" />
+            <input type="text" id="categoryName" maxlength="100" class="form-control" placeholder="Category name" />
             <div class="field-error hidden" id="categoryNameError"></div>
         </div>
         <input type="hidden" id="categoryId" />
