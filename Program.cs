@@ -28,6 +28,7 @@ builder.Services.AddScoped<GayatriCateringPortal.Interfaces.IFoodMenuRepository,
 builder.Services.AddScoped<GayatriCateringPortal.Interfaces.ICommonRepository, GayatriCateringPortal.Repositories.CommonRepository>();
 builder.Services.AddScoped<GayatriCateringPortal.Interfaces.IFoodMenuCategoryRepository, GayatriCateringPortal.Repositories.FoodMenuCategoryRepository>();
 builder.Services.AddScoped<GayatriCateringPortal.Interfaces.IUsersRepository, GayatriCateringPortal.Repositories.UsersRepository>();
+builder.Services.AddScoped<GayatriCateringPortal.Interfaces.IUserRoleMappingRepository, GayatriCateringPortal.Repositories.UserRoleMappingRepository>();
 
 var app = builder.Build();
 

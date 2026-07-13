@@ -265,6 +265,34 @@ function doLogout() {
     window.location.href = '/Customer/Home';
 }
 
+function initRichDatePickers(root) {
+    if (typeof window.flatpickr !== 'function') return;
+
+    var scope = root || document;
+    var dateInputs = scope.querySelectorAll('input[type="date"]:not([data-gc-date-init="true"])');
+
+    dateInputs.forEach(function (input) {
+        input.setAttribute('data-gc-date-init', 'true');
+        var currentValue = input.value;
+
+        // Switch to text so the custom picker UI is always used instead of browser-native popup.
+        input.type = 'text';
+
+        flatpickr(input, {
+            dateFormat: 'Y-m-d',
+            altInput: true,
+            altFormat: 'd-m-Y',
+            allowInput: false,
+            clickOpens: true,
+            disableMobile: true,
+            monthSelectorType: 'static',
+            prevArrow: '<span aria-hidden="true">&#8249;</span>',
+            nextArrow: '<span aria-hidden="true">&#8250;</span>',
+            defaultDate: currentValue || null
+        });
+    });
+}
+
 document.addEventListener('DOMContentLoaded', function () {
     var loginBtn = document.getElementById('loginBtn');
     var loginCloseBtn = document.getElementById('loginCloseBtn');
@@ -274,6 +302,7 @@ document.addEventListener('DOMContentLoaded', function () {
     var sidebarToggle = document.getElementById('sidebarToggle');
 
     restoreAppState();
+    initRichDatePickers(document);
 
     if (loginBtn) {
         loginBtn.addEventListener('click', function () {
@@ -309,6 +338,20 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 });
+
+var gcDateObserver = new MutationObserver(function (mutations) {
+    for (var i = 0; i < mutations.length; i++) {
+        var added = mutations[i].addedNodes;
+        for (var j = 0; j < added.length; j++) {
+            var node = added[j];
+            if (node && node.nodeType === 1) {
+                initRichDatePickers(node);
+            }
+        }
+    }
+});
+
+gcDateObserver.observe(document.documentElement, { childList: true, subtree: true });
 
 document.addEventListener('click', function (e) {
     var overlay = document.getElementById('loginModal');

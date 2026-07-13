@@ -10,7 +10,7 @@ namespace GayatriCateringPortal.Models
         public string? Remarks { get; set; }
         public bool IsAdmin { get; set; } 
         public string Email { get; set; } = null!;
-        public string Password { get; set; } = null!;
+        public string? Password { get; set; }
         public string? ContactNo { get; set; }
         public bool IsActive { get; set; }
         public bool IsDeleted { get; set; }
@@ -27,6 +27,6 @@ namespace GayatriCateringPortal.Models
         public int? Country { get; set; }
         public int? State { get; set; }
         public int? City { get; set; }
-        public string? PostalCode { get; set; }
+        public int? PostalCode { get; set; }
     }
 }

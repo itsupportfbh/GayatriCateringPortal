@@ -58,7 +58,7 @@ public class UsersRepository : IUsersRepository
             using (conn = DataFactory.CreateConnection())
             {
                 if (conn.State == ConnectionState.Closed) conn.Open();
-                using (cmd = DataFactory.CreateCommand("SP_GetUserMasterByID", conn))
+                using (cmd = DataFactory.CreateCommand("SP_GetUserMasterById", conn))
                 {
                     ((SqlCommand)cmd).CommandType = CommandType.StoredProcedure;
                     cmd.Parameters.Add(DataFactory.CreateParameter("@Id", id));
@@ -99,13 +99,22 @@ public class UsersRepository : IUsersRepository
                     cmd.Parameters.Add(DataFactory.CreateParameter("@Code", item.Code));
                     cmd.Parameters.Add(DataFactory.CreateParameter("@Name", item.Name));
                     cmd.Parameters.Add(DataFactory.CreateParameter("@Email", item.Email));
-                    cmd.Parameters.Add(DataFactory.CreateParameter("@Password", item.Password));
                     cmd.Parameters.Add(DataFactory.CreateParameter("@ContactNo", item.ContactNo ?? (object)DBNull.Value));
                     cmd.Parameters.Add(DataFactory.CreateParameter("@Remarks", item.Remarks ?? (object)DBNull.Value));
                     cmd.Parameters.Add(DataFactory.CreateParameter("@IsAdmin", item.IsAdmin));
                     cmd.Parameters.Add(DataFactory.CreateParameter("@IsActive", item.IsActive));
                     cmd.Parameters.Add(DataFactory.CreateParameter("@IsDeleted", item.IsDeleted));
                     cmd.Parameters.Add(DataFactory.CreateParameter("@CreatedBy", item.CreatedBy ?? (object)DBNull.Value));
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@Image", item.Image ?? (object)DBNull.Value));
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@Gender", item.Gender ?? (object)DBNull.Value));
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@DOB", item.DOB ?? (object)DBNull.Value));
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@Age", item.Age ?? (object)DBNull.Value));
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@Address1", item.Address1 ?? (object)DBNull.Value));
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@Address2", item.Address2 ?? (object)DBNull.Value));
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@Country", item.Country ?? (object)DBNull.Value));
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@State", item.State ?? (object)DBNull.Value));
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@City", item.City ?? (object)DBNull.Value));
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@PostalCode", item.PostalCode ?? (object)DBNull.Value));
 
                     var result = DataFactory.ExecuteScalar(cmd);
                     if (result != null)
@@ -147,13 +156,22 @@ public class UsersRepository : IUsersRepository
                     cmd.Parameters.Add(DataFactory.CreateParameter("@Code", item.Code));
                     cmd.Parameters.Add(DataFactory.CreateParameter("@Name", item.Name));
                     cmd.Parameters.Add(DataFactory.CreateParameter("@Email", item.Email));
-                    cmd.Parameters.Add(DataFactory.CreateParameter("@Password", item.Password));
                     cmd.Parameters.Add(DataFactory.CreateParameter("@ContactNo", item.ContactNo ?? (object)DBNull.Value));
                     cmd.Parameters.Add(DataFactory.CreateParameter("@Remarks", item.Remarks ?? (object)DBNull.Value));
                     cmd.Parameters.Add(DataFactory.CreateParameter("@IsAdmin", item.IsAdmin));
                     cmd.Parameters.Add(DataFactory.CreateParameter("@IsActive", item.IsActive));
                     cmd.Parameters.Add(DataFactory.CreateParameter("@IsDeleted", item.IsDeleted));
                     cmd.Parameters.Add(DataFactory.CreateParameter("@UpdatedBy", item.UpdatedBy ?? (object)DBNull.Value));
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@Image", item.Image ?? (object)DBNull.Value));
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@Gender", item.Gender ?? (object)DBNull.Value));
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@DOB", item.DOB ?? (object)DBNull.Value));
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@Age", item.Age ?? (object)DBNull.Value));
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@Address1", item.Address1 ?? (object)DBNull.Value));
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@Address2", item.Address2 ?? (object)DBNull.Value));
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@Country", item.Country ?? (object)DBNull.Value));
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@State", item.State ?? (object)DBNull.Value));
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@City", item.City ?? (object)DBNull.Value));
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@PostalCode", item.PostalCode ?? (object)DBNull.Value));
 
                     var result = DataFactory.ExecuteScalar(cmd);
                     if (result != null)
@@ -266,8 +284,6 @@ public class UsersRepository : IUsersRepository
                     item.Name = Convert.ToString(reader["Name"])!;
                 if (reader["Email"] != DBNull.Value)
                     item.Email = Convert.ToString(reader["Email"])!;
-                if (reader["Password"] != DBNull.Value)
-                    item.Password = Convert.ToString(reader["Password"])!;
                 if (reader["ContactNo"] != DBNull.Value)
                     item.ContactNo = Convert.ToString(reader["ContactNo"]);
                 if (reader["Remarks"] != DBNull.Value)
@@ -305,7 +321,7 @@ public class UsersRepository : IUsersRepository
                 if (reader["City"] != DBNull.Value)
                     item.City = Convert.ToInt32(reader["City"]);
                 if (reader["PostalCode"] != DBNull.Value)
-                    item.PostalCode = Convert.ToString(reader["PostalCode"]);
+                    item.PostalCode = Convert.ToInt32(reader["PostalCode"]);
 
                 list.Add(item);
             }

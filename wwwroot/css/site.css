@@ -639,6 +639,149 @@ input, select, textarea {
         box-shadow: 0 0 0 3px rgba(26,110,60,.1)
     }
 
+    input[type=date] {
+        appearance: auto;
+        -webkit-appearance: auto;
+        letter-spacing: normal;
+        cursor: pointer
+    }
+
+    input[type=date]::-webkit-calendar-picker-indicator {
+        margin: 0;
+        cursor: pointer
+    }
+
+    input[type=date]::-webkit-datetime-edit {
+        color: var(--gray-900)
+    }
+
+    input[type=date]::-webkit-datetime-edit-fields-wrapper {
+        padding: 0
+    }
+
+/* GLOBAL DATE PICKER THEME (Flatpickr) */
+.flatpickr-calendar {
+    border: 1px solid #d5e4da;
+    border-radius: 14px;
+    box-shadow: 0 16px 36px rgba(15,23,42,.16), 0 3px 10px rgba(15,23,42,.1);
+    overflow: hidden;
+    font-family: "Segoe UI", Arial, sans-serif
+}
+
+    .flatpickr-calendar:before,
+    .flatpickr-calendar:after {
+        display: none
+    }
+
+    .flatpickr-calendar .flatpickr-months {
+        background: linear-gradient(135deg, var(--green-dark) 0%, var(--green) 56%, var(--green-mid) 100%);
+        color: #fff;
+        padding: 9px 8px 7px
+    }
+
+    .flatpickr-calendar .flatpickr-current-month,
+    .flatpickr-calendar .flatpickr-monthDropdown-months,
+    .flatpickr-calendar .numInputWrapper {
+        color: #fff;
+        fill: #fff
+    }
+
+    .flatpickr-calendar .flatpickr-weekdays {
+        background: linear-gradient(180deg, #f8fcfa 0%, #eff7f2 100%);
+        border-bottom: 1px solid #dde9e1
+    }
+
+    .flatpickr-calendar span.flatpickr-weekday {
+        color: #355f48;
+        font-weight: 700;
+        font-size: 12px
+    }
+
+    .flatpickr-calendar .flatpickr-day {
+        border-radius: 10px;
+        margin: 2px;
+        color: #1f2937;
+        font-weight: 600;
+        transition: background-color .15s ease, border-color .15s ease, color .15s ease, transform .12s ease
+    }
+
+        .flatpickr-calendar .flatpickr-day:hover {
+            background: #eef8f2;
+            border-color: #d2e9dc;
+            transform: translateY(-1px)
+        }
+
+        .flatpickr-calendar .flatpickr-day.today {
+            border-color: var(--orange);
+            color: var(--orange-dark);
+            background: #fff8ef
+        }
+
+        .flatpickr-calendar .flatpickr-day.selected,
+        .flatpickr-calendar .flatpickr-day.startRange,
+        .flatpickr-calendar .flatpickr-day.endRange {
+            background: var(--green);
+            border-color: var(--green);
+            box-shadow: 0 3px 9px rgba(26,110,60,.28)
+        }
+
+        .flatpickr-calendar .flatpickr-day.selected:hover,
+        .flatpickr-calendar .flatpickr-day.startRange:hover,
+        .flatpickr-calendar .flatpickr-day.endRange:hover {
+            background: var(--green-mid);
+            border-color: var(--green-mid)
+        }
+
+    .flatpickr-calendar .flatpickr-months .flatpickr-prev-month,
+    .flatpickr-calendar .flatpickr-months .flatpickr-next-month {
+        color: #fff;
+        fill: #fff;
+        border-radius: 8px;
+        transition: background-color .15s ease
+    }
+
+    .flatpickr-calendar .flatpickr-months .flatpickr-prev-month:hover,
+    .flatpickr-calendar .flatpickr-months .flatpickr-next-month:hover {
+        background: rgba(255,255,255,.16)
+    }
+
+    .flatpickr-calendar .flatpickr-months .flatpickr-prev-month:hover svg,
+    .flatpickr-calendar .flatpickr-months .flatpickr-next-month:hover svg {
+        fill: #ffe3c0
+    }
+
+    .flatpickr-calendar .flatpickr-current-month .numInputWrapper span.arrowUp:after,
+    .flatpickr-calendar .flatpickr-current-month .numInputWrapper span.arrowDown:after {
+        border-bottom-color: #fff;
+        border-top-color: #fff
+    }
+
+    .flatpickr-calendar .flatpickr-monthDropdown-months,
+    .flatpickr-calendar .numInput {
+        font-weight: 700
+    }
+
+    .flatpickr-calendar .flatpickr-monthDropdown-months option {
+        color: #111827
+    }
+
+    .flatpickr-calendar .flatpickr-months .flatpickr-prev-month svg,
+    .flatpickr-calendar .flatpickr-months .flatpickr-next-month svg {
+        width: 14px;
+        height: 14px
+    }
+
+    .flatpickr-calendar .flatpickr-clear,
+    .flatpickr-calendar .flatpickr-today {
+        color: var(--green);
+        font-weight: 700
+    }
+
+input.flatpickr-input[readonly] {
+    background-color: #fff;
+    cursor: pointer
+}
+
 label {
     font-size: 13px;
     font-weight: 700;
@@ -905,11 +1048,17 @@ label {
     }
 
 .tbl thead th {
-    background: #fff;
+    background: linear-gradient(180deg, #ffffff 0%, #f9fcfa 100%);
+    color: var(--gray-700);
+    font-size: 11.5px;
+    font-weight: 800;
+    letter-spacing: .45px;
+    text-transform: uppercase;
+    border-bottom: 1px solid #d7e8de;
     position: sticky;
     top: 0;
     z-index: 3;
-    box-shadow: 0 4px 12px rgba(15,23,42,.04);
+    box-shadow: inset 0 -2px 0 rgba(26,110,60,.18), 0 4px 12px rgba(15,23,42,.04);
 }
 
 .tbl tr:last-child td {
@@ -925,13 +1074,20 @@ label {
     transition: background .12s
 }
 
-.tbl th, .tbl td {
-    padding: 10px 12px;
+.tbl th {
+    padding: 8px 12px;
     vertical-align: middle;
 }
 
 .tbl td {
-    min-height: 40px
+    padding: 6px 12px;
+    vertical-align: middle;
+}
+
+.tbl td {
+    min-height: 30px;
+    color: var(--gray-900);
+    font-size: 12.5px
 }
 
 .table-wrap {
