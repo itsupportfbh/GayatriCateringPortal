@@ -1,0 +1,101 @@
+@{
+    ViewData["Title"] = "Users Management";
+}
+
+@section Styles {
+    <style>
+        /* No page-specific styles needed - uses global styles */
+    </style>
+}
+
+<div class="page-header">
+    <div>
+        <div class="page-title">Users Management</div>
+        <div class="page-subtitle">Create, edit and manage system users</div>
+    </div>
+    <div class="page-header-actions">
+        <div class="app-header-filter">
+            <input type="text" id="usersSearch" class="tbl-search" data-table="usersList" placeholder="Search users...">
+        </div>
+        <button class="btn btn-orange" onclick="openUsersModal()">+ Add User</button>
+    </div>
+</div>
+
+<div class="pageloaderfull hidden">
+    <div class="spinner"></div>
+    <div class="loader-text">Loading users...</div>
+</div>
+
+<div id="usersListPanel" class="card">
+    <div class="panel-header">
+        <div class="panel-title">Manage Users</div>
+    </div>
+    <div class="muted" style="margin-bottom:16px">Create, edit and manage users. Assign admin role and control access.</div>
+    <div class="pageloaderpanel hidden">
+        <div class="spinner"></div>
+        <div class="loader-text">Loading users...</div>
+    </div>
+    <div class="table-wrap">
+        <table class="tbl" id="usersList" data-page-size="10">
+            <thead>
+                <tr><th class="sortable">#</th><th class="sortable">Code</th><th class="sortable">Name</th><th class="sortable">Email</th><th class="sortable">Contact</th><th class="sortable">Admin</th><th class="sortable">Status</th><th class="no-sort">Actions</th></tr>
+            </thead>
+            <tbody>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Users Modal -->
+<div class="modal-overlay hidden" id="usersModal">
+    <div class="modal-box">
+        <div class="modal-header">
+            <span class="modal-title" id="users-title">Create / Edit User</span>
+            <button class="modal-close" type="button" onclick="closeUsersModal()">✕</button>
+        </div>
+        <div class="form-group">
+            <label>Code <span class="field-required">*</span></label>
+            <input type="text" id="userCode" class="form-control" placeholder="User code" />
+            <div class="field-error hidden" id="userCodeError"></div>
+        </div>
+        <div class="form-group">
+            <label>Name <span class="field-required">*</span></label>
+            <input type="text" id="userName" class="form-control" placeholder="User name" />
+            <div class="field-error hidden" id="userNameError"></div>
+        </div>
+        <div class="form-group">
+            <label>Email <span class="field-required">*</span></label>
+            <input type="email" id="userEmail" class="form-control" placeholder="Email address" />
+            <div class="field-error hidden" id="userEmailError"></div>
+        </div>
+        <div class="form-group">
+            <label>Contact No</label>
+            <input type="text" id="userContact" class="form-control" placeholder="Contact number" />
+        </div>
+        <div class="form-group">
+            <label>Password <span class="field-required">*</span></label>
+            <input type="password" id="userPassword" class="form-control" placeholder="Password" />
+            <div class="field-error hidden" id="userPasswordError"></div>
+        </div>
+        <div class="form-group">
+            <label>Remarks</label>
+            <input type="text" id="userRemarks" class="form-control" placeholder="Remarks" />
+        </div>
+        <div class="form-group">
+            <label class="checkbox-label">
+                <input type="checkbox" id="userIsAdmin" />
+                <span>Is Admin</span>
+            </label>
+        </div>
+        <input type="hidden" id="userId" />
+        <div class="actions">
+            <button type="button" class="btn btn-light" onclick="clearUsersForm(true)">Clear</button>
+            <button type="button" id="saveUserBtn" class="btn btn-primary" onclick="saveUser()">Save</button>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/admin/table-utils.js" asp-append-version="true"></script>
+    <script src="~/js/admin/users.js" asp-append-version="true"></script>
+}
