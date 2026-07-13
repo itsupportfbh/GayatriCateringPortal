@@ -8,7 +8,7 @@ namespace GayatriCateringPortal.Interfaces
         List<FoodMenuCategory> GetAll();
         FoodMenuCategory? GetById(string id);
         int Create(FoodMenuCategory item);
-        bool Update(FoodMenuCategory item);
+        int Update(FoodMenuCategory item);
         bool Delete(string id);
         bool ActiveInActive(string id, bool status);
     }

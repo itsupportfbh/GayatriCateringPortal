@@ -46,11 +46,11 @@ namespace GayatriCateringPortal.Repositories
             }
             catch (SqlException)
             {
-                throw new Exception("Database error");
+                return new List<FoodMenuCategory>();
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                throw new Exception(ex.StackTrace);
+                return new List<FoodMenuCategory>();
             }
             finally
             {
@@ -73,23 +73,30 @@ namespace GayatriCateringPortal.Repositories
             {
                 conn = DataFactory.CreateConnection();
                 conn.Open();
-                cmd = DataFactory.CreateCommand("INSERT INTO FoodMenuCategory (Code, Name, IsActive, IsDeleted, CreatedBy, CreatedDate) VALUES (@Code, @Name, @IsActive, @IsDeleted, @CreatedBy, @CreatedDate)", conn);
+                cmd = DataFactory.CreateCommand("SP_CreateFoodMenuCategory", conn);
+                cmd.CommandType = CommandType.StoredProcedure;
+
                 cmd.Parameters.Add(DataFactory.CreateParameter("@Code", item.Code ?? string.Empty));
                 cmd.Parameters.Add(DataFactory.CreateParameter("@Name", item.Name ?? string.Empty));
-                cmd.Parameters.Add(DataFactory.CreateParameter("@IsActive", item.IsActive ?? "1"));
-                cmd.Parameters.Add(DataFactory.CreateParameter("@IsDeleted", item.IsDeleted ?? "0"));
+                cmd.Parameters.Add(DataFactory.CreateParameter("@IsActive", item.IsActive == "1" ? 1 : 0));
+                cmd.Parameters.Add(DataFactory.CreateParameter("@IsDeleted", 0));
                 cmd.Parameters.Add(DataFactory.CreateParameter("@CreatedBy", item.CreatedBy ?? "0"));
-                cmd.Parameters.Add(DataFactory.CreateParameter("@CreatedDate", DateTime.UtcNow));
-                DataFactory.ExecuteNonQuery(cmd);
-                return 1;
+
+                var reader = DataFactory.ExecuteReader(cmd);
+                if (reader.Read())
+                {
+                    int result = Convert.ToInt32(reader["Result"]);
+                    return result;
+                }
+                return 0;
             }
             catch (SqlException)
             {
-                throw new Exception("Database error");
+                return 0;
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                throw new Exception(ex.StackTrace);
+                return 0;
             }
             finally
             {
@@ -97,32 +104,40 @@ namespace GayatriCateringPortal.Repositories
             }
         }
 
-        public bool Update(FoodMenuCategory item)
+        public int Update(FoodMenuCategory item)
         {
-            if (item == null) return false;
+            if (item == null) return 0;
             IDbConnection? conn = null;
             IDbCommand? cmd = null;
             try
             {
                 conn = DataFactory.CreateConnection();
                 conn.Open();
-                cmd = DataFactory.CreateCommand("UPDATE FoodMenuCategory SET Code = @Code, Name = @Name, IsActive = @IsActive, UpdatedBy = @UpdatedBy, UpdatedDate = @UpdatedDate WHERE Id = @Id", conn);
+                cmd = DataFactory.CreateCommand("SP_UpdateFoodMenuCategory", conn);
+                cmd.CommandType = CommandType.StoredProcedure;
+
                 cmd.Parameters.Add(DataFactory.CreateParameter("@Id", item.Id ?? string.Empty));
                 cmd.Parameters.Add(DataFactory.CreateParameter("@Code", item.Code ?? string.Empty));
                 cmd.Parameters.Add(DataFactory.CreateParameter("@Name", item.Name ?? string.Empty));
-                cmd.Parameters.Add(DataFactory.CreateParameter("@IsActive", item.IsActive ?? "1"));
+                cmd.Parameters.Add(DataFactory.CreateParameter("@IsActive", item.IsActive == "1" ? 1 : 0));
+                cmd.Parameters.Add(DataFactory.CreateParameter("@IsDeleted", 0));
                 cmd.Parameters.Add(DataFactory.CreateParameter("@UpdatedBy", item.UpdatedBy ?? "0"));
-                cmd.Parameters.Add(DataFactory.CreateParameter("@UpdatedDate", DateTime.UtcNow));
-                DataFactory.ExecuteNonQuery(cmd);
-                return true;
+
+                var reader = DataFactory.ExecuteReader(cmd);
+                if (reader.Read())
+                {
+                    int result = Convert.ToInt32(reader["Result"]);
+                    return result;
+                }
+                return 0;
             }
             catch (SqlException)
             {
-                throw new Exception("Database error");
+                return 0;
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                throw new Exception(ex.StackTrace);
+                return 0;
             }
             finally
             {
@@ -147,11 +162,11 @@ namespace GayatriCateringPortal.Repositories
             }
             catch (SqlException)
             {
-                throw new Exception("Database error");
+                return false;
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                throw new Exception(ex.StackTrace);
+                return false;
             }
             finally
             {
@@ -170,18 +185,18 @@ namespace GayatriCateringPortal.Repositories
                 conn.Open();
                 cmd = DataFactory.CreateCommand("UPDATE FoodMenuCategory SET IsActive = @IsActive, UpdatedDate = @UpdatedDate WHERE Id = @Id", conn);
                 cmd.Parameters.Add(DataFactory.CreateParameter("@Id", id));
-                cmd.Parameters.Add(DataFactory.CreateParameter("@IsActive", status ? "1" : "0"));
+                cmd.Parameters.Add(DataFactory.CreateParameter("@IsActive", status ? 1 : 0));
                 cmd.Parameters.Add(DataFactory.CreateParameter("@UpdatedDate", DateTime.UtcNow));
                 DataFactory.ExecuteNonQuery(cmd);
                 return true;
             }
             catch (SqlException)
             {
-                throw new Exception("Database error");
+                return false;
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                throw new Exception(ex.StackTrace);
+                return false;
             }
             finally
             {

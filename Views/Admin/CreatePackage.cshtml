@@ -2,6 +2,10 @@
     ViewData["Title"] = @ViewData["Title"];
 }
 
+@section Styles {
+    <link rel="stylesheet" href="~/css/admin/packages.css" asp-append-version="true">
+}
+
 <div class="page-header">
     <div>
         <div class="page-title">@ViewData["Title"]</div>
@@ -12,11 +16,10 @@
     </div>
 </div>
 
-@section Styles {
-    <link rel="stylesheet" href="~/css/admin/packages.css" asp-append-version="true">
-}
-
 <div class="card package-form-card">
+    <div class="panel-header">
+        <div class="panel-title">Package Details</div>
+    </div>
     <div class="form-grid">
         <div class="form-group">
             <label>Package Name <span class="field-required">*</span></label>
@@ -58,7 +61,7 @@
     </div>
 
     <div class="form-actions">
-        <button class="btn btn-secondary btn-sm" id="clearPackage" type="button">Clear</button>
+        <button class="btn btn-light btn-sm" id="clearPackage" type="button">Clear</button>
         <button class="btn btn-orange btn-sm" id="savePackage" type="button">Save</button>
     </div>
 </div>

@@ -2,6 +2,10 @@
     ViewData["Title"] = "Kitchen Queue";
 }
 
+@section Styles {
+     <link rel="stylesheet" href="~/css/admin/kitchen.css" asp-append-version="true">
+}
+
 <div class="page-header">
     <div>
         <div class="page-title">Kitchen Queue</div>
@@ -9,11 +13,11 @@
     </div>
 </div>
 
-@section Styles {
-     <link rel="stylesheet" href="~/css/admin/kitchen.css" asp-append-version="true">
-}
-
 <div class="card" id="kitchenTable">
+    <div class="panel-header">
+        <div class="panel-title">Kitchen Queue</div>
+    </div>
+    <div class="muted" style="margin-bottom:16px">Track confirmed orders scheduled for kitchen preparation.</div>
     <p class="muted">Loading...</p>
 </div>
 

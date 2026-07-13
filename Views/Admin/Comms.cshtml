@@ -6,15 +6,21 @@
     <link rel="stylesheet" href="~/css/admin/comms.css" asp-append-version="true">
 }
 
-    <div class="page-header">
+<div class="page-header">
     <div>
         <div class="page-title">Communications</div>
         <div class="page-subtitle">Communication log — WhatsApp, email and SMS history</div>
     </div>
-    <button class="btn btn-orange btn-add" id="btnAddComms">+ Log Communication</button>
+    <div class="page-header-actions">
+        <button class="btn btn-orange btn-add" id="btnAddComms">+ Log Communication</button>
+    </div>
 </div>
 
-    <div class="card">
+<div class="card">
+    <div class="panel-header">
+        <div class="panel-title">Communication Log</div>
+    </div>
+    <div class="muted" style="margin-bottom:16px">Track outbound communication across WhatsApp, email and SMS.</div>
     <div class="table-wrap" id="commsTable">
         <table class="tbl">
             <thead><tr><th>Date/Time</th><th>Order</th><th>Customer</th><th>Channel</th><th>Message</th><th>Sent By</th></tr></thead>
@@ -35,11 +41,11 @@
         <div class="form-group"><label>Channel</label><select id="cmChannel" class="form-control"><option>WhatsApp</option><option>Email</option><option>SMS</option></select></div>
         <div class="form-group"><label>Message</label><textarea id="cmMsgField" class="form-control"></textarea></div>
         @Html.AntiForgeryToken()
-        <div class="actions"><button class="btn btn-secondary" id="btnClearComms">Clear</button> <button class="btn btn-primary" id="btnSaveComms">Save</button></div>
+        <div class="actions"><button class="btn btn-light" id="btnClearComms">Clear</button> <button class="btn btn-primary" id="btnSaveComms">Save</button></div>
     </div>
 </div>
 
-    @section Scripts {
-        <script src="~/js/admin/table-utils.js" asp-append-version="true"></script>
-        <script src="~/js/admin/comms.js" asp-append-version="true"></script>
-    }
+@section Scripts {
+    <script src="~/js/admin/table-utils.js" asp-append-version="true"></script>
+    <script src="~/js/admin/comms.js" asp-append-version="true"></script>
+}
