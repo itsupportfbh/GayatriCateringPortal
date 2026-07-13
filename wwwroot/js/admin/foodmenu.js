@@ -1,5 +1,6 @@
 ﻿$(document).ready(function () {
     loadMenus();
+    /*loadCategories();*/
 });
 
 function closeMenuModal() {
@@ -31,6 +32,60 @@ function loadMenus() {
     });
 }
 
+function loadCategories(selectedId) {
+
+    $.ajax({
+        url: '/Admin/Category/GetCategories',
+        type: 'GET',
+        dataType: 'json',
+        success: function (categories) {
+
+            var ddl = $('#CategoryId');
+            ddl.empty();
+
+            var ddlSearch = $('#catFilter');
+            ddlSearch.empty();
+
+            ddl.append('<option value="">Select Category</option>');
+            ddlSearch.append('<option value="">Select Category</option>');
+
+            $.each(categories, function (i, item) {
+
+                var id = item.id || item.Id;
+                var name = item.categoryName || item.CategoryName;
+
+                ddl.append(
+                    $('<option>', {
+                        value: id,
+                        text: name
+                    })
+                );
+
+                ddlSearch.append(
+                    $('<option>', {
+                        value: id,
+                        text: name
+                    })
+                );
+            });
+
+            if (selectedId) {
+                ddl.val(selectedId);
+            }
+
+            if (selectedId) {
+                ddlSearch.val(selectedId);
+            }
+        },
+        error: function () {
+            showToast('Unable to load categories.', 3000, {
+                type: 'error',
+                title: 'Load Failed'
+            });
+        }
+    });
+}
+
 function showMenuLoader(show) {
     var $panel = $('.pageloaderpanel');
     if ($panel.length) {
@@ -53,10 +108,10 @@ function renderMenuList(rows) {
 
             var actions;
             if (active) {
-                actions = `<button type="button" class="action-item btn-edit" data-id="${id}" onclick="editRole(this.dataset.id)"><span class="action-icon p-p-pencil"></span>Edit</button>
-                           <button type="button" class="action-item btn-set-inactive" data-id="${id}" onclick="setRoleActive(this.dataset.id, false)"><span class="action-icon p-p-lock"></span>Inactive</button>`;
+                actions = `<button type="button" class="action-item btn-edit" data-id="${id}" onclick="editMenu(this.dataset.id)"><span class="action-icon p-p-pencil"></span>Edit</button>
+                           <button type="button" class="action-item btn-set-inactive" data-id="${id}" onclick="setMenuActive(this.dataset.id, false)"><span class="action-icon p-p-lock"></span>Inactive</button>`;
             } else {
-                actions = `<button type="button" class="action-item btn-set-active" data-id="${id}" onclick="setRoleActive(this.dataset.id, true)"><span class="action-icon p-p-unlock"></span>Active</button>`;
+                actions = `<button type="button" class="action-item btn-set-active" data-id="${id}" onclick="setMenuActive(this.dataset.id, true)"><span class="action-icon p-p-unlock"></span>Active</button>`;
             }
 
             var statusBadge;
@@ -78,7 +133,7 @@ function renderMenuList(rows) {
                             <button class="dots-btn" title="Actions">⋯</button>
                             <div class="actions-menu hidden">
                                 ${actions}
-                                <button type="button" class="action-item btn-delete" data-id="${id}" onclick="deleteRole(this.dataset.id)"><span class="action-icon p-p-trash"></span>Delete</button>
+                                <button type="button" class="action-item btn-delete" data-id="${id}" onclick="deleteMenu(this.dataset.id)"><span class="action-icon p-p-trash"></span>Delete</button>
                             </div>
                         </div>
                     </td>
@@ -143,7 +198,7 @@ function saveMenu() {
     });
 }
 
-function editRole(id) {
+function editMenu(id) {
     $.ajax({
         url: '/Admin/FoodMenus/get/' + id,
         type: 'GET',
@@ -152,10 +207,12 @@ function editRole(id) {
                 showToast('Menu not found.', 3000, { type: 'warning', title: 'Not found' });
                 return;
             }
+
+            /*loadCategories(data.categoryId);*/
             $('#menuId').val(role.Id || role.id || '');
             $('#ItemCode').val(role.Code || role.code || '');
             $('#ItemName').val(role.Name || role.name || '');
-            $('#CategoryId').val(role.categoryId || role.CategoryId || '');           
+            $('#CategoryId').val(role.categoryId || role.CategoryId || '');
             $('#Price').val(role.price || role.Price || '');
             $('#PreparationTime').val(role.preparationTime || role.PreparationTime || '');
             $('#FoodType').val(role.foodType || role.FoodType || '');
@@ -164,9 +221,9 @@ function editRole(id) {
         },
         error: function () { showToast('Unable to load Menu.', 3000, { type: 'error', title: 'Load failed' }); }
     });
-}  
+}
 
-function deleteRole(id) {
+function deleteMenu(id) {
     if (!id) return;
     showToast('Delete this Menu?', 0, {
         confirm: true,
@@ -195,7 +252,7 @@ function deleteRole(id) {
     });
 }
 
-function setRoleActive(id, isActive) {
+function setMenuActive(id, isActive) {
     if (!id) return;
 
     var confirmMessage = isActive ? 'Mark this Menu active?' : 'Mark this Menu inactive?';
