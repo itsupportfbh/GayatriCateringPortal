@@ -4,15 +4,3 @@
 #foodCategoryListPanel {
     position: relative;
 }
-
-/* validation helpers (category modal) */
-.field-error {
-    color: var(--red);
-    font-size: 13px;
-    margin-top: 8px;
-}
-
-.input-error {
-    border-color: var(--red) !important;
-    box-shadow: 0 0 0 3px rgba(220, 38, 38, .06);
-}

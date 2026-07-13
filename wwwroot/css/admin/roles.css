@@ -48,18 +48,6 @@
 /* Role list badges */
 /* role-specific styles remain here; badge styles are shared in site.css */
 
-/* validation helpers (role modal) */
-.field-error {
-    color: var(--red);
-    font-size: 13px;
-    margin-top: 8px
-}
-
-.input-error {
-    border-color: var(--red) !important;
-    box-shadow: 0 0 0 3px rgba(220,38,38,.06)
-}
-
 
 /* Roles modal: larger size than default modal-box */
 /*#rolesModal .modal-box {
