@@ -32,11 +32,11 @@ public class FinanceRepository : IFinanceRepository
         }
         catch (SqlException)
         {
-            throw new Exception("Database error");
+            return new List<Orders>();
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            throw new Exception(ex.StackTrace);
+            return new List<Orders>();
         }
         finally
         {
@@ -65,11 +65,11 @@ public class FinanceRepository : IFinanceRepository
         }
         catch (SqlException)
         {
-            throw new Exception("Database error");
+            return null;
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            throw new Exception(ex.StackTrace);
+            return null;
         }
         finally
         {
@@ -97,11 +97,11 @@ public class FinanceRepository : IFinanceRepository
         }
         catch (SqlException)
         {
-            throw new Exception("Database error");
+            return 0;
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            throw new Exception(ex.StackTrace);
+            return 0;
         }
         finally
         {
@@ -128,11 +128,11 @@ public class FinanceRepository : IFinanceRepository
         }
         catch (SqlException)
         {
-            throw new Exception("Database error");
+            return false;
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            throw new Exception(ex.StackTrace);
+            return false;
         }
         finally
         {
@@ -158,11 +158,11 @@ public class FinanceRepository : IFinanceRepository
         }
         catch (SqlException)
         {
-            throw new Exception("Database error");
+            return false;
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            throw new Exception(ex.StackTrace);
+            return false;
         }
         finally
         {
@@ -188,11 +188,11 @@ public class FinanceRepository : IFinanceRepository
         }
         catch (SqlException)
         {
-            throw new Exception("Database error");
+            return false;
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            throw new Exception(ex.StackTrace);
+            return false;
         }
         finally
         {

@@ -40,6 +40,7 @@ $(function () {
     $(document).on('click', '#commsModal .modal-close', function () { $('#commsModal').addClass('hidden'); });
     $(document).on('click', '#btnClearComms', function () { $('#commsModal').find('input, textarea').val(''); });
     $(document).on('click', '#btnSaveComms', function () {
+        setButtonBusy('#btnSaveComms', true, 'Saving...');
         var payload = { channel: $('#cmChannel').val() || 'WhatsApp', msg: $('#cmMsgField').val() || '' };
         if (editId) {
             var item = data.find(function (d) { return d.id === editId; });
@@ -52,6 +53,7 @@ $(function () {
         }
         $('#commsModal').addClass('hidden');
         render();
+        setButtonBusy('#btnSaveComms', false);
     });
     render();
 });

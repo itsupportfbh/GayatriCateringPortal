@@ -1,7 +1,6 @@
 using GayatriCateringPortal.Interfaces;
 using GayatriCateringPortal.Models;
 using Microsoft.AspNetCore.Mvc;
-using System.Diagnostics.Eventing.Reader;
 namespace GayatriCateringPortal.Controllers.Admin
 {
     [Route("Admin/Roles")]
@@ -21,6 +20,27 @@ namespace GayatriCateringPortal.Controllers.Admin
             ViewData["Page"] = "roles";
             ViewData["Title"] = "Roles & Permissions";
             return View("~/Views/Admin/Roles.cshtml");
+        }
+
+        [HttpGet("~/Admin/RolePermission")]
+        public IActionResult RolePermission([FromQuery(Name = "RoleId")] int roleId = 0)
+        {
+            var role = roleId > 0 ? _rolesRepository.GetById(roleId) : null;
+            var roleCode = role?.Code ?? string.Empty;
+            var roleName = role?.Name ?? string.Empty;
+            var roleDisplay = !string.IsNullOrWhiteSpace(roleCode) && !string.IsNullOrWhiteSpace(roleName)
+                ? roleCode + " - " + roleName
+                : (!string.IsNullOrWhiteSpace(roleName) ? roleName : (!string.IsNullOrWhiteSpace(roleCode) ? roleCode : roleId.ToString()));
+
+            ViewData["Mode"] = "admin";
+            ViewData["Page"] = "roles";
+            ViewData["Title"] = "Role Permission";
+            ViewData["RoleId"] = roleId;
+            ViewData["SelectedRoleCode"] = roleCode;
+            ViewData["SelectedRoleTitle"] = roleName;
+            ViewData["SelectedRoleDisplay"] = roleDisplay;
+
+            return View("~/Views/Admin/RolePermission.cshtml");
         }
 
         [HttpGet("get")]

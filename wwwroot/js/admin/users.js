@@ -9,7 +9,7 @@ function loadCountries(selectedCountryId) {
         dataType: 'json',
         success: function (rows) {
             var list = Array.isArray(rows) ? rows : [];
-            var html = '<option value="0">--Select Country--</option>';
+            var html = '<option value="0">Select country</option>';
 
             for (var i = 0; i < list.length; i++) {
                 var row = list[i] || {};
@@ -25,15 +25,15 @@ function loadCountries(selectedCountryId) {
 
             $('#userCountry').off('change.location').on('change.location', function () {
                 var countryId = parseInt($(this).val(), 10) || 0;
-                $('#userState').html('<option value="0">--Select State--</option>');
-                $('#userCity').html('<option value="0">--Select City--</option>');
+                $('#userState').html('<option value="0">Select state</option>');
+                $('#userCity').html('<option value="0">Select city</option>');
                 if (countryId > 0) {
                     loadStatesByCountryId(countryId);
                 }
             });
         },
         error: function () {
-            $('#userCountry').html('<option value="0">--Select Country--</option>');
+            $('#userCountry').html('<option value="0">Select country</option>');
             showToast('Unable to load countries.', 3000, { type: 'error', title: 'Load failed' });
         }
     });
@@ -41,8 +41,8 @@ function loadCountries(selectedCountryId) {
 
 function loadStatesByCountryId(countryId, selectedStateId) {
     if (!countryId) {
-        $('#userState').html('<option value="0">--Select State--</option>');
-        $('#userCity').html('<option value="0">--Select City--</option>');
+        $('#userState').html('<option value="0">Select state</option>');
+        $('#userCity').html('<option value="0">Select city</option>');
         return $.Deferred().resolve().promise();
     }
 
@@ -52,7 +52,7 @@ function loadStatesByCountryId(countryId, selectedStateId) {
         dataType: 'json',
         success: function (rows) {
             var list = Array.isArray(rows) ? rows : [];
-            var html = '<option value="0">--Select State--</option>';
+            var html = '<option value="0">Select state</option>';
 
             for (var i = 0; i < list.length; i++) {
                 var row = list[i] || {};
@@ -68,14 +68,14 @@ function loadStatesByCountryId(countryId, selectedStateId) {
 
             $('#userState').off('change.location').on('change.location', function () {
                 var stateId = parseInt($(this).val(), 10) || 0;
-                $('#userCity').html('<option value="0">--Select City--</option>');
+                $('#userCity').html('<option value="0">Select city</option>');
                 if (stateId > 0) {
                     loadCitiesByStateId(stateId);
                 }
             });
         },
         error: function () {
-            $('#userState').html('<option value="0">--Select State--</option>');
+            $('#userState').html('<option value="0">Select state</option>');
             showToast('Unable to load states.', 3000, { type: 'error', title: 'Load failed' });
         }
     });
@@ -83,7 +83,7 @@ function loadStatesByCountryId(countryId, selectedStateId) {
 
 function loadCitiesByStateId(stateId, selectedCityId) {
     if (!stateId) {
-        $('#userCity').html('<option value="0">--Select City--</option>');
+        $('#userCity').html('<option value="0">Select city</option>');
         return $.Deferred().resolve().promise();
     }
 
@@ -93,7 +93,7 @@ function loadCitiesByStateId(stateId, selectedCityId) {
         dataType: 'json',
         success: function (rows) {
             var list = Array.isArray(rows) ? rows : [];
-            var html = '<option value="0">--Select City--</option>';
+            var html = '<option value="0">Select city</option>';
 
             for (var i = 0; i < list.length; i++) {
                 var row = list[i] || {};
@@ -108,7 +108,7 @@ function loadCitiesByStateId(stateId, selectedCityId) {
             }
         },
         error: function () {
-            $('#userCity').html('<option value="0">--Select City--</option>');
+            $('#userCity').html('<option value="0">Select city</option>');
             showToast('Unable to load cities.', 3000, { type: 'error', title: 'Load failed' });
         }
     });
@@ -221,6 +221,7 @@ function loadUserRoleMappings(userId) {
 function saveUserRoleMappings(userId, roleIds, isUpdate) {
     var ids = Array.isArray(roleIds) ? roleIds : [];
     if (!ids.length) {
+        setButtonBusy('#saveUserBtn', false);
         showToast('Select at least one role.', 3000, { type: 'error', title: 'Validation' });
         return;
     }
@@ -247,11 +248,14 @@ function saveUserRoleMappings(userId, roleIds, isUpdate) {
                 clearUsersForm();
                 $('#usersModal').addClass('hidden');
                 loadUsers();
+                setButtonBusy('#saveUserBtn', false);
             } else {
+                setButtonBusy('#saveUserBtn', false);
                 showToast('User saved, but role mapping failed.', 3000, { type: 'error', title: 'Role mapping failed' });
             }
         },
         error: function () {
+            setButtonBusy('#saveUserBtn', false);
             showToast('User saved, but role mapping failed.', 3000, { type: 'error', title: 'Role mapping failed' });
         }
     });
@@ -346,7 +350,7 @@ function openUsersModal() {
 
     loadCountries();
 
-    $('#saveUserBtn').text('Save');
+    setActionButtonLabel('#saveUserBtn', 'Save');
 }
 
 function loadUsers() {
@@ -453,7 +457,7 @@ function initUserField(inputSelector, errorSelector) {
 function clearUsersForm(keepId) {
     if (!keepId) {
         $('#userId').val('');
-        $('#saveUserBtn').text('Save');
+        setActionButtonLabel('#saveUserBtn', 'Save');
     }
     $('#userCode').val('');
     $('#userName').val('');
@@ -465,6 +469,7 @@ function clearUsersForm(keepId) {
     $('#userCity').html('<option value="0">--Select City--</option>');
     $('#userPostalCode').val('');
     $('#userAge').val('');
+    $('#userGender').val('');
     $('#userAddress1').val('');
     $('#userAddress2').val('');
     $('#userImage').val('');
@@ -520,6 +525,7 @@ function editUser(id) {
 
             $('#userPostalCode').val(user.postalCode || '');
             setUserDobValue(user.dob);
+            $('#userGender').val(user.gender || '');
             $('#userAddress1').val(user.address1 || '');
             $('#userAddress2').val(user.address2 || '');
 
@@ -543,7 +549,7 @@ function editUser(id) {
             initUserField('#userEmail', '#userEmailError');
 
             $('#usersModal').removeClass('hidden');
-            $('#saveUserBtn').text('Update');
+            setActionButtonLabel('#saveUserBtn', 'Update');
         },
         error: function () {
             showToast('Unable to load user.', 3000, { type: 'error', title: 'Load failed' });
@@ -609,6 +615,8 @@ function saveUser() {
         return;
     }
 
+    setButtonBusy('#saveUserBtn', true, 'Saving...');
+
     var userId = $('#userId').val();
     var isUpdate = userId && parseInt(userId) > 0;
     var isActive = isUpdate ? ($('#userIsActive').val() === 'true') : true;
@@ -626,6 +634,7 @@ function saveUser() {
         PostalCode: parseInt($('#userPostalCode').val(), 10) || null,
         DOB: $('#userDob').val() || null,
         Age: parseInt($('#userAge').val(), 10) || null,
+        Gender: parseInt($('#userGender').val(), 10) || null,
         Address1: $('#userAddress1').val() || '',
         Address2: $('#userAddress2').val() || '',
         Image: $('#userImage').val() || '',
@@ -647,17 +656,20 @@ function saveUser() {
             if (res && res.success) {
                 var savedUserId = isUpdate ? parseInt(userId, 10) : parseInt(res.id, 10);
                 if (!savedUserId || isNaN(savedUserId)) {
+                    setButtonBusy('#saveUserBtn', false);
                     showToast('User saved, but invalid user id for role mapping.', 3000, { type: 'error', title: 'Role mapping failed' });
                     return;
                 }
 
                 saveUserRoleMappings(savedUserId, selectedRoles, isUpdate);
             } else {
+                setButtonBusy('#saveUserBtn', false);
                 var errorMsg = res && res.message ? res.message : (isUpdate ? 'Unable to update user.' : 'Unable to create user.');
                 showToast(errorMsg, 3000, { type: 'error', title: 'Save failed' });
             }
         },
         error: function () {
+            setButtonBusy('#saveUserBtn', false);
             showToast(isUpdate ? 'Update failed.' : 'Save failed.', 3000, { type: 'error', title: 'Save failed' });
         }
     });

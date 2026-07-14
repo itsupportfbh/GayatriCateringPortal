@@ -58,16 +58,16 @@
         <table class="tbl" id="popularFreebieList" data-page-size="10">
             <thead>
                 <tr>
-                    <th>S.No</th>
-                    <th>Item</th>
-                    <th>Package  Name</th>
-                    <th>Free quantity</th>
-                    <th>Display Order</th>
-                    <th>Valid From</th>
-                    <th>Valid To</th>
-                    <th>Remarks</th>
-                    <th>Active</th>
-                    <th>Actions</th>
+                    <th class="sortable">#</th>
+                    <th class="sortable">Item</th>
+                    <th class="sortable">Package  Name</th>
+                    <th class="sortable">Free quantity</th>
+                    <th class="sortable">Display Order</th>
+                    <th class="sortable">Valid From</th>
+                    <th class="sortable">Valid To</th>
+                    <th class="sortable">Remarks</th>
+                    <th class="sortable">Active</th>
+                    <th class="no-sort">Actions</th>
                 </tr>
             </thead>
 
@@ -88,8 +88,8 @@
     <div class="modal-box modal-box-lg freebies-modal-box">
 
         <div class="modal-header">
-            <span class="modal-title">
-                Create / Edit Popular Freebie
+            <span class="modal-title" id="popularFreebie-title">
+                Create Popular Freebie
             </span>
 
             <button class="modal-close"
@@ -126,7 +126,7 @@
 
                 <select id="freebiePackageId"
                         class="form-control">
-                    <option value="">All packages</option>
+                    <option value="">Select package (or all)</option>
                 </select>
             </div>
 
@@ -135,7 +135,7 @@
 
                 <select id="freebieLocationId"
                         class="form-control">
-                    <option value="">All locations</option>
+                    <option value="">Select location (or all)</option>
                 </select>
             </div>
 
@@ -151,7 +151,7 @@
                        id="freebieMinPax"
                        class="form-control"
                        min="0"
-                       placeholder="Minimum pax" />
+                       placeholder="Enter minimum pax" />
             </div>
 
             <div class="form-group">
@@ -161,7 +161,7 @@
                        id="freebieFreeQty"
                        class="form-control"
                        min="0"
-                       placeholder="Free quantity" />
+                       placeholder="Enter free quantity" />
             </div>
 
             <div class="form-group">
@@ -174,7 +174,7 @@
                        id="freebieDisplayOrder"
                        class="form-control"
                        min="1"
-                       placeholder="Display order" />
+                       placeholder="Enter display order" />
             </div>
 
         </div>
@@ -209,7 +209,7 @@
                 <textarea id="freebieRemarks"
                           class="form-control"
                           rows="3"
-                          placeholder="Remarks"></textarea>
+                          placeholder="Enter remarks (optional)"></textarea>
             </div>
 
         </div>

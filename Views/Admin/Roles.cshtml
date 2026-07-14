@@ -57,64 +57,18 @@
         </div>
         <div class="form-group">
             <label>Name <span class="field-required">*</span></label>
-            <input type="text" id="roleName" class="form-control" placeholder="Role name" />
+            <input type="text" id="roleName" class="form-control" placeholder="Enter role name" />
             <div class="field-error hidden" id="roleNameError"></div>
         </div>
         <div class="form-group">
             <label>Remarks</label>
-            <input type="text" id="roleRemarks" class="form-control" placeholder="Remarks" />
+            <input type="text" id="roleRemarks" class="form-control" placeholder="Enter remarks (optional)" />
         </div>
         <input type="hidden" id="roleId" />
         <div class="actions">
             <button type="button" class="btn btn-light" onclick="clearRoleForm(true)">Clear</button>
             <button type="button" id="saveRoleBtn" class="btn btn-primary" onclick="saveRole()">Save</button>
         </div>
-    </div>
-</div>
-
-<div id="rolesPermissionPanel" class="card hidden">
-    <div class="panel-header">
-        <div class="panel-title">Role Permission</div>
-        <div class="panel-actions">
-            <button id="btnBackToRoles" class="btn" onclick="hideRolePermission();">Back to Roles</button>
-        </div>
-    </div>
-    <div class="muted" style="margin-bottom:16px">Viewing permissions for role: <strong id="selectedRoleName">None</strong></div>
-    <div class="table-wrap">
-        <table class="tbl" id="rolesMatrix">
-            <thead>
-                <tr>
-                    <th>Function</th>
-                    <th>Super Admin</th>
-                    <th>Admin</th>
-                    <th>Sales</th>
-                    <th>Accounts</th>
-                    <th>Kitchen Admin</th>
-                    <th>Kitchen Staff</th>
-                    <th>Logistics</th>
-                    <th>Customer Service</th>
-                    <th>Viewer</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr><td><strong>Dashboard</strong></td><td><input type="checkbox" checked></td><td><input type="checkbox" checked></td><td><input type="checkbox" checked></td><td><input type="checkbox" checked></td><td><input type="checkbox" checked></td><td><input type="checkbox" checked></td><td><input type="checkbox" checked></td><td><input type="checkbox" checked></td><td><input type="checkbox" checked></td></tr>
-                <tr><td><strong>Orders</strong></td><td><input type="checkbox" checked></td><td><input type="checkbox" checked></td><td><input type="checkbox" checked></td><td><input type="checkbox" checked></td><td><input type="checkbox" checked></td><td><input type="checkbox"></td><td><input type="checkbox" checked></td><td><input type="checkbox" checked></td><td><input type="checkbox" checked></td></tr>
-                <tr><td><strong>Quotation</strong></td><td><input type="checkbox" checked></td><td><input type="checkbox" checked></td><td><input type="checkbox" checked></td><td><input type="checkbox" checked></td><td><input type="checkbox"></td><td><input type="checkbox"></td><td><input type="checkbox"></td><td><input type="checkbox" checked></td><td><input type="checkbox"></td></tr>
-                <tr><td><strong>Invoice</strong></td><td><input type="checkbox" checked></td><td><input type="checkbox" checked></td><td><input type="checkbox"></td><td><input type="checkbox" checked></td><td><input type="checkbox"></td><td><input type="checkbox"></td><td><input type="checkbox"></td><td><input type="checkbox"></td><td><input type="checkbox"></td></tr>
-                <tr><td><strong>Kitchen Queue</strong></td><td><input type="checkbox" checked></td><td><input type="checkbox" checked></td><td><input type="checkbox"></td><td><input type="checkbox"></td><td><input type="checkbox" checked></td><td><input type="checkbox" checked></td><td><input type="checkbox"></td><td><input type="checkbox"></td><td><input type="checkbox"></td></tr>
-                <tr><td><strong>Logistics</strong></td><td><input type="checkbox" checked></td><td><input type="checkbox" checked></td><td><input type="checkbox"></td><td><input type="checkbox"></td><td><input type="checkbox"></td><td><input type="checkbox"></td><td><input type="checkbox" checked></td><td><input type="checkbox"></td><td><input type="checkbox"></td></tr>
-                <tr><td><strong>Customers</strong></td><td><input type="checkbox" checked></td><td><input type="checkbox" checked></td><td><input type="checkbox" checked></td><td><input type="checkbox"></td><td><input type="checkbox"></td><td><input type="checkbox"></td><td><input type="checkbox"></td><td><input type="checkbox" checked></td><td><input type="checkbox"></td></tr>
-                <tr><td><strong>Menu Master</strong></td><td><input type="checkbox" checked></td><td><input type="checkbox" checked></td><td><input type="checkbox" checked></td><td><input type="checkbox"></td><td><input type="checkbox" checked></td><td><input type="checkbox"></td><td><input type="checkbox"></td><td><input type="checkbox"></td><td><input type="checkbox"></td></tr>
-                <tr><td><strong>Package Config</strong></td><td><input type="checkbox" checked></td><td><input type="checkbox" checked></td><td><input type="checkbox" checked></td><td><input type="checkbox"></td><td><input type="checkbox"></td><td><input type="checkbox"></td><td><input type="checkbox"></td><td><input type="checkbox"></td><td><input type="checkbox"></td></tr>
-                <tr><td><strong>Utensils Config</strong></td><td><input type="checkbox" checked></td><td><input type="checkbox" checked></td><td><input type="checkbox"></td><td><input type="checkbox"></td><td><input type="checkbox" checked></td><td><input type="checkbox" checked></td><td><input type="checkbox"></td><td><input type="checkbox"></td><td><input type="checkbox"></td></tr>
-                <tr><td><strong>Meal Periods</strong></td><td><input type="checkbox" checked></td><td><input type="checkbox" checked></td><td><input type="checkbox"></td><td><input type="checkbox"></td><td><input type="checkbox" checked></td><td><input type="checkbox"></td><td><input type="checkbox"></td><td><input type="checkbox"></td><td><input type="checkbox"></td></tr>
-                <tr><td><strong>Locations</strong></td><td><input type="checkbox" checked></td><td><input type="checkbox" checked></td><td><input type="checkbox" checked></td><td><input type="checkbox"></td><td><input type="checkbox"></td><td><input type="checkbox"></td><td><input type="checkbox" checked></td><td><input type="checkbox"></td><td><input type="checkbox"></td></tr>
-                <tr><td><strong>Finance</strong></td><td><input type="checkbox" checked></td><td><input type="checkbox" checked></td><td><input type="checkbox"></td><td><input type="checkbox" checked></td><td><input type="checkbox"></td><td><input type="checkbox"></td><td><input type="checkbox"></td><td><input type="checkbox"></td><td><input type="checkbox"></td></tr>
-                <tr><td><strong>Reports</strong></td><td><input type="checkbox" checked></td><td><input type="checkbox" checked></td><td><input type="checkbox" checked></td><td><input type="checkbox" checked></td><td><input type="checkbox" checked></td><td><input type="checkbox" checked></td><td><input type="checkbox" checked></td><td><input type="checkbox" checked></td><td><input type="checkbox" checked></td></tr>
-                <tr><td><strong>Communication Log</strong></td><td><input type="checkbox" checked></td><td><input type="checkbox" checked></td><td><input type="checkbox" checked></td><td><input type="checkbox" checked></td><td><input type="checkbox" checked></td><td><input type="checkbox"></td><td><input type="checkbox" checked></td><td><input type="checkbox" checked></td><td><input type="checkbox"></td></tr>
-                <tr><td><strong>Roles &amp; Permissions</strong></td><td><input type="checkbox" checked></td><td><input type="checkbox"></td><td><input type="checkbox"></td><td><input type="checkbox"></td><td><input type="checkbox"></td><td><input type="checkbox"></td><td><input type="checkbox"></td><td><input type="checkbox"></td><td><input type="checkbox"></td></tr>
-            </tbody>
-        </table>
     </div>
 </div>
 

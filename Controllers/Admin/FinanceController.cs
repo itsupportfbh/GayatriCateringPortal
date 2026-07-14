@@ -16,8 +16,15 @@ namespace GayatriCateringPortal.Controllers.Admin
         [HttpGet("")]
         public IActionResult Index()
         {
-            var items = _financeRepository.GetAll();
-            ViewData["Items"] = items;
+            try
+            {
+                ViewData["Items"] = _financeRepository.GetAll();
+            }
+            catch
+            {
+                ViewData["Items"] = new List<Orders>();
+                TempData["ErrorMessage"] = "Unable to load finance data right now.";
+            }
             ViewData["Mode"] = "admin";
             ViewData["Page"] = "finance";
             ViewData["Title"] = "Finance";
@@ -27,46 +34,81 @@ namespace GayatriCateringPortal.Controllers.Admin
         [HttpGet("get")]
         public IActionResult GetAll()
         {
-            var items = _financeRepository.GetAll();
-            return Ok(items);
+            try
+            {
+                var items = _financeRepository.GetAll();
+                return Ok(items);
+            }
+            catch
+            {
+                return Ok(new List<Orders>());
+            }
         }
 
         [HttpGet("get/{id}")]
         public IActionResult Get(int id)
         {
-            var item = _financeRepository.GetById(id);
-            if (item == null) return NotFound();
-            return Ok(item);
+            try
+            {
+                var item = _financeRepository.GetById(id);
+                if (item == null) return NotFound();
+                return Ok(item);
+            }
+            catch
+            {
+                return NotFound();
+            }
         }
 
         [HttpPost("save")]
         public IActionResult Save([FromBody] Orders item)
         {
-            if (item == null) return BadRequest();
-            var idValue = item.Id;
-
-            if (idValue == 0)
+            try
             {
-                int newId = _financeRepository.Create(item);
-                return Ok(new { success = newId > 0, id = newId });
-            }
+                if (item == null) return BadRequest();
+                var idValue = item.Id;
 
-            bool result = _financeRepository.Update(item);
-            return Ok(new { success = result });
+                if (idValue == 0)
+                {
+                    int newId = _financeRepository.Create(item);
+                    return Ok(new { success = newId > 0, id = newId });
+                }
+
+                bool result = _financeRepository.Update(item);
+                return Ok(new { success = result });
+            }
+            catch
+            {
+                return Ok(new { success = false });
+            }
         }
 
         [HttpPost("delete/{id}")]
         public IActionResult Delete(int id)
         {
-            bool result = _financeRepository.Delete(id);
-            return Ok(new { success = result });
+            try
+            {
+                bool result = _financeRepository.Delete(id);
+                return Ok(new { success = result });
+            }
+            catch
+            {
+                return Ok(new { success = false });
+            }
         }
 
         [HttpPost("activeinactive/{id}")]
         public IActionResult ActiveInActive(int id)
         {
-            bool result = _financeRepository.ActiveInActive(id);
-            return Ok(new { success = result });
+            try
+            {
+                bool result = _financeRepository.ActiveInActive(id);
+                return Ok(new { success = result });
+            }
+            catch
+            {
+                return Ok(new { success = false });
+            }
         }
     }
 }

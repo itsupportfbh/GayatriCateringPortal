@@ -95,7 +95,7 @@ public class UtensilsRepository : IUtensilsRepository
                 {
                     ((SqlCommand)cmd).CommandType = CommandType.StoredProcedure;
                     cmd.Parameters.Add(DataFactory.CreateParameter("@UtensilName", (object?)item.UtensilName ?? DBNull.Value));
-                    cmd.Parameters.Add(DataFactory.CreateParameter("@UnitType", (object?)item.UnitType ?? DBNull.Value));
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@Rules", (object?)item.Rules ?? DBNull.Value));
                     cmd.Parameters.Add(DataFactory.CreateParameter("@Price", (object?)item.Price ?? DBNull.Value));
                     cmd.Parameters.Add(DataFactory.CreateParameter("@DepositAmount", (object?)item.DepositAmount ?? DBNull.Value));
                     cmd.Parameters.Add(DataFactory.CreateParameter("@IsActive", item.IsActive));
@@ -143,7 +143,7 @@ public class UtensilsRepository : IUtensilsRepository
                     ((SqlCommand)cmd).CommandType = CommandType.StoredProcedure;
                     cmd.Parameters.Add(DataFactory.CreateParameter("@Id", item.Id));
                     cmd.Parameters.Add(DataFactory.CreateParameter("@UtensilName", (object?)item.UtensilName ?? DBNull.Value));
-                    cmd.Parameters.Add(DataFactory.CreateParameter("@UnitType", (object?)item.UnitType ?? DBNull.Value));
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@Rules", (object?)item.Rules ?? DBNull.Value));
                     cmd.Parameters.Add(DataFactory.CreateParameter("@Price", (object?)item.Price ?? DBNull.Value));
                     cmd.Parameters.Add(DataFactory.CreateParameter("@DepositAmount", (object?)item.DepositAmount ?? DBNull.Value)); 
                     cmd.Parameters.Add(DataFactory.CreateParameter("@IsActive", item.IsActive));
@@ -258,8 +258,8 @@ public class UtensilsRepository : IUtensilsRepository
                     item.Id = Convert.ToInt32(reader["Id"])!;
                 if (reader["UtensilName"] != DBNull.Value)
                     item.UtensilName = Convert.ToString(reader["UtensilName"])!;
-                if (reader["UnitType"] != DBNull.Value)
-                    item.UnitType = Convert.ToString(reader["UnitType"])!;
+                if (reader["Rules"] != DBNull.Value)
+                    item.Rules = Convert.ToDecimal(reader["Rules"]);
                 if (reader["Price"] != DBNull.Value)
                     item.Price = Convert.ToDecimal(reader["Price"]);
                 if (reader["DepositAmount"] != DBNull.Value)

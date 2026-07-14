@@ -6,7 +6,7 @@ namespace GayatriCateringPortal.Models
     {
         public int Id { get; set; }
         public string UtensilName { get; set; } = null!;
-        public string UnitType { get; set; } = null!;
+        public decimal Rules { get; set; }
         public decimal Price { get; set; }
         public decimal DepositAmount { get; set; }
         public bool IsDeleted { get; set; }

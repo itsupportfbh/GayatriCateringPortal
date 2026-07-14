@@ -293,6 +293,103 @@ function initRichDatePickers(root) {
     });
 }
 
+function getButtonLabel($button) {
+    return $.trim($button.attr('data-gc-button-label') || $button.clone().children().remove().end().text());
+}
+
+function decorateActionButtons(root) {
+    var $scope = root ? $(root) : $(document);
+    var $buttons = $scope.is('button, a.btn') ? $scope.add($scope.find('button, a.btn')) : $scope.find('button, a.btn');
+
+    $buttons.each(function () {
+        var $button = $(this);
+        if ($button.data('gcButtonDecorated')) {
+            return;
+        }
+
+        var label = getButtonLabel($button);
+        var lowerLabel = label.toLowerCase();
+        var buttonId = ($button.attr('id') || '').toLowerCase();
+        var onclick = ($button.attr('onclick') || '').toLowerCase();
+        var action = null;
+
+        if (lowerLabel.indexOf('save') === 0 || buttonId.indexOf('save') > -1 || onclick.indexOf('save') > -1) {
+            action = 'save';
+        } else if (lowerLabel.indexOf('clear') === 0 || buttonId.indexOf('clear') > -1 || onclick.indexOf('clear') > -1) {
+            action = 'clear';
+        }
+
+        if (!action) {
+            return;
+        }
+
+        $button.attr('data-gc-button-label', label);
+        $button.attr('data-gc-button-action', action);
+        $button.addClass('gc-action-btn');
+
+        var icon = action === 'save' ? '💾' : '↺';
+        var busyLabel = action === 'save' ? 'Saving...' : 'Clearing...';
+
+        $button.html(
+            '<span class="gc-btn-icon" aria-hidden="true">' + icon + '</span>' +
+            '<span class="gc-btn-label">' + label + '</span>' +
+            '<span class="gc-btn-loader" aria-hidden="true"></span>'
+        );
+
+        $button.attr('data-gc-busy-label', busyLabel);
+        $button.data('gcButtonDecorated', true);
+    });
+}
+
+function setActionButtonLabel(buttonRef, label) {
+    var $button = $(buttonRef);
+    if (!$button.length) return;
+
+    if (!$button.data('gcButtonDecorated')) {
+        decorateActionButtons($button);
+    }
+
+    $button.attr('data-gc-button-label', label);
+
+    // Ensure stale loading state never leaks into create/edit reopen flows.
+    $button.removeClass('is-busy').prop('disabled', false);
+
+    if (!$button.find('.gc-btn-label').length) {
+        $button.text(label);
+        $button.data('gcButtonDecorated', false);
+        decorateActionButtons($button);
+        return;
+    }
+
+    $button.find('.gc-btn-label').text(label);
+}
+
+function setButtonBusy(buttonRef, isBusy, busyLabel) {
+    var $button = $(buttonRef);
+    if (!$button.length) return;
+
+    if (!$button.data('gcButtonDecorated') || !$button.find('.gc-btn-label').length || !$button.find('.gc-btn-loader').length) {
+        $button.data('gcButtonDecorated', false);
+        decorateActionButtons($button);
+    }
+
+    var label = busyLabel || $button.attr('data-gc-busy-label') || 'Saving...';
+    var originalLabel = getButtonLabel($button);
+
+    if (isBusy) {
+        if (!$button.attr('data-gc-button-label')) {
+            $button.attr('data-gc-button-label', originalLabel);
+        }
+        $button.addClass('is-busy').prop('disabled', true);
+        $button.find('.gc-btn-label').text(label);
+        return;
+    }
+
+    var restoreLabel = $button.attr('data-gc-button-label') || originalLabel;
+    $button.removeClass('is-busy').prop('disabled', false);
+    $button.find('.gc-btn-label').text(restoreLabel);
+}
+
 document.addEventListener('DOMContentLoaded', function () {
     var loginBtn = document.getElementById('loginBtn');
     var loginCloseBtn = document.getElementById('loginCloseBtn');
@@ -303,6 +400,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     restoreAppState();
     initRichDatePickers(document);
+    decorateActionButtons(document);
 
     if (loginBtn) {
         loginBtn.addEventListener('click', function () {
@@ -346,6 +444,7 @@ var gcDateObserver = new MutationObserver(function (mutations) {
             var node = added[j];
             if (node && node.nodeType === 1) {
                 initRichDatePickers(node);
+                decorateActionButtons(node);
             }
         }
     }
