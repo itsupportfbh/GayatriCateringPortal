@@ -1,13 +1,4 @@
-.cust-avatar {
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    background: var(--green-light);
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: 700;
-    color: var(--green);
-    font-size: 13px;
-    margin-right: 8px
+#customersModal .customers-modal-box {
+    width: min(1080px, 94vw);
+    max-width: min(1080px, 94vw);
 }

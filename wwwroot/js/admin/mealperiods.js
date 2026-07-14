@@ -8,6 +8,8 @@ $(document).ready(function () {
 
 
 function loadMealPeriod() {
+    showMealPeriodsLoader(true);
+
     $.ajax({
         url: '/Admin/MealPeriods/getAll',
         type: 'GET',
@@ -16,8 +18,20 @@ function loadMealPeriod() {
         },
         error: function () {
             renderMealPeriodList([]);
+            showToast('Unable to load meal periods.', 3000, { type: 'error', title: 'Load failed' });
+        },
+        complete: function () {
+            showMealPeriodsLoader(false);
         }
     });
+}
+
+function showMealPeriodsLoader(show) {
+    var $panel = $('.pageloaderpanel');
+    if ($panel.length) {
+        $('#mealPeriodsListPanel .table-wrap').toggleClass('hidden', show);
+        $panel.toggleClass('hidden', !show);
+    }
 }
 
 
@@ -101,7 +115,6 @@ function clearMealPeriodForm() {
     $('#mealPeriodStartTime').val('');
     $('#mealPeriodEndTime').val('');
     $('#mealPeriodDisplayOrder').val('');
-    $('#mealPeriodIsActive').prop('checked', true);
 }
 
 

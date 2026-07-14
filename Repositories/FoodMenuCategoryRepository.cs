@@ -247,7 +247,9 @@ namespace GayatriCateringPortal.Repositories
                     if (reader["Code"] != DBNull.Value)
                         item.Code = Convert.ToString(reader["Code"])!;
                     if (reader["Name"] != DBNull.Value)
-                        item.Name = Convert.ToString(reader["Name"])!;                    
+                        item.Name = Convert.ToString(reader["Name"])!;
+                    if (reader["MaxChoice"] != DBNull.Value)
+                        item.MaxChoice = Convert.ToInt32(reader["MaxChoice"])!;
                     if (reader["IsActive"] != DBNull.Value)
                         item.IsActive = Convert.ToBoolean(reader["IsActive"]);
                     if (reader["IsDeleted"] != DBNull.Value)
