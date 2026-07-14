@@ -108,8 +108,8 @@ public class UtensilsRepository : IUtensilsRepository
                     var result = DataFactory.ExecuteScalar(cmd);
                     if (result != null)
                     {
-                        item.Id = Convert.ToString(result) ?? item.Id;
-                        return Convert.ToInt32(item.Id);
+                        //item.Id = Convert.ToString(result) ?? item.Id;
+                        return Convert.ToInt32(result);
                     }
                 }
             }
@@ -129,20 +129,19 @@ public class UtensilsRepository : IUtensilsRepository
         return 0;
     }
 
-    public bool Update(UtensilMaster item)
+    public int Update(UtensilMaster item)
     {
         IDbConnection? conn = null;
         IDbCommand? cmd = null;
         try
         {
-            var idValue = int.TryParse(item.Id, out var parsedId) ? parsedId : 0;
             using (conn = DataFactory.CreateConnection())
             {
                 conn.Open();
                 using (cmd = DataFactory.CreateCommand("SP_UpdateUtensilMaster", conn))
                 {
                     ((SqlCommand)cmd).CommandType = CommandType.StoredProcedure;
-                    cmd.Parameters.Add(DataFactory.CreateParameter("@Id", idValue));
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@Id", item.Id));
                     cmd.Parameters.Add(DataFactory.CreateParameter("@UtensilName", (object?)item.UtensilName ?? DBNull.Value));
                     cmd.Parameters.Add(DataFactory.CreateParameter("@UnitType", (object?)item.UnitType ?? DBNull.Value));
                     cmd.Parameters.Add(DataFactory.CreateParameter("@Price", (object?)item.Price ?? DBNull.Value));
@@ -155,7 +154,11 @@ public class UtensilsRepository : IUtensilsRepository
                     cmd.Parameters.Add(DataFactory.CreateParameter("@UpdatedDate", DateTime.TryParse(item.UpdatedDate, out var updatedDate) ? updatedDate : (object?)DBNull.Value));
 
                     var result = DataFactory.ExecuteScalar(cmd);
-                    return result != null && Convert.ToInt32(result) > 0;
+                    if (result != null)
+                    {
+                        int status = Convert.ToInt32(result);
+                        return status;
+                    }
                 }
             }
         }
@@ -171,6 +174,7 @@ public class UtensilsRepository : IUtensilsRepository
         {
             if (conn != null && conn.State != ConnectionState.Closed) conn.Close();
         }
+        return 0;
     }
 
     public bool Delete(int id)
@@ -251,7 +255,7 @@ public class UtensilsRepository : IUtensilsRepository
             {
                 var item = new UtensilMaster();
                 if (reader["Id"] != DBNull.Value)
-                    item.Id = Convert.ToString(reader["Id"])!;
+                    item.Id = Convert.ToInt32(reader["Id"])!;
                 if (reader["UtensilName"] != DBNull.Value)
                     item.UtensilName = Convert.ToString(reader["UtensilName"])!;
                 if (reader["UnitType"] != DBNull.Value)

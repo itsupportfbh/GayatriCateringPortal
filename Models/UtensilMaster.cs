@@ -4,7 +4,7 @@ namespace GayatriCateringPortal.Models
 {
     public class UtensilMaster
     {
-        public string Id { get; set; } = null!;
+        public int Id { get; set; }
         public string UtensilName { get; set; } = null!;
         public string UnitType { get; set; } = null!;
         public decimal Price { get; set; }

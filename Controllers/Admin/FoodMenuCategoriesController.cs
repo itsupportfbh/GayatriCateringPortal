@@ -43,17 +43,43 @@ namespace GayatriCateringPortal.Controllers.Admin
         [HttpPost("create")]
         public IActionResult Create([FromBody] FoodMenuCategory item)
         {
+            if (!ModelState.IsValid)
+            {
+                var errors = string.Join("; ", ModelState.Values
+                .SelectMany(x => x.Errors)
+                .Select(x => x.ErrorMessage));
+            }
+
             if (item == null) return BadRequest();
             int newId = _categoryRepository.Create(item);
+
+            if (newId == -1)
+            {
+                return Ok(new { success = false, message = "Category already exists" });
+            }
+
             return Ok(new { success = newId > 0, id = newId });
         }
 
         [HttpPost("update")]
         public IActionResult Update([FromBody] FoodMenuCategory item)
         {
+            if (!ModelState.IsValid)
+            {
+                var errors = string.Join("; ", ModelState.Values
+                .SelectMany(x => x.Errors)
+                .Select(x => x.ErrorMessage));
+            }
+
             if (item == null) return BadRequest();
-            bool updated = _categoryRepository.Update(item);
-            return Ok(new { success = updated });
+            int result = _categoryRepository.Update(item);
+
+            if (result == -1)
+            {
+                return Ok(new { success = false, message = "Category already exists" });
+            }
+
+            return Ok(new { success = result > 0 });
         }
 
         [HttpPost("delete/{id}")]
