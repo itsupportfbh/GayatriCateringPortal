@@ -17,9 +17,17 @@ $(function () {
             email: '',
             mobile: '',
             eventDate: '',
+            mealPeriodId: '',
             mealPeriod: '',
             postal: '',
-            location: '',
+            addressLine1: '',
+            addressLine2: '',
+            cityId: '',
+            city: '',
+            stateId: '',
+            state: '',
+            countryId: '',
+            country: '',
             notes: ''
         }
     };
@@ -76,7 +84,12 @@ $(function () {
     var addonRows = [];
     var addOnsLoading = false;
     var addOnsLoaded = false;
+    var mealPeriods = [];
+    var mealPeriodsLoading = false;
+    var mealPeriodsLoaded = false;
     var utensilRows = [];
+    var utensilsLoading = false;
+    var utensilsLoaded = false;
 
     function money(value) {
         return 'S$' + value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -400,31 +413,208 @@ $(function () {
     }
 
     function renderStep4() {
+        if (!mealPeriodsLoaded && !mealPeriodsLoading) {
+            loadMealPeriods();
+        }
         var d = state.details;
+        var mealPeriodOptions = mealPeriods.map(function (period) {
+            return '<option value="' + period.id + '"' + (String(d.mealPeriodId) === period.id ? ' selected' : '') + '>' + escapeHtml(period.name) + '</option>';
+        }).join('');
+        var mealPeriodPlaceholder = mealPeriodsLoading ? 'Loading meal periods...' : (mealPeriods.length ? 'Select meal period' : 'No meal periods available');
         var html = '<div class="card order-card"><div class="section-label">Step 4 - Event and Customer Details</div><div class="form-row col2">' +
             '<div class="form-group"><label>Customer / Company Name</label><input id="detailCompany" value="' + d.company + '"></div>' +
             '<div class="form-group"><label>Contact Person</label><input id="detailContact" value="' + d.contact + '"></div>' +
             '<div class="form-group"><label>Email</label><input id="detailEmail" value="' + d.email + '"></div>' +
             '<div class="form-group"><label>Mobile / WhatsApp</label><input id="detailMobile" value="' + d.mobile + '"></div>' +
             '<div class="form-group"><label>Event Date</label><input id="detailDate" type="date" value="' + d.eventDate + '"></div>' +
-            '<div class="form-group"><label>Meal Period</label><select id="detailPeriod"><option value="">Select meal period</option></select></div>' +
-            '<div class="form-group"><label>Postal Code / Area</label><input id="detailPostal" value="' + d.postal + '"></div>' +
-            '<div class="form-group"><label>Delivery / Event Location</label><input id="detailLocation" value="' + d.location + '"></div>' +
-            '</div><div class="form-group"><label>Remarks / Dietary Notes</label><textarea id="detailNotes" rows="3">' + d.notes + '</textarea></div><div class="save-row"><button class="btn btn-primary" id="saveEventBtn">Save Event Details</button></div></div>';
+            '<div class="form-group"><label>Meal Period</label><select id="detailPeriod"' + (mealPeriods.length ? '' : ' disabled') + '><option value="">' + mealPeriodPlaceholder + '</option>' + mealPeriodOptions + '</select></div>' +
+            '<div class="form-group"><label>Address Line 1</label><input id="detailAddressLine1" value="' + d.addressLine1 + '"></div>' +
+            '<div class="form-group"><label>Address Line 2</label><input id="detailAddressLine2" value="' + d.addressLine2 + '"></div>' +
+            '<div class="form-group"><label>Country</label><select id="detailCountry"><option value="">--Select Country--</option></select></div>' +
+            '<div class="form-group"><label>State</label><select id="detailState" disabled><option value="">--Select State--</option></select></div>' +
+            '<div class="form-group"><label>City</label><select id="detailCity" disabled><option value="">--Select City--</option></select></div>' +
+            '<div class="form-group"><label>Postal Code </label><input id="detailPostal" value="' + d.postal + '"></div>' +
+            '</div><div class="form-group"><label>Notes</label><textarea id="detailNotes" rows="3">' + d.notes + '</textarea></div></div>';
         $('#orderStepContent').html(html);
+        loadEventCountries(d.countryId, d.stateId, d.cityId);
+    }
+
+    function loadEventCountries(selectedCountryId, selectedStateId, selectedCityId) {
+        return $.ajax({
+            url: '/Common/GetCountry',
+            type: 'GET',
+            dataType: 'json',
+            success: function (rows) {
+                var list = Array.isArray(rows) ? rows : [];
+                var html = '<option value="0">--Select Country--</option>';
+                for (var i = 0; i < list.length; i++) {
+                    var row = list[i] || {};
+                    html += '<option value="' + row.id + '">' + escapeHtml(row.name || '') + '</option>';
+                }
+                $('#detailCountry').html(html);
+                if (selectedCountryId) $('#detailCountry').val(selectedCountryId.toString());
+
+                $('#detailCountry').off('change.location').on('change.location', function () {
+                    var countryId = parseInt($(this).val(), 10) || 0;
+                    $('#detailState').prop('disabled', true).html('<option value="0">--Select State--</option>');
+                    $('#detailCity').prop('disabled', true).html('<option value="0">--Select City--</option>');
+                    updateEventDetails();
+                    if (countryId > 0) loadEventStates(countryId);
+                });
+
+                if (selectedCountryId) loadEventStates(selectedCountryId, selectedStateId, selectedCityId);
+            },
+            error: function () {
+                $('#detailCountry').html('<option value="0">--Select Country--</option>');
+                showToast('Unable to load countries.', 3000, { type: 'error', title: 'Load failed' });
+            }
+        });
+    }
+
+    function loadEventStates(countryId, selectedStateId, selectedCityId) {
+        if (!countryId) return $.Deferred().resolve().promise();
+        return $.ajax({
+            url: '/Common/GetStateByCountryId?countryId=' + parseInt(countryId, 10),
+            type: 'GET',
+            dataType: 'json',
+            success: function (rows) {
+                var list = Array.isArray(rows) ? rows : [];
+                var html = '<option value="0">--Select State--</option>';
+                for (var i = 0; i < list.length; i++) {
+                    var row = list[i] || {};
+                    html += '<option value="' + row.id + '">' + escapeHtml(row.name || '') + '</option>';
+                }
+                $('#detailState').prop('disabled', false).html(html);
+                if (selectedStateId) $('#detailState').val(selectedStateId.toString());
+
+                $('#detailState').off('change.location').on('change.location', function () {
+                    var stateId = parseInt($(this).val(), 10) || 0;
+                    $('#detailCity').prop('disabled', true).html('<option value="0">--Select City--</option>');
+                    updateEventDetails();
+                    if (stateId > 0) loadEventCities(stateId);
+                });
+
+                if (selectedStateId) loadEventCities(selectedStateId, selectedCityId);
+            },
+            error: function () {
+                $('#detailState').prop('disabled', true).html('<option value="0">--Select State--</option>');
+                showToast('Unable to load states.', 3000, { type: 'error', title: 'Load failed' });
+            }
+        });
+    }
+
+    function loadEventCities(stateId, selectedCityId) {
+        if (!stateId) return $.Deferred().resolve().promise();
+        return $.ajax({
+            url: '/Common/GetCityByStateId?stateId=' + parseInt(stateId, 10),
+            type: 'GET',
+            dataType: 'json',
+            success: function (rows) {
+                var list = Array.isArray(rows) ? rows : [];
+                var html = '<option value="0">--Select City--</option>';
+                for (var i = 0; i < list.length; i++) {
+                    var row = list[i] || {};
+                    html += '<option value="' + row.id + '">' + escapeHtml(row.name || '') + '</option>';
+                }
+                $('#detailCity').prop('disabled', false).html(html);
+                if (selectedCityId) $('#detailCity').val(selectedCityId.toString());
+            },
+            error: function () {
+                $('#detailCity').prop('disabled', true).html('<option value="0">--Select City--</option>');
+                showToast('Unable to load cities.', 3000, { type: 'error', title: 'Load failed' });
+            }
+        });
+    }
+
+    function loadMealPeriods() {
+        mealPeriodsLoading = true;
+        $.ajax({
+            url: '/Admin/MealPeriods/getAll',
+            type: 'GET',
+            success: function (rows) {
+                mealPeriods = (Array.isArray(rows) ? rows : []).filter(function (item) {
+                    var isActive = item.isActive ?? item.IsActive ?? false;
+                    var isDeleted = item.isDeleted ?? item.IsDeleted ?? false;
+                    return isActive && !isDeleted;
+                }).sort(function (left, right) {
+                    return Number(left.displayOrder ?? left.DisplayOrder ?? 0) - Number(right.displayOrder ?? right.DisplayOrder ?? 0);
+                }).map(function (item) {
+                    return {
+                        id: String(item.id ?? item.Id ?? ''),
+                        name: item.mealPeriodName ?? item.MealPeriodName ?? ''
+                    };
+                }).filter(function (item) {
+                    return item.id && item.name;
+                });
+            },
+            error: function (xhr) {
+                mealPeriods = [];
+                showToast(xhr.responseJSON?.message || 'Unable to load meal periods.', 3000, { type: 'error', title: 'Load failed' });
+            },
+            complete: function () {
+                mealPeriodsLoading = false;
+                mealPeriodsLoaded = true;
+                if (currentStep === 4) renderStep();
+            }
+        });
     }
 
     function renderStep5() {
-        var html = '<div class="card order-card"><div class="section-label">Step 5 - Utensils, Equipment and Payment</div><div class="muted" style="font-size:13px;margin-bottom:16px">Utensil quantity can be auto-suggested from admin/kitchen configuration, then adjusted manually by Sales/Admin/Kitchen Admin.</div><div class="actions" style="margin-bottom:14px"><button class="btn btn-primary" id="suggestUtensilsBtn">Use Suggested Qty</button><button class="btn btn-light" id="clearUtensilsBtn">Clear Utensils</button><button class="btn btn-light">Admin Utensils Config</button></div><div class="data-table-card"><table class="item-table"><thead><tr><th>Item</th><th>Rule</th><th>Suggested</th><th>Qty</th><th>Price</th><th>Deposit</th><th>Amount</th></tr></thead><tbody>' +
-            utensilRows.map(function (row) {
+        if (!utensilsLoaded && !utensilsLoading) {
+            loadOrderUtensils();
+        }
+        var html = '<div class="card order-card"><div class="section-label">Step 5 - Utensils, Equipment and Payment</div><div class="muted" style="font-size:13px;margin-bottom:16px">Utensil quantity can be auto-suggested from admin/kitchen configuration, then adjusted manually by Sales/Admin/Kitchen Admin.</div><div class="actions" style="margin-bottom:14px"><button class="btn btn-primary" id="suggestUtensilsBtn">Use Suggested Qty</button><button class="btn btn-light" id="clearUtensilsBtn">Clear Utensils</button></div><div class="data-table-card"><table class="item-table"><thead><tr><th>Item</th><th>Rule</th><th>Suggested</th><th>Qty</th><th>Price</th><th>Deposit</th><th>Amount</th></tr></thead><tbody>' +
+            (utensilsLoading
+                ? '<tr><td colspan="7" class="muted">Loading utensils...</td></tr>'
+                : utensilRows.map(function (row) {
+                row.suggested = row.rule > 0 ? Math.ceil(state.pax / row.rule) : 0;
                 var qty = state.utensils[row.name] || 0;
-                return '<tr class="' + (qty > 0 ? 'selected-row' : '') + '"><td><strong>' + row.name + '</strong><div class="muted">' + row.unit + '</div></td><td>' + row.rule + '</td><td>' + row.suggested + '</td><td><input class="qty-input utensil-qty" data-name="' + row.name + '" type="number" min="0" value="' + qty + '"></td><td class="price-cell">' + money(row.price) + '</td><td>' + money(row.deposit) + '</td><td class="amount-cell">' + money(qty * row.price) + '</td></tr>';
-            }).join('') + (utensilRows.length ? '' : '<tr><td colspan="7" class="muted">No utensils available.</td></tr>') + '</tbody></table></div></div>';
+                return '<tr class="' + (qty > 0 ? 'selected-row' : '') + '"><td><strong>' + row.name + '</strong><div class="muted">' + row.unit + '</div></td><td>' + row.ruleLabel + '</td><td>' + row.suggested + '</td><td><input class="qty-input utensil-qty" data-name="' + row.name + '" type="number" min="0" value="' + qty + '"></td><td class="price-cell">' + money(row.price) + '</td><td>' + money(row.deposit) + '</td><td class="amount-cell">' + money(qty * row.price) + '</td></tr>';
+            }).join('') + (utensilRows.length ? '' : '<tr><td colspan="7" class="muted">No utensils available.</td></tr>')) + '</tbody></table></div></div>';
         $('#orderStepContent').html(html);
     }
 
+    function loadOrderUtensils() {
+        utensilsLoading = true;
+        $.ajax({
+            url: '/Admin/Utensils/get',
+            type: 'GET',
+            dataType: 'json',
+            success: function (rows) {
+                utensilRows = (Array.isArray(rows) ? rows : []).filter(function (item) {
+                    var isActive = item.isActive ?? item.IsActive ?? false;
+                    var isDeleted = item.isDeleted ?? item.IsDeleted ?? false;
+                    return isActive && !isDeleted;
+                }).map(function (item) {
+                    var rule = Number(item.rules ?? item.Rules ?? 0);
+                    return {
+                        id: String(item.id ?? item.Id ?? ''),
+                        name: item.utensilName ?? item.UtensilName ?? '',
+                        unit: 'per pc',
+                        rule: rule,
+                        ruleLabel: rule > 0 ? '1 per ' + rule + ' pax' : 'Manual',
+                        suggested: 0,
+                        price: Number(item.price ?? item.Price ?? 0),
+                        deposit: Number(item.depositAmount ?? item.DepositAmount ?? 0)
+                    };
+                }).filter(function (item) {
+                    return item.id && item.name;
+                });
+            },
+            error: function () {
+                utensilRows = [];
+                showToast('Unable to load utensils.', 3000, { type: 'error', title: 'Load failed' });
+            },
+            complete: function () {
+                utensilsLoading = false;
+                utensilsLoaded = true;
+                if (currentStep === 5) renderStep();
+            }
+        });
+    }
+
     function renderStep6() {
-        var html = '<div class="review-sheet"><div class="review-top"><div class="review-brand"><div class="review-title">Order Review</div></div><div class="review-line"><strong>Quotation Request</strong><br>Date: ' + new Date().toLocaleDateString() + '<br>Status: Draft</div></div><div class="review-split"><div><strong>Customer</strong><div>' + escapeHtml(state.details.company) + '</div><div>' + escapeHtml(state.details.email) + '</div><div>' + escapeHtml(state.details.mobile) + '</div></div><div><strong>Event</strong><div>' + escapeHtml(state.details.eventDate) + ' ' + escapeHtml(state.details.mealPeriod) + '</div><div>' + escapeHtml(state.details.location) + '</div><div>Pax: ' + state.pax + '</div></div></div><div class="review-table-title">Package: ' + escapeHtml(state.packageName) + ' (S$' + state.packagePrice.toFixed(2) + '/pax x ' + state.pax + ' pax = ' + money(packageBase()) + ')</div><div class="review-table-title">Included Package Dish Choices</div><table class="item-table"><thead><tr><th>Category</th><th>Dish</th><th>Included Qty</th><th>Unit</th><th>Status</th></tr></thead><tbody>' +
+        var html = '<div class="review-sheet"><div class="review-top"><div class="review-brand"><div class="review-title">Order Review</div></div><div class="review-line"><strong>Quotation Request</strong><br>Date: ' + new Date().toLocaleDateString() + '<br>Status: Draft</div></div><div class="review-split"><div><strong>Customer</strong><div>' + escapeHtml(state.details.company) + '</div><div>' + escapeHtml(state.details.email) + '</div><div>' + escapeHtml(state.details.mobile) + '</div></div><div><strong>Event</strong><div>' + escapeHtml(state.details.eventDate) + ' ' + escapeHtml(state.details.mealPeriod) + '</div><div>' + escapeHtml(buildDeliveryAddress()) + '</div><div>Pax: ' + state.pax + '</div></div></div><div class="review-table-title">Package: ' + escapeHtml(state.packageName) + ' (S$' + state.packagePrice.toFixed(2) + '/pax x ' + state.pax + ' pax = ' + money(packageBase()) + ')</div><div class="review-table-title">Included Package Dish Choices</div><table class="item-table"><thead><tr><th>Category</th><th>Dish</th><th>Included Qty</th><th>Unit</th><th>Status</th></tr></thead><tbody>' +
             includedChoices.map(function (category) {
                 return '<tr><td>' + escapeHtml(category.categoryName) + '</td><td>-</td><td>' + (Number(category.requiredQuantity) || 1) + '</td><td>choice</td><td><span class="badge badge-paid">Included in Package</span></td></tr>';
             }).join('') + '</tbody></table></div>';
@@ -437,17 +627,23 @@ $(function () {
         return 'GC-' + datePart + '-' + randomPart;
     }
 
+    function buildDeliveryAddress() {
+        return [state.details.addressLine1, state.details.addressLine2, state.details.city, state.details.state, state.details.country, state.details.postal]
+            .filter(function (part) { return part && part.trim(); })
+            .join(', ');
+    }
+
     function buildOrderPayload() {
         return {
             id: 0,
             orderNumber: generateOrderNumber(),
             customerId: 0,
             packageId: parseInt(state.selectedPackage, 10) || null,
-            mealPeriodId: null,
+            mealPeriodId: parseInt(state.details.mealPeriodId, 10) || null,
             locationId: null,
             eventStartDateTime: state.details.eventDate || null,
             eventEndDateTime: null,
-            deliveryAddress: state.details.location,
+            deliveryAddress: buildDeliveryAddress(),
             notes: state.details.notes,
             pax: state.pax,
             packageBaseAmount: packageBase(),
@@ -646,19 +842,34 @@ $(function () {
         renderStep();
     });
 
-    $(document).on('click', '#saveEventBtn', function () {
+    function updateEventDetails() {
+        var selectedMealPeriod = $('#detailPeriod option:selected');
+        var cityId = parseInt($('#detailCity').val(), 10) || 0;
+        var stateId = parseInt($('#detailState').val(), 10) || 0;
+        var countryId = parseInt($('#detailCountry').val(), 10) || 0;
         state.details = {
             company: $('#detailCompany').val(),
             contact: $('#detailContact').val(),
             email: $('#detailEmail').val(),
             mobile: $('#detailMobile').val(),
             eventDate: $('#detailDate').val(),
-            mealPeriod: $('#detailPeriod').val(),
+            mealPeriodId: $('#detailPeriod').val(),
+            mealPeriod: selectedMealPeriod.val() ? selectedMealPeriod.text() : '',
             postal: $('#detailPostal').val(),
-            location: $('#detailLocation').val(),
+            addressLine1: $('#detailAddressLine1').val(),
+            addressLine2: $('#detailAddressLine2').val(),
+            cityId: cityId || '',
+            city: cityId ? $('#detailCity option:selected').text() : '',
+            stateId: stateId || '',
+            state: stateId ? $('#detailState option:selected').text() : '',
+            countryId: countryId || '',
+            country: countryId ? $('#detailCountry option:selected').text() : '',
             notes: $('#detailNotes').val()
         };
-        showToast('Event details saved');
+    }
+
+    $(document).on('input change', '#detailCompany, #detailContact, #detailEmail, #detailMobile, #detailDate, #detailPeriod, #detailPostal, #detailAddressLine1, #detailAddressLine2, #detailCity, #detailState, #detailCountry, #detailNotes', function () {
+        updateEventDetails();
     });
 
     loadOrderPackages();
