@@ -1,4 +1,5 @@
 using System;
+using Microsoft.AspNetCore.Http;
 
 namespace GayatriCateringPortal.Models
 {
@@ -65,5 +66,22 @@ namespace GayatriCateringPortal.Models
         public bool ActiveInActive { get; set; }
         public bool Download { get; set; }
         public bool Print { get; set; }
+    }
+
+    public class FileUploadResult
+    {
+        public string? Url { get; set; }
+        public string? FileName { get; set; }
+        public string? FileType { get; set; }
+        public string? FullPath { get; set; }
+    }
+
+    public class SendEmailRequest
+    {
+        public string? ToEmail { get; set; }
+        public string? CcEmail { get; set; }
+        public string? Subject { get; set; }
+        public string? Body { get; set; }
+        public IFormFile? Attachment { get; set; }
     }
 }

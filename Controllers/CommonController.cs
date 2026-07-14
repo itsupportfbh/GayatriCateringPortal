@@ -1,6 +1,7 @@
 using GayatriCateringPortal.Interfaces;
 using GayatriCateringPortal.Models;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 
 namespace GayatriCateringPortal.Controllers
 {
@@ -8,10 +9,12 @@ namespace GayatriCateringPortal.Controllers
     public class CommonController : Controller
     {
         private readonly ICommonRepository _common;
+        private readonly ILogger<CommonController> _logger;
 
-        public CommonController(ICommonRepository common)
+        public CommonController(ICommonRepository common, ILogger<CommonController> logger)
         {
             _common = common;
+            _logger = logger;
         }
 
         [HttpGet("menus")]
@@ -79,6 +82,75 @@ namespace GayatriCateringPortal.Controllers
 
             var items = _common.GetRolePermissionsByRoleId(roleId);
             return Ok(items);
+        }
+
+        [HttpPost("FileUpload")]
+        public async Task<IActionResult> FileUpload(string folderName)
+        {
+            var dict = new Dictionary<string, object>();
+
+            try
+            {
+                var httpRequest = HttpContext.Request;
+
+                foreach (var file in httpRequest.Form.Files)
+                {
+                    var result = await _common.FileUpload(file, folderName);
+                    return Created(string.Empty, result);
+                }
+
+                dict.Add("error", "Please upload an image or voice recording.");
+                return NotFound(dict);
+            }
+            catch (Exception ex)
+            {
+                dict.Add("error", "Some error occurred.");
+                Exception objErr = ex.GetBaseException();
+                _logger.LogError(ex, "Error in Common/FileUpload. BaseError={Error}", objErr.Message);
+                return NotFound(dict);
+            }
+        }
+
+        [HttpPost("SendEmail")]
+        public async Task<IActionResult> SendEmail([FromForm] SendEmailRequest request)
+        {
+            try
+            {
+                byte[]? fileBytes = null;
+                string? fileName = null;
+                string? contentType = null;
+
+                if (request.Attachment != null && request.Attachment.Length > 0)
+                {
+                    using var memoryStream = new MemoryStream();
+                    await request.Attachment.CopyToAsync(memoryStream);
+                    fileBytes = memoryStream.ToArray();
+                    fileName = request.Attachment.FileName;
+                    contentType = request.Attachment.ContentType;
+                }
+
+                await _common.SendEmail(
+                    request.ToEmail ?? string.Empty,
+                    request.CcEmail,
+                    request.Subject ?? string.Empty,
+                    request.Body ?? string.Empty,
+                    fileBytes,
+                    fileName,
+                    contentType);
+
+                return Ok(new
+                {
+                    Message = "Mail sent successfully."
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error while sending email.");
+                return BadRequest(new
+                {
+                    Message = ex.Message
+                });
+            }
         }
     }
 }

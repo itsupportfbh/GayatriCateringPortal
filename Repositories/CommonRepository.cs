@@ -1,15 +1,30 @@
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.IO;
+using System.Linq;
+using System.Net;
+using System.Net.Mail;
+using System.Text;
+using System.Threading.Tasks;
 using Microsoft.Data.SqlClient;
 using GayatriCateringPortal.Data;
 using GayatriCateringPortal.Interfaces;
 using GayatriCateringPortal.Models;
+using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Configuration;
 
 namespace GayatriCateringPortal.Repositories
 {
     public class CommonRepository : ICommonRepository
     {
+        private readonly IConfiguration _configuration;
+
+        public CommonRepository(IConfiguration configuration)
+        {
+            _configuration = configuration;
+        }
+
         public List<MenuGroup> GetMenuGroups()
         {
             var list = new List<MenuGroup>();
@@ -387,6 +402,141 @@ namespace GayatriCateringPortal.Repositories
             {
                 if (conn != null && conn.State != ConnectionState.Closed) conn.Close();
             }
+        }
+
+        public async Task<FileUploadResult> FileUpload(IFormFile postedFile, string folderName)
+        {
+            if (postedFile == null || postedFile.Length == 0)
+            {
+                throw new Exception("Please upload file.");
+            }
+
+            int maxContentLength = 1024 * 1024 * 20;
+            IList<string> allowedFileExtensions = new List<string>
+            {
+                ".jpg", ".jpeg", ".png", ".gif", ".bmp", ".tif", ".tiff", ".webp", ".svg", ".ico",
+                ".doc", ".docx", ".pdf", ".txt", ".rtf", ".csv", ".xls", ".xlsx", ".ppt", ".pptx", ".odt", ".md", ".html", ".htm", ".xml", ".json", ".ps", ".epub",
+                ".mp3", ".wav", ".ogg", ".flac", ".aac", ".wma", ".m4a", ".amr", ".mid", ".midi",
+                ".mp4", ".mov", ".avi", ".mkv", ".wmv", ".flv", ".webm", ".m4v", ".mpeg", ".mpg", ".3gp", ".3g2"
+            };
+
+            var ext = Path.GetExtension(postedFile.FileName);
+            var fileExtension = ext.ToLower();
+
+            if (!allowedFileExtensions.Contains(fileExtension))
+            {
+                throw new Exception("Please upload valid file.");
+            }
+
+            if (postedFile.Length > maxContentLength)
+            {
+                throw new Exception("Please upload a file up to 20 MB.");
+            }
+
+            var safeFolderName = string.IsNullOrWhiteSpace(folderName) ? "General" : folderName.Trim();
+            string timeStamp = DateTime.Now.ToString("yyyyMMddHHmmssfff");
+            string uploadPathView = _configuration["AppSettings:FileUploadPathView"] ?? string.Empty;
+            string fileName = Path.GetFileName(postedFile.FileName);
+            string extension = Path.GetExtension(fileName);
+            string uploadPathName = extension.Substring(1).ToUpper() + timeStamp + extension;
+
+            string startupPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "FileUpload", safeFolderName);
+            if (!Directory.Exists(startupPath))
+            {
+                Directory.CreateDirectory(startupPath);
+            }
+
+            var filePath = Path.Combine(startupPath, uploadPathName);
+            using (var stream = new FileStream(filePath, FileMode.Create))
+            {
+                await postedFile.CopyToAsync(stream);
+            }
+
+            var url = safeFolderName + "/" + uploadPathName;
+
+            return new FileUploadResult
+            {
+                Url = url,
+                FileName = uploadPathName,
+                FileType = safeFolderName,
+                FullPath = uploadPathView + url
+            };
+        }
+
+        public async Task SendEmail(string toEmail, string? ccEmail, string subject, string body, byte[]? fileBytes = null, string? fileName = null, string? contentType = null)
+        {
+            toEmail = toEmail?.Trim() ?? string.Empty;
+            ccEmail = ccEmail?.Trim();
+
+            var smtpHost = _configuration["AppSettings:SmtpSettings:SmtpHost"];
+            var smtpPort = Convert.ToInt32(_configuration["AppSettings:SmtpSettings:SmtpPort"]);
+            var smtpUser = _configuration["AppSettings:SmtpSettings:SmtpUser"];
+            var smtpPass = _configuration["AppSettings:SmtpSettings:SmtpPass"];
+            var fromEmail = _configuration["AppSettings:SmtpSettings:From"];
+            var configuredCc = _configuration["AppSettings:SmtpSettings:Cc"];
+
+            if (string.IsNullOrWhiteSpace(toEmail))
+            {
+                throw new Exception("Recipient email address is missing.");
+            }
+
+            if (string.IsNullOrWhiteSpace(fromEmail))
+            {
+                throw new Exception("AppSettings:SmtpSettings:From is missing in appsettings.json.");
+            }
+
+            if (string.IsNullOrWhiteSpace(smtpHost))
+            {
+                throw new Exception("AppSettings:SmtpSettings:SmtpHost is missing in appsettings.json.");
+            }
+
+            using var message = new MailMessage();
+            message.From = new MailAddress(fromEmail);
+            message.To.Add(toEmail);
+
+            var mergedCc = string.Join(";", new[] { configuredCc, ccEmail }
+                .Where(x => !string.IsNullOrWhiteSpace(x)));
+
+            if (!string.IsNullOrWhiteSpace(mergedCc))
+            {
+                var ccAddresses = mergedCc
+                    .Split(new[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                    .Distinct(StringComparer.OrdinalIgnoreCase);
+
+                foreach (var address in ccAddresses)
+                {
+                    message.CC.Add(address);
+                }
+            }
+
+            message.Subject = subject;
+            message.Body = body;
+            message.IsBodyHtml = true;
+            message.SubjectEncoding = Encoding.UTF8;
+            message.BodyEncoding = Encoding.UTF8;
+
+            if (fileBytes != null && fileBytes.Length > 0 && !string.IsNullOrWhiteSpace(fileName))
+            {
+                var stream = new MemoryStream(fileBytes);
+                var attachment = new Attachment(
+                    stream,
+                    fileName,
+                    string.IsNullOrWhiteSpace(contentType) ? "application/octet-stream" : contentType
+                );
+
+                message.Attachments.Add(attachment);
+            }
+
+            using var client = new SmtpClient(smtpHost, smtpPort)
+            {
+                Credentials = new NetworkCredential(smtpUser, smtpPass),
+                EnableSsl = true,
+                UseDefaultCredentials = false,
+                DeliveryMethod = SmtpDeliveryMethod.Network,
+                Timeout = 30000
+            };
+
+            await client.SendMailAsync(message);
         }
     }
 }

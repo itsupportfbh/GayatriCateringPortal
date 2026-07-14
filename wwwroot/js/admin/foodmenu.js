@@ -1,6 +1,6 @@
 ﻿$(document).ready(function () {
     loadMenus();
-    /*loadCategories();*/
+    loadCategories();
 });
 
 function closeMenuModal() {
@@ -10,12 +10,13 @@ function closeMenuModal() {
 function openMenuModal() {
     clearMenuForm();
     $('#menu-title').text('Create Menu');
+    setActionButtonLabel('#btnSaveMenu', 'Save');
     $('#MenuModal').removeClass('hidden');
      
     initCategoryField('#ItemCode', '#ItemCodeError');
     initCategoryField('#ItemName', '#ItemNameError');
     initCategoryField('#CategoryId', '#CategoryIdError');
-    initCategoryField('#Price', '#PriceError');
+    initCategoryField('#ItemPrice', '#PriceError');
     initCategoryField('#PreparationTime', '#PreparationTimeError');
     initCategoryField('#FoodType', '#FoodTypeError');
     initCategoryField('#ServiceCharge', '#ServiceChargeError');
@@ -44,7 +45,7 @@ function loadMenus() {
 function loadCategories(selectedId) {
 
     $.ajax({
-        url: '/Admin/Category/GetCategories',
+        url: '/Admin/FoodMenuCategories/get',
         type: 'GET',
         dataType: 'json',
         success: function (categories) {
@@ -61,7 +62,7 @@ function loadCategories(selectedId) {
             $.each(categories, function (i, item) {
 
                 var id = item.id || item.Id;
-                var name = item.categoryName || item.CategoryName;
+                var name = item.name || item.Name || item.categoryName || item.CategoryName;
 
                 ddl.append(
                     $('<option>', {
@@ -157,13 +158,15 @@ function renderMenuList(rows) {
 }
 
 function clearMenuForm() {
+    $('#menuId').val('');
     $('#ItemCode').val('');
     $('#ItemName').val('');
     $('#CategoryId').val('');
-    $('#Price').val('');
+    $('#ItemPrice').val('');
     $('#PreparationTime').val('');
     $('#FoodType').val('1');
     $('#ServiceCharge').val('');
+    setActionButtonLabel('#btnSaveMenu', 'Save');
 
     clearMenuError('#ItemCode', '#ItemCodeError');
     clearMenuError('#ItemName', '#ItemNameError');
@@ -185,11 +188,11 @@ function clearMenuError(inputSelector, errorSelector) {
 }
 
 function initCategoryField(inputSelector, errorSelector) {
-    clearCategoryError(inputSelector, errorSelector);
+    clearMenuError(inputSelector, errorSelector);
     var el = document.querySelector(inputSelector);
     if (el) {
         el.oninput = function () {
-            clearCategoryError(inputSelector, errorSelector);
+            clearMenuError(inputSelector, errorSelector);
         };
     }
 }
@@ -198,7 +201,7 @@ function validateForm() {
     clearMenuError('#ItemCode', '#ItemCodeError');
     clearMenuError('#ItemName', '#ItemNameError');
     clearMenuError('#CategoryId', '#CategoryIdError');
-    clearMenuError('#Price', '#PriceError');
+    clearMenuError('#ItemPrice', '#PriceError');
     clearMenuError('#PreparationTime', '#PreparationTimeError');
     clearMenuError('#FoodType', '#FoodTypeError');
     clearMenuError('#ServiceCharge', '#ServiceChargeError');
@@ -251,7 +254,7 @@ function saveMenu() {
         Code: $('#ItemCode').val() || '',
         Name: $('#ItemName').val() || '',
         CategoryId: $('#CategoryId').val() || '',
-        Price: $('#Price').val() || '',
+        Price: $('#ItemPrice').val() || '',
         PreparationTime: $('#PreparationTime').val() || '',
         FoodType: $('#FoodType').val() || '',
         Servicecharge: $('#ServiceCharge').val() || '',
@@ -303,11 +306,13 @@ function editMenu(id) {
             $('#menuId').val(role.Id || role.id || '');
             $('#ItemCode').val(role.Code || role.code || '');
             $('#ItemName').val(role.Name || role.name || '');
+            loadCategories(role.categoryId || role.CategoryId || '');
             $('#CategoryId').val(role.categoryId || role.CategoryId || '');
-            $('#Price').val(role.price || role.Price || '');
+            $('#ItemPrice').val(role.price || role.Price || '');
             $('#PreparationTime').val(role.preparationTime || role.PreparationTime || '');
             $('#FoodType').val(role.foodType || role.FoodType || '');
             $('#ServiceCharge').val(role.servicecharge || role.Servicecharge || '');
+            setActionButtonLabel('#btnSaveMenu', 'Update');
             $('#MenuModal').removeClass('hidden');
         },
         error: function () { showToast('Unable to load Menu.', 3000, { type: 'error', title: 'Load failed' }); }
