@@ -1,23 +1,33 @@
-using System;
-using System.Data;
-using Microsoft.Data.SqlClient;
 using GayatriCateringPortal.Data;
 using GayatriCateringPortal.Interfaces;
+using GayatriCateringPortal.Models;
+using Microsoft.Data.SqlClient;
+using System;
+using System.Data;
 
 namespace GayatriCateringPortal.Repositories;
 
 public class SettingsRepository : ISettingsRepository
 {
-    public object GetSettings()
+    public List<Organization> GetAll()
     {
+        var list = new List<Organization>();
         IDbConnection? conn = null;
         IDbCommand? cmd = null;
+        IDataReader? reader = null;
         try
         {
-            conn = DataFactory.CreateConnection();
-            cmd = DataFactory.CreateCommand("SELECT TOP 1 * FROM Settings", conn);
-            conn.Open();
-            return new { }; // placeholder
+            using (conn = DataFactory.CreateConnection())
+            {
+                conn.Open();
+                using (cmd = DataFactory.CreateCommand("GetOrganization", conn))
+                {
+                    ((SqlCommand)cmd).CommandType = CommandType.StoredProcedure;
+                    reader = DataFactory.ExecuteReader(cmd);
+                    list = this.List(reader);
+                }
+            }
+            return list ?? new List<Organization>();
         }
         catch (SqlException)
         {
@@ -33,18 +43,180 @@ public class SettingsRepository : ISettingsRepository
         }
     }
 
-    public int Create(object settings)
+    public int Create(Organization item)
     {
-        throw new NotImplementedException();
+        IDbConnection? conn = null;
+        IDbCommand? cmd = null;
+        try
+        {
+            using (conn = DataFactory.CreateConnection())
+            {
+                conn.Open();
+                using (cmd = DataFactory.CreateCommand("SP_CreateOrganization", conn))
+                {
+                    ((SqlCommand)cmd).CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@Id", item.Id));
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@Name", (object?)item.Name ?? DBNull.Value));
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@UEN", (object?)item.UEN ?? DBNull.Value));
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@Address", (object?)item.Address ?? DBNull.Value));
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@Email", (object?)item.Email ?? DBNull.Value));
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@Hotline", (object?)item.Hotline ?? DBNull.Value));
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@whatsapp", (object?)item.Whatsapp ?? DBNull.Value));
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@DefaultDeposit", item.DefaultDeposit));
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@QuotationValidity", item.QuotationValidity));
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@MinOrderPax", item.MinOrderPax));
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@GSTRate", item.GSTRate));
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@Servicecharge", item.Servicecharge));
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@PortalMode", item.PortalMode));
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@GSTNO", (object?)item.GSTNO ?? DBNull.Value));
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@IsActive", item.IsActive));
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@IsDeleted", item.IsDeleted));
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@CreatedBy", item.CreatedBy));
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@CreatedDate", DateTime.TryParse(item.CreatedDate, out var createdDate) ? createdDate : (object?)DBNull.Value));
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@UpdatedBy", item.UpdatedBy));
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@UpdatedDate", DateTime.TryParse(item.UpdatedDate, out var updatedDate) ? updatedDate : (object?)DBNull.Value));
+
+                    var result = DataFactory.ExecuteScalar(cmd);
+                    if (result != null)
+                    {
+                        return Convert.ToInt32(result);
+                    }
+                }
+            }
+        }
+        catch (SqlException)
+        {
+            throw new Exception("Database error");
+        }
+        catch (Exception ex)
+        {
+            throw new Exception(ex.StackTrace);
+        }
+        finally
+        {
+            if (conn != null && conn.State != ConnectionState.Closed) conn.Close();
+        }
+        return 0;
     }
 
-    public bool Update(object settings)
+    public int Update(Organization item)
     {
-        throw new NotImplementedException();
+        IDbConnection? conn = null;
+        IDbCommand? cmd = null;
+        try
+        {
+            using (conn = DataFactory.CreateConnection())
+            {
+                conn.Open();
+                using (cmd = DataFactory.CreateCommand("SP_UpdateOrganization", conn))
+                {
+                    ((SqlCommand)cmd).CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@Id", item.Id));
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@Name", (object?)item.Name ?? DBNull.Value));
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@UEN", (object?)item.UEN ?? DBNull.Value));
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@Address", (object?)item.Address ?? DBNull.Value));
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@Email", (object?)item.Email ?? DBNull.Value));
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@Hotline", (object?)item.Hotline ?? DBNull.Value));
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@whatsapp", (object?)item.Whatsapp ?? DBNull.Value));
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@DefaultDeposit", item.DefaultDeposit));
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@QuotationValidity", item.QuotationValidity));
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@MinOrderPax", item.MinOrderPax));
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@GSTRate", item.GSTRate));
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@Servicecharge", item.Servicecharge));
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@PortalMode", item.PortalMode));
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@GSTNO", (object?)item.GSTNO ?? DBNull.Value));
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@IsActive", item.IsActive));
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@IsDeleted", item.IsDeleted));
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@CreatedBy", item.CreatedBy));
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@CreatedDate", DateTime.TryParse(item.CreatedDate, out var createdDate) ? createdDate : (object?)DBNull.Value));
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@UpdatedBy", item.UpdatedBy));
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@UpdatedDate", DateTime.TryParse(item.UpdatedDate, out var updatedDate) ? updatedDate : (object?)DBNull.Value));
+
+                    var result = DataFactory.ExecuteScalar(cmd);
+                    if (result != null)
+                    {
+                        int status = Convert.ToInt32(result);
+                        return status;
+                    }
+                }
+            }
+        }
+        catch (SqlException)
+        {
+            throw new Exception("Database error");
+        }
+        catch (Exception ex)
+        {
+            throw new Exception(ex.StackTrace);
+        }
+        finally
+        {
+            if (conn != null && conn.State != ConnectionState.Closed) conn.Close();
+        }
+        return 0;
     }
 
-    public bool Save(object settings)
+    #region Private Methods
+    private List<Organization> List(IDataReader reader)
     {
-        throw new NotImplementedException();
+        var list = new List<Organization>();
+        try
+        {
+            while (reader.Read())
+            {
+                var item = new Organization();
+                if (reader["Id"] != DBNull.Value)
+                    item.Id = Convert.ToInt32(reader["Id"])!;
+                if (reader["Name"] != DBNull.Value)
+                    item.Name = Convert.ToString(reader["Name"])!;
+                if (reader["UEN"] != DBNull.Value)
+                    item.UEN = Convert.ToString(reader["UEN"])!;
+                if (reader["Address"] != DBNull.Value)
+                    item.Address = Convert.ToString(reader["Address"]);
+                if (reader["Email"] != DBNull.Value)
+                    item.Email = Convert.ToString(reader["Email"]);
+                if (reader["Hotline"] != DBNull.Value)
+                    item.Hotline = Convert.ToString(reader["Hotline"]);
+                if (reader["Whatsapp"] != DBNull.Value)
+                    item.Whatsapp = Convert.ToString(reader["Whatsapp"]);
+                if (reader["DefaultDeposit"] != DBNull.Value)
+                    item.DefaultDeposit = Convert.ToInt32(reader["DefaultDeposit"]);
+                if (reader["QuotationValidity"] != DBNull.Value)
+                    item.QuotationValidity = Convert.ToInt32(reader["QuotationValidity"]);
+                if (reader["MinOrderPax"] != DBNull.Value)
+                    item.MinOrderPax = Convert.ToInt32(reader["MinOrderPax"]);
+                if (reader["GSTRate"] != DBNull.Value)
+                    item.GSTRate = Convert.ToInt32(reader["GSTRate"]);
+                if (reader["Servicecharge"] != DBNull.Value)
+                    item.Servicecharge = Convert.ToInt32(reader["Servicecharge"]);
+                if (reader["PortalMode"] != DBNull.Value)
+                    item.PortalMode = Convert.ToString(reader["PortalMode"]);
+                if (reader["IsActive"] != DBNull.Value)
+                    item.IsActive = Convert.ToBoolean(reader["IsActive"]);
+                if (reader["IsDeleted"] != DBNull.Value)
+                    item.IsDeleted = Convert.ToBoolean(reader["IsDeleted"]);
+                if (reader["CreatedBy"] != DBNull.Value)
+                    item.CreatedBy = Convert.ToInt32(reader["CreatedBy"]);
+                if (reader["CreatedDate"] != DBNull.Value)
+                    item.CreatedDate = Convert.ToString(reader["CreatedDate"]);
+                if (reader["UpdatedBy"] != DBNull.Value)
+                    item.UpdatedBy = Convert.ToInt32(reader["UpdatedBy"]);
+                if (reader["UpdatedDate"] != DBNull.Value)
+                    item.UpdatedDate = Convert.ToString(reader["UpdatedDate"]);
+
+                list.Add(item);
+            }
+        }
+        catch (SqlException)
+        {
+            throw new Exception("Database error");
+        }
+        catch (Exception ex)
+        {
+            throw new Exception(ex.StackTrace);
+        }
+
+        return list;
     }
+    #endregion
 }

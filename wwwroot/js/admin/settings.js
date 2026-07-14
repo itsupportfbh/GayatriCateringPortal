@@ -3,17 +3,17 @@ $(document).ready(function () {
 });
 
 function validateForm() {
-    clearsettingError('#Compname', '#CompnameError');
-    clearsettingError('#uen', '#uenError');
-    clearsettingError('#address', '#addressError');
-    clearsettingError('#email', '#emailError');
-    clearsettingError('#hotline', '#hotlineError');
-    clearsettingError('#whatsapp', '#whatsappError');
-    clearsettingError('#defaultdep', '#defaultdepError');
-    clearsettingError('#Quotaval', '#QuotavalError');
-    clearsettingError('#Minorder', '#MinorderError');
-    clearsettingError('#gstrate', '#gstrateError');
-    clearsettingError('#Servicechar', '#ServicecharError');
+    //clearsettingError('#Compname', '#CompnameError');
+    //clearsettingError('#uen', '#uenError');
+    //clearsettingError('#address', '#addressError');
+    //clearsettingError('#email', '#emailError');
+    //clearsettingError('#hotline', '#hotlineError');
+    //clearsettingError('#whatsapp', '#whatsappError');
+    //clearsettingError('#defaultdep', '#defaultdepError');
+    //clearsettingError('#Quotaval', '#QuotavalError');
+    //clearsettingError('#Minorder', '#MinorderError');
+    //clearsettingError('#gstrate', '#gstrateError');
+    //clearsettingError('#Servicechar', '#ServicecharError');
 
     var code = $('#Compname').val();
     if (code) {
@@ -52,9 +52,9 @@ function validateForm() {
 }
 
 function savesettings() {
-    if (!validateForm()) {
-        return;
-    }
+    //if (!validateForm()) {
+    //    return;
+    //}
 
     var setting = {
         Id: $('#settingId').val() || '',
