@@ -101,7 +101,7 @@ public class CustomerRepository : ICustomerRepository
 
                     cmd.Parameters.Add(DataFactory.CreateParameter("@MobileNo", customer.MobileNo ?? (object)DBNull.Value));
                     cmd.Parameters.Add(DataFactory.CreateParameter("@EmailId", customer.EmailId ?? (object)DBNull.Value));
-                    cmd.Parameters.Add(DataFactory.CreateParameter("@CompanyName", customer.CompanyName ?? (object)DBNull.Value));
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@Age", customer.Age ?? (object)DBNull.Value));
                     cmd.Parameters.Add(DataFactory.CreateParameter("@AddressLine1", customer.AddressLine1 ?? (object)DBNull.Value));
                     cmd.Parameters.Add(DataFactory.CreateParameter("@AddressLine2", customer.AddressLine2 ?? (object)DBNull.Value));
 
@@ -160,7 +160,7 @@ public class CustomerRepository : ICustomerRepository
                     cmd.Parameters.Add(DataFactory.CreateParameter("@Name", customer.Name ?? (object)DBNull.Value));
                     cmd.Parameters.Add(DataFactory.CreateParameter("@MobileNo", customer.MobileNo ?? (object)DBNull.Value));
                     cmd.Parameters.Add(DataFactory.CreateParameter("@EmailId", customer.EmailId ?? (object)DBNull.Value));
-                    cmd.Parameters.Add(DataFactory.CreateParameter("@CompanyName", customer.CompanyName ?? (object)DBNull.Value));
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@Age", customer.Age ?? (object)DBNull.Value));
                     cmd.Parameters.Add(DataFactory.CreateParameter("@AddressLine1", customer.AddressLine1 ?? (object)DBNull.Value));
                     cmd.Parameters.Add(DataFactory.CreateParameter("@AddressLine2", customer.AddressLine2 ?? (object)DBNull.Value));
 
@@ -328,7 +328,7 @@ public class CustomerRepository : ICustomerRepository
 
                 if (reader["EmailId"] != DBNull.Value)customer.EmailId = Convert.ToString(reader["EmailId"]);
 
-                if (reader["CompanyName"] != DBNull.Value) customer.CompanyName = Convert.ToString(reader["CompanyName"]);
+                if (HasColumn(reader, "Age") && reader["Age"] != DBNull.Value) customer.Age = Convert.ToInt32(reader["Age"]);
 
                 if (reader["AddressLine1"] != DBNull.Value) customer.AddressLine1 = Convert.ToString(reader["AddressLine1"]);
 
@@ -373,6 +373,18 @@ public class CustomerRepository : ICustomerRepository
         }
 
         return list;
+    }
+
+    private static bool HasColumn(IDataReader reader, string columnName)
+    {
+        try
+        {
+            return reader.GetOrdinal(columnName) >= 0;
+        }
+        catch (IndexOutOfRangeException)
+        {
+            return false;
+        }
     }
 
 

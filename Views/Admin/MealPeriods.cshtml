@@ -19,14 +19,23 @@
     </div>
 </div>
 
-<div class="card">
+<div class="pageloaderfull hidden">
+    <div class="spinner"></div>
+    <div class="loader-text">Loading meal periods...</div>
+</div>
+
+<div id="mealPeriodsListPanel" class="card">
     <div class="panel-header">
         <div class="panel-title">Manage Meal Periods</div>
     </div>
     <div class="muted" style="margin-bottom:16px">Create, edit and manage service time slots for catering operations.</div>
+    <div class="pageloaderpanel hidden">
+        <div class="spinner"></div>
+        <div class="loader-text">Loading meal periods...</div>
+    </div>
     <div class="table-wrap">
 
-        <table class="tbl" id="mealPeriodList">
+        <table class="tbl" id="mealPeriodList" data-page-size="10">
 
             <thead>
                 <tr>

@@ -12,7 +12,7 @@ function openMenuModal() {
 }
 
 function loadUtensils() {
-    showutensilLoader(true);
+    showUtensilsLoader(true);
 
     $.ajax({
         url: '/Admin/Utensils/get',
@@ -26,17 +26,16 @@ function loadUtensils() {
             showToast('Unable to load Utensil.', 3000, { type: 'error', title: 'Load failed' });
         },
         complete: function () {
-            showutensilLoader(false);
+            showUtensilsLoader(false);
         }
     });
 }
 
-function showutensilLoader(show) {
+function showUtensilsLoader(show) {
     var $panel = $('.pageloaderpanel');
     if ($panel.length) {
         $('#utensilListPanel .table-wrap').toggleClass('hidden', show);
         $panel.toggleClass('hidden', !show);
-        return;
     }
 }
 
@@ -95,15 +94,16 @@ function renderUtensilList(rows) {
 }
 
 function clearUtensilForm() {
+    $('#utensilId').val('');
     $('#utName').val('');
     $('#utType').val('');
     $('#utPrice').val('');
     $('#utDepAmt').val('0.00');
 
-    clearutensilError('#utName', '#utNameError');
-    clearutensilError('#utType', '#utTypeError');
-    clearutensilError('#utPrice', '#utPriceError');
-    clearutensilError('#utDepAmt', '#utDepAmtError');
+    clearUtensilError('#utName', '#utNameError');
+    clearUtensilError('#utType', '#utTypeError');
+    clearUtensilError('#utPrice', '#utPriceError');
+    clearUtensilError('#utDepAmt', '#utDepAmtError');
 }
 
 function setUtensilError(inputSelector, errorSelector, message) {
@@ -111,26 +111,16 @@ function setUtensilError(inputSelector, errorSelector, message) {
     $(errorSelector).removeClass('hidden').text(message);
 }
 
-function clearutensilError(inputSelector, errorSelector) {
+function clearUtensilError(inputSelector, errorSelector) {
     $(inputSelector).removeClass('input-error');
     $(errorSelector).addClass('hidden').text('');
 }
 
-function initCategoryField(inputSelector, errorSelector) {
-    clearCategoryError(inputSelector, errorSelector);
-    var el = document.querySelector(inputSelector);
-    if (el) {
-        el.oninput = function () {
-            clearCategoryError(inputSelector, errorSelector);
-        };
-    }
-}
-
 function validateForm() {
-    clearutensilError('#utName', '#utNameError');
-    clearutensilError('#utType', '#utTypeError');
-    clearutensilError('#utPrice', '#utPriceError');
-    clearutensilError('#utDepAmt', '#utDepAmtError'); 
+    clearUtensilError('#utName', '#utNameError');
+    clearUtensilError('#utType', '#utTypeError');
+    clearUtensilError('#utPrice', '#utPriceError');
+    clearUtensilError('#utDepAmt', '#utDepAmtError');
 
     var code = $('#utName').val();
     if (code) {
@@ -139,7 +129,7 @@ function validateForm() {
         code = '';
     }
 
-    var name = $('#ItemName').val();
+    var name = $('#utType').val();
     if (name) {
         name = name.toString().trim();
     } else {

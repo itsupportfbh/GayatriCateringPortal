@@ -12,6 +12,7 @@ $(document).ready(function () {
 
 
 function loadLocation() {
+    showLocationsLoader(true);
 
     $.ajax({
         url: '/Admin/Locations/getAll',
@@ -22,10 +23,22 @@ function loadLocation() {
         },
         error: function () {
             renderLocationList([]);
+            showToast('Unable to load locations.', 3000, { type: 'error', title: 'Load failed' });
+        },
+        complete: function () {
+            showLocationsLoader(false);
         }
     });
 }
 
+
+function showLocationsLoader(show) {
+    var $panel = $('.pageloaderpanel');
+    if ($panel.length) {
+        $('#locationsListPanel .table-wrap').toggleClass('hidden', show);
+        $panel.toggleClass('hidden', !show);
+    }
+}
 function renderLocationList(rows) {
     rows = Array.isArray(rows) ? rows : [];
 
@@ -102,7 +115,6 @@ function clearLocationForm() {
     $('#locationMinimumPax').val('');
     $('#locationLeadTimeDays').val('');
     $('#locationRemarks').val('');
-    $('#locationIsActive').prop('checked', true);
 }
 
 
