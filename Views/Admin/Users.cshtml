@@ -3,7 +3,7 @@
 }
 
 @section Styles {
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css">
+    <link rel="stylesheet" href="~/lib/select2/dist/css/select2.min.css" asp-append-version="true">
     <link rel="stylesheet" href="~/css/admin/users.css" asp-append-version="true">
 }
 
@@ -55,17 +55,17 @@
         <div class="form-row col3">
             <div class="form-group">
                 <label>Code <span class="field-required">*</span></label>
-                <input type="text" id="userCode" class="form-control" placeholder="User code" />
+                <input type="text" id="userCode" class="form-control" placeholder="e.g. USR001" />
                 <div class="field-error hidden" id="userCodeError"></div>
             </div>
             <div class="form-group">
                 <label>Name <span class="field-required">*</span></label>
-                <input type="text" id="userName" class="form-control" placeholder="User name" />
+                <input type="text" id="userName" class="form-control" placeholder="Enter user name" />
                 <div class="field-error hidden" id="userNameError"></div>
             </div>
             <div class="form-group">
                 <label>Email <span class="field-required">*</span></label>
-                <input type="email" id="userEmail" class="form-control" placeholder="Email address" />
+                <input type="email" id="userEmail" class="form-control" placeholder="name@example.com" />
                 <div class="field-error hidden" id="userEmailError"></div>
             </div>
         </div>
@@ -73,7 +73,7 @@
         <div class="form-row col3">
             <div class="form-group">
                 <label>Contact No</label>
-                <input type="text" id="userContact" class="form-control" placeholder="Contact number" />
+                <input type="text" id="userContact" class="form-control" placeholder="Enter contact number" />
             </div>
 
             <div class="form-group">
@@ -96,55 +96,66 @@
             </div>
             <div class="form-group">
                 <label>Age</label>
-                <input type="text" id="userAge" class="form-control" placeholder="Age" disabled />
+                <input type="text" id="userAge" class="form-control" placeholder="Auto-calculated" disabled />
             </div>
             <div class="form-group">
-                <label>Address 1</label>
-                <input type="text" id="userAddress1" class="form-control" placeholder="Address line 1" />
+                <label>Gender</label>
+                <select id="userGender" class="form-control">
+                    <option value="">Select Gender</option>
+                    <option value="1">Male</option>
+                    <option value="2">Female</option>
+                    <option value="3">Other</option>
+                </select>
             </div>
         </div>
 
         <div class="form-row col3">
             <div class="form-group">
+                <label>Address 1</label>
+                <input type="text" id="userAddress1" class="form-control" placeholder="Enter address line 1" />
+            </div>
+            <div class="form-group">
                 <label>Address 2</label>
-                <input type="text" id="userAddress2" class="form-control" placeholder="Address line 2" />
+                <input type="text" id="userAddress2" class="form-control" placeholder="Enter address line 2 (optional)" />
             </div>
             <div class="form-group">
                 <label>Country</label>
                 <select id="userCountry" class="form-control">
+                    <option value="0">Select country</option>
                 </select>
             </div>
             <div class="form-group">
                 <label>State</label>
                 <select id="userState" class="form-control">
+                    <option value="0">Select state</option>
                 </select>
             </div>
-        </div>
-
-        <div class="form-row col3">
             <div class="form-group">
                 <label>City</label>
                 <select id="userCity" class="form-control">
+                    <option value="0">Select city</option>
                 </select>
             </div>
             <div class="form-group">
                 <label>Postal Code</label>
-                <input type="text" id="userPostalCode" class="form-control" placeholder="Postal code" />
+                <input type="text" id="userPostalCode" class="form-control" placeholder="Enter postal code" />
             </div>
+        </div>
+
+        <div class="form-row col2">
             <div class="form-group">
                 <label>Image Upload</label>
                 <input type="file" id="userImageFile" class="form-control" accept="image/*" />
                 <input type="hidden" id="userImage" />
+                <div style="margin-top:8px;">
+                    <img id="userImagePreview" class="hidden" alt="User image preview" style="max-height: 80px; border-radius: 8px; border: 1px solid var(--gray-200);" />
+                </div>
             </div>
-        </div>
 
-        <div class="form-group">
-            <img id="userImagePreview" class="hidden" alt="User image preview" style="max-height: 80px; border-radius: 8px; border: 1px solid var(--gray-200);" />
-        </div>
-
-        <div class="form-group">
-            <label>Remarks</label>
-            <input type="text" id="userRemarks" class="form-control" placeholder="Remarks" />
+            <div class="form-group">
+                <label>Remarks</label>
+                <textarea id="userRemarks" class="form-control" rows="3" placeholder="Enter remarks (optional)"></textarea>
+            </div>
         </div>
         <input type="hidden" id="userId" />
         <input type="hidden" id="userIsActive" value="true" />
@@ -157,6 +168,6 @@
 
 @section Scripts {
     <script src="~/js/admin/table-utils.js" asp-append-version="true"></script>
-    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <script src="~/lib/select2/dist/js/select2.min.js" asp-append-version="true"></script>
     <script src="~/js/admin/users.js" asp-append-version="true"></script>
 }

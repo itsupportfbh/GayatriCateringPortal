@@ -1,4 +1,5 @@
 using GayatriCateringPortal.Interfaces;
+using GayatriCateringPortal.Models;
 using Microsoft.AspNetCore.Mvc;
 
 namespace GayatriCateringPortal.Controllers
@@ -40,6 +41,43 @@ namespace GayatriCateringPortal.Controllers
         {
             if (stateId <= 0) return Ok(new List<Models.City>());
             var items = _common.GetCityByStateId(stateId);
+            return Ok(items);
+        }
+
+        [HttpGet("GetEntityMaster")]
+        public IActionResult GetEntityMaster()
+        {
+            var items = _common.GetEntityMaster();
+            return Ok(items);
+        }
+
+        [HttpPost("CreateRolePermission")]
+        public IActionResult CreateRolePermission([FromBody] List<CreateRolePermissionRequest> requests)
+        {
+            if (requests == null || requests.Count == 0)
+            {
+                return BadRequest(new { success = false, message = "Invalid request." });
+            }
+
+            for (int i = 0; i < requests.Count; i++)
+            {
+                var request = requests[i];
+                if (request == null || request.RoleId <= 0 || request.EntityNo <= 0)
+                {
+                    return BadRequest(new { success = false, message = "Invalid request." });
+                }
+            }
+
+            var savedCount = _common.CreateRolePermission(requests);
+            return Ok(new { success = savedCount > 0, count = savedCount });
+        }
+
+        [HttpGet("GetRolePermissionsByRoleId")]
+        public IActionResult GetRolePermissionsByRoleId(int roleId)
+        {
+            if (roleId <= 0) return Ok(new List<RolePermissionItem>());
+
+            var items = _common.GetRolePermissionsByRoleId(roleId);
             return Ok(items);
         }
     }

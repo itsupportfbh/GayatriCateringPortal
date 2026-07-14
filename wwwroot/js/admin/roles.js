@@ -8,7 +8,6 @@ function closeRolesModal() {
 
 function openRolesModal() {
     clearRoleForm();
-    hideRolePermission();
     $('#model-title').html('Create Role');
     $('#rolesModal').removeClass('hidden');
 
@@ -16,7 +15,7 @@ function openRolesModal() {
     initRoleField('#roleName', '#roleNameError');
     
     // Change button text to "Save" for create mode
-    $('#saveRoleBtn').text('Save');
+    setActionButtonLabel('#saveRoleBtn', 'Save');
 }
 
 function loadRoles() {
@@ -108,8 +107,8 @@ function renderRolesList(rows) {
 function clearRoleForm(keepId) {
     if (!keepId) {
         $('#roleId').val('');
-        // Reset button text to "Save" when clearing the form in create mode
-        $('#saveRoleBtn').text('Save');
+        // Reset button label to "Save" when clearing the form in create mode.
+        setActionButtonLabel('#saveRoleBtn', 'Save');
     }
     $('#roleCode').val('');
     $('#roleName').val('');
@@ -176,6 +175,8 @@ function saveRole() {
         return;
     }
 
+    setButtonBusy('#saveRoleBtn', true, 'Saving...');
+
     var roleId = $('#roleId').val();
     var role = {
         Id: roleId ? parseInt(roleId) : 0,
@@ -203,11 +204,13 @@ function saveRole() {
                 $('#rolesModal').addClass('hidden');
                 loadRoles();
             } else {
+                setButtonBusy('#saveRoleBtn', false);
                 var errorMsg = res && res.message ? res.message : (roleId == 0 ? 'Unable to save role.' : 'Unable to update role');
                 showToast(errorMsg, 3000, { type: 'error', title: roleId == 0 ? 'Save failed' : 'Update failed' });
             }
         },
         error: function () {
+            setButtonBusy('#saveRoleBtn', false);
             showToast(roleId == 0 ? 'Save failed.' : 'Update failed.', 3000, { type: 'error', title: roleId == 0 ? 'Save failed' : 'Update failed' });
         }
     });
@@ -232,25 +235,22 @@ function editRole(id) {
                 initRoleField('#roleCode', '#roleCodeError');
                 initRoleField('#roleName', '#roleNameError');
 
-                hideRolePermission();
                 $('#rolesModal').removeClass('hidden');
                 
                 // Change button text to "Update" for edit mode
-                $('#saveRoleBtn').text('Update');
+                setActionButtonLabel('#saveRoleBtn', 'Update');
         },
         error: function () { showToast('Unable to load role.', 3000, { type: 'error', title: 'Load failed' }); }
     });
 }
 
 function showRolePermission(id, code) {
-    $('#selectedRoleName').text(code || id || 'Unknown');
-    $('#rolesListPanel').addClass('hidden');
-    $('#rolesPermissionPanel').removeClass('hidden');
+    if (!id) return;
+    window.location.href = '/Admin/RolePermission?RoleId=' + encodeURIComponent(id);
 }
 
 function hideRolePermission() {
-    $('#rolesPermissionPanel').addClass('hidden');
-    $('#rolesListPanel').removeClass('hidden');
+    // Permission view moved to separate route: /Admin/RolePermission
 }
 
 function deleteRole(id) {

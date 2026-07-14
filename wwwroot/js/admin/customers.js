@@ -255,6 +255,7 @@ function openCustomerModal() {
     clearCustomerForm();
     bindCustomerAgeFromDob();
     loadCustomerCountries();
+    $('#customers-title').text('Create Customer');
     // hideRolePermission();
     $('#customersModal').removeClass('hidden');
 }
@@ -282,6 +283,8 @@ function saveCustomer() {
         UpdatedBy: null,
         UpdatedDate: null
     };
+
+    setButtonBusy('button[onclick="saveCustomer()"]', true, 'Saving...');
    
 
     var endpoint = customer.Id ? '/Admin/Customers/update' : '/Admin/Customers/create';
@@ -298,10 +301,12 @@ function saveCustomer() {
                 $('#customersModal').addClass('hidden');
                 loadCustomers();
             } else {
+                setButtonBusy('button[onclick="saveCustomer()"]', false);
                 showToast(res?.message || 'Unable to save Customer.', 3000, { type: 'error', title: 'Save failed' });
             }
         },
         error: function (xhr) {
+            setButtonBusy('button[onclick="saveCustomer()"]', false);
             showToast(xhr.responseJSON?.message || 'Save failed.', 3000, { type: 'error', title: 'Save failed' });
         }
     });
@@ -310,6 +315,7 @@ function saveCustomer() {
 
 function editCustomer(id) {
     bindCustomerAgeFromDob();
+    $('#customers-title').text('Edit Customer');
 
     $.ajax({
         url: '/Admin/Customers/get/' + id,

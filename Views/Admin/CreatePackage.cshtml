@@ -23,26 +23,26 @@
     <div class="form-grid">
         <div class="form-group">
             <label>Package Name <span class="field-required">*</span></label>
-            <input id="packageName" name="PackageName" class="form-control" />
+            <input id="packageName" name="PackageName" class="form-control" placeholder="Enter package name" />
             <div class="field-error hidden" id="packageNameError"></div>
         </div>
         <div class="form-group form-span-2">
             <label>Description</label>
-            <textarea id="packageDescription" name="PackageDescription" class="form-control" rows="3"></textarea>
+            <textarea id="packageDescription" name="PackageDescription" class="form-control" rows="3" placeholder="Enter package description (optional)"></textarea>
         </div>
         <div class="form-group">
             <label>Price <span class="field-required">*</span></label>
-            <input id="packagePrice" name="Price" type="number" step="0.01" class="form-control" />
+            <input id="packagePrice" name="Price" type="number" step="0.01" class="form-control" placeholder="0.00" />
             <div class="field-error hidden" id="packagePriceError"></div>
         </div>
         <div class="form-group">
             <label>Minimum Pax <span class="field-required">*</span></label>
-            <input id="minPersons" name="MinPersons" type="number" class="form-control" />
+            <input id="minPersons" name="MinPersons" type="number" class="form-control" placeholder="Enter minimum pax" />
             <div class="field-error hidden" id="minPersonsError"></div>
         </div>
         <div class="form-group">
             <label>Maximum Pax</label>
-            <input id="maxPersons" name="MaxPersons" type="number" class="form-control" />
+            <input id="maxPersons" name="MaxPersons" type="number" class="form-control" placeholder="Enter maximum pax" />
         </div>
     </div>
 
@@ -62,7 +62,7 @@
 
     <div class="form-actions">
         <button class="btn btn-light btn-sm" id="clearPackage" type="button">Clear</button>
-        <button class="btn btn-orange btn-sm" id="savePackage" type="button">Save</button>
+        <button class="btn btn-primary btn-sm" id="savePackage" type="button">Save</button>
     </div>
 </div>
 

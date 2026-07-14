@@ -37,7 +37,7 @@
         <table class="tbl" id="menusList" data-page-size="10">
             <thead>
                 <tr>
-                    <th class="sortable">Id</th>
+                    <th class="sortable">#</th>
                     <th class="sortable">Code</th>
                     <th class="sortable">Name</th>
                     <th class="sortable">Category</th>
@@ -55,7 +55,7 @@
     <div class="modal-overlay hidden" id="MenuModal">
         <div class="modal-box">
             <div class="modal-header">
-                <span class="modal-title">Add Menu Item</span>
+                <span class="modal-title" id="menu-title">Create Menu</span>
                 <button class="modal-close" type="button" onclick="closeMenuModal()">✕</button>
             </div>
             <div class="form-row col2">
@@ -72,7 +72,7 @@
                 <div class="form-group">
                     <label>Category</label>
                     <select id="CategoryId" class="form-control">
-                        <option value="">Select Categories</option>                       
+                        <option value="">Select category</option>
                     </select>
                 </div>
 
@@ -91,6 +91,7 @@
             <div class="form-group">
                 <label>Food Type</label>
                 <select id="FoodType">
+                    <option value="">Select food type</option>
                     <option value="1">Veg</option>
                     <option value="2">Non-Veg</option>
                 </select>
@@ -98,13 +99,13 @@
         </div>
 
         <div class="form-group">
-            <label>Service Charge</label>
+            <label>Service Charge (S$)</label>
             <input type="number" id="ServiceCharge" min="0" step="0.01" placeholder="0.00">
         </div>
         <input type="hidden" id="menuId" />
         <div class="actions">
-            <button class="btn btn-primary" id="btnSaveMenu" onclick="saveMenu()">Save Item</button>
             <button type="button" class="btn btn-light" onclick="clearMenuForm()">Clear</button>
+            <button class="btn btn-primary" id="btnSaveMenu" onclick="saveMenu()">Save</button>
         </div>
     </div>
 </div>

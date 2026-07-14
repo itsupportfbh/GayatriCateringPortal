@@ -481,6 +481,53 @@ body.customer-mode .main {
     white-space: nowrap
 }
 
+.gc-action-btn {
+    position: relative;
+}
+
+.gc-btn-icon,
+.gc-btn-label,
+.gc-btn-loader {
+    display: inline-flex;
+    align-items: center;
+}
+
+.gc-btn-icon {
+    font-size: 12px;
+    line-height: 1;
+}
+
+.gc-btn-loader {
+    display: none;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    border: 2px solid currentColor;
+    border-right-color: transparent;
+    animation: gc-btn-spin .7s linear infinite
+}
+
+.btn.is-busy {
+    cursor: progress;
+}
+
+.btn.is-busy .gc-btn-icon {
+    display: none;
+}
+
+.btn.is-busy .gc-btn-label {
+    opacity: .85;
+}
+
+.btn.is-busy .gc-btn-loader {
+    display: inline-flex;
+}
+
+@keyframes gc-btn-spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
     .btn:focus-visible {
         outline: 2px solid rgba(26,110,60,.9);
         outline-offset: 3px;
@@ -488,12 +535,14 @@ body.customer-mode .main {
     }
 
 .btn-primary {
-    background: var(--green);
-    color: #fff
+    background: var(--green) !important;
+    color: #fff !important;
+    border-color: var(--green) !important
 }
 
     .btn-primary:hover {
-        background: var(--green-mid)
+        background: var(--green-mid) !important;
+        border-color: var(--green-mid) !important
     }
 
 .btn-orange {
@@ -516,13 +565,13 @@ body.customer-mode .main {
     }
 
 .btn-light {
-    background: var(--white);
-    color: var(--gray-700);
-    border: 1px solid var(--gray-300)
+    background: var(--white) !important;
+    color: var(--gray-700) !important;
+    border: 1px solid var(--gray-300) !important
 }
 
     .btn-light:hover {
-        background: var(--gray-50)
+        background: var(--gray-50) !important
     }
 
 .btn-danger {

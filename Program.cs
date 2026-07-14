@@ -1,5 +1,9 @@
 var builder = WebApplication.CreateBuilder(args);
-builder.Services.AddControllersWithViews();
+builder.Services.AddScoped<GayatriCateringPortal.Common.GlobalExceptionFilter>();
+builder.Services.AddControllersWithViews(options =>
+{
+    options.Filters.AddService<GayatriCateringPortal.Common.GlobalExceptionFilter>();
+});
 
 // Initialize DataFactory (centralized ADO.NET helpers)
 GayatriCateringPortal.Data.DataFactory.Init(builder.Configuration);
@@ -33,9 +37,9 @@ builder.Services.AddScoped<GayatriCateringPortal.Interfaces.Customer.IPackageRep
 
 var app = builder.Build();
 
+app.UseExceptionHandler("/Home/Error");
 if (!app.Environment.IsDevelopment())
 {
-    app.UseExceptionHandler("/Home/Error");
     app.UseHsts();
 }
 

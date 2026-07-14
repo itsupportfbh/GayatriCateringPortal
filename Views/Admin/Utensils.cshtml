@@ -37,9 +37,9 @@
             <table class="tbl" id="utensilList" data-page-size="10">
                 <thead>
                     <tr>
-                        <th class="sortable">Id</th>
+                        <th class="sortable">#</th>
                         <th class="sortable">Utensil</th>
-                        <th class="sortable">Unit Type</th>
+                        <th class="sortable">Rules</th>
                         <th class="sortable">Price</th>
                         <th class="sortable">Deposit Amount</th>
                         <th class="sortable">Status</th>
@@ -56,25 +56,25 @@
     <div class="modal-overlay hidden" id="utensilsModal">
         <div class="modal-box">
             <div class="modal-header">
-                <span class="modal-title">Create Utensil</span>
+                <span class="modal-title" id="utensils-title">Create Utensil</span>
                 <button class="modal-close" type="button" onclick="closeMenuModal()">✕</button>
             </div>
             <div class="form-group">
                 <label>Utensil</label>
-                <input id="utName" maxlength="200" class="form-control">
+                <input id="utName" maxlength="200" class="form-control" placeholder="Enter utensil name">
             </div>
             <div class="form-group">
-                <label>Unit Type</label>
-                <input id="utType" maxlength="20" class="form-control">
+                <label>Rules</label>
+                <input id="utRules" type="number" step="0.01" value="0.00" class="form-control" placeholder="Enter rules value">
             </div>
             <div class="form-row col2">
                 <div class="form-group">
                     <label>Price</label>
-                    <input id="utPrice" type="number" value="0.00" class="form-control">
+                    <input id="utPrice" type="number" value="0.00" class="form-control" placeholder="0.00">
                 </div>
                 <div class="form-group">
                     <label>Deposit Amount</label>
-                    <input id="utDepAmt" type="number" value="0.00" class="form-control">
+                    <input id="utDepAmt" type="number" value="0.00" class="form-control" placeholder="0.00">
                 </div>
             </div>
             <input type="hidden" id="utensilId" />

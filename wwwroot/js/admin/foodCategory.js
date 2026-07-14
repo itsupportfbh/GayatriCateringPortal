@@ -13,7 +13,7 @@ function openFoodCategoryModal() {
     initCategoryField('#categoryCode', '#categoryCodeError');
     initCategoryField('#categoryName', '#categoryNameError');
     
-    $('#saveCategoryBtn').text('Save');
+    setActionButtonLabel('#saveCategoryBtn', 'Save');
 }
 
 function loadFoodCategories() {
@@ -122,7 +122,7 @@ function initCategoryField(inputSelector, errorSelector) {
 function clearFoodCategoryForm(keepId) {
     if (!keepId) {
         $('#categoryId').val('');
-        $('#saveCategoryBtn').text('Save');
+        setActionButtonLabel('#saveCategoryBtn', 'Save');
     }
     $('#categoryCode').val('');
     $('#categoryName').val('');
@@ -149,7 +149,7 @@ function editFoodCategory(id) {
             initCategoryField('#categoryName', '#categoryNameError');
 
             $('#foodCategoryModal').removeClass('hidden');
-            $('#saveCategoryBtn').text('Update');
+            setActionButtonLabel('#saveCategoryBtn', 'Update');
         },
         error: function () {
             showToast('Unable to load food category.', 3000, { type: 'error', title: 'Load failed' });
@@ -202,6 +202,8 @@ function saveFoodCategory() {
         return;
     }
 
+    setButtonBusy('#saveCategoryBtn', true, 'Saving...');
+
     var categoryId = $('#categoryId').val();
     var category = {
         Id: categoryId ? parseInt(categoryId) : 0,
@@ -230,11 +232,13 @@ function saveFoodCategory() {
                 $('#foodCategoryModal').addClass('hidden');
                 loadFoodCategories();
             } else {
+                setButtonBusy('#saveCategoryBtn', false);
                 var errorMsg = res && res.message ? res.message : (isUpdate ? 'Unable to update food category.' : 'Unable to create food category.');
                 showToast(errorMsg, 3000, { type: 'error', title: 'Save failed' });
             }
         },
         error: function () {
+            setButtonBusy('#saveCategoryBtn', false);
             showToast(isUpdate ? 'Update failed.' : 'Save failed.', 3000, { type: 'error', title: 'Save failed' });
         }
     });
