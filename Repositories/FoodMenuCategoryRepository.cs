@@ -235,6 +235,9 @@ namespace GayatriCateringPortal.Repositories
             var list = new List<FoodMenuCategory>();
             try
             {
+                var hasMaxChoice = Enumerable.Range(0, reader.FieldCount)
+                    .Any(index => string.Equals(reader.GetName(index), "MaxChoice", StringComparison.OrdinalIgnoreCase));
+
                 while (reader.Read())
                 {
                     var item = new FoodMenuCategory();
@@ -243,17 +246,25 @@ namespace GayatriCateringPortal.Repositories
                     if (reader["Code"] != DBNull.Value)
                         item.Code = Convert.ToString(reader["Code"])!;
                     if (reader["Name"] != DBNull.Value)
-                        item.Name = Convert.ToString(reader["Name"])!;                    
+                        item.Name = Convert.ToString(reader["Name"])!;
+                    if (hasMaxChoice && reader["MaxChoice"] != DBNull.Value)
+                    {
+                        int.TryParse(Convert.ToString(reader["MaxChoice"]), out var maxChoice);
+                        item.MaxChoice = maxChoice;
+                    }
                     if (reader["IsActive"] != DBNull.Value)
-                        item.IsActive = Convert.ToBoolean(reader["IsActive"]);
+                        item.IsActive = Convert.ToString(reader["IsActive"]) ?? "0";
                     if (reader["IsDeleted"] != DBNull.Value)
-                        item.IsDeleted = Convert.ToBoolean(reader["IsDeleted"]);
+                        item.IsDeleted = Convert.ToString(reader["IsDeleted"]) ?? "0";
                     if (reader["CreatedBy"] != DBNull.Value)
-                        item.CreatedBy = Convert.ToInt32(reader["CreatedBy"]);
+                        item.CreatedBy = Convert.ToString(reader["CreatedBy"]);
                     if (reader["CreatedDate"] != DBNull.Value)
-                        item.CreatedDate = Convert.ToString(reader["CreatedDate"]);
+                        item.CreatedDate = Convert.ToString(reader["CreatedDate"]) ?? string.Empty;
                     if (reader["UpdatedBy"] != DBNull.Value)
-                        item.UpdatedBy = Convert.ToInt32(reader["UpdatedBy"]);
+                    {
+                        int.TryParse(Convert.ToString(reader["UpdatedBy"]), out var updatedBy);
+                        item.UpdatedBy = updatedBy;
+                    }
                     if (reader["UpdatedDate"] != DBNull.Value)
                         item.UpdatedDate = Convert.ToString(reader["UpdatedDate"]);
 
