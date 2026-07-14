@@ -246,8 +246,9 @@ function saveMenu() {
 
     setButtonBusy('#btnSaveMenu', true, 'Saving...');
 
+    var menuId = $('#menuId').val();
     var menu = {
-        Id: $('#menuId').val() || '',
+        Id: menuId ? parseInt(menuId) : 0,
         Code: $('#ItemCode').val() || '',
         Name: $('#ItemName').val() || '',
         CategoryId: $('#CategoryId').val() || '',
