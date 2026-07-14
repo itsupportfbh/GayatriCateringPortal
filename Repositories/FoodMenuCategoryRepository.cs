@@ -256,6 +256,7 @@ namespace GayatriCateringPortal.Repositories
                         item.CreatedBy = Convert.ToInt32(reader["CreatedBy"]);
                     if (reader["CreatedDate"] != DBNull.Value)
                         item.CreatedDate = Convert.ToString(reader["CreatedDate"]);
+
                     if (reader["UpdatedBy"] != DBNull.Value)
                         item.UpdatedBy = Convert.ToInt32(reader["UpdatedBy"]);
                     if (reader["UpdatedDate"] != DBNull.Value)
