@@ -21,28 +21,14 @@ namespace GayatriCateringPortal.Repositories
                 using (conn = DataFactory.CreateConnection())
                 {
                     conn.Open();
-                    using (cmd = DataFactory.CreateCommand("SELECT Id, Code, Name, IsActive, IsDeleted, CreatedBy, CreatedDate, UpdatedBy, UpdatedDate FROM FoodMenuCategory WHERE IsDeleted = 0", conn))
+                    using (cmd = DataFactory.CreateCommand("GetFoodMenuCategory", conn))
                     {
+                        ((SqlCommand)cmd).CommandType = CommandType.StoredProcedure;
                         reader = DataFactory.ExecuteReader(cmd);
-                        while (reader.Read())
-                        {
-                            list.Add(new FoodMenuCategory
-                            {
-                                Id = Convert.ToString(reader["Id"]) ?? string.Empty,
-                                Code = Convert.ToString(reader["Code"]) ?? string.Empty,
-                                Name = Convert.ToString(reader["Name"]) ?? string.Empty,
-                                IsActive = Convert.ToString(reader["IsActive"]) ?? string.Empty,
-                                IsDeleted = Convert.ToString(reader["IsDeleted"]) ?? string.Empty,
-                                CreatedBy = Convert.ToString(reader["CreatedBy"]) ?? string.Empty,
-                                CreatedDate = Convert.ToString(reader["CreatedDate"]) ?? string.Empty,
-                                UpdatedBy = reader["UpdatedBy"] != DBNull.Value ? Convert.ToString(reader["UpdatedBy"]) : null,
-                                UpdatedDate = reader["UpdatedDate"] != DBNull.Value ? Convert.ToString(reader["UpdatedDate"]) : null
-                            });
-                        }
+                        list = this.List(reader);
                     }
                 }
-
-                return list;
+                return list ?? new List<FoodMenuCategory>();
             }
             catch (SqlException)
             {
@@ -60,84 +46,114 @@ namespace GayatriCateringPortal.Repositories
 
         public FoodMenuCategory? GetById(string id)
         {
-            var list = GetAll();
-            return list.FirstOrDefault(x => x.Id == id);
-        }
-
-        public int Create(FoodMenuCategory item)
-        {
-            if (item == null) return 0;
             IDbConnection? conn = null;
             IDbCommand? cmd = null;
+            IDataReader? reader = null;
+            FoodMenuCategory? item = null;
             try
             {
-                conn = DataFactory.CreateConnection();
-                conn.Open();
-                cmd = DataFactory.CreateCommand("SP_CreateFoodMenuCategory", conn);
-                cmd.CommandType = CommandType.StoredProcedure;
-
-                cmd.Parameters.Add(DataFactory.CreateParameter("@Code", item.Code ?? string.Empty));
-                cmd.Parameters.Add(DataFactory.CreateParameter("@Name", item.Name ?? string.Empty));
-                cmd.Parameters.Add(DataFactory.CreateParameter("@IsActive", item.IsActive == "1" ? 1 : 0));
-                cmd.Parameters.Add(DataFactory.CreateParameter("@IsDeleted", 0));
-                cmd.Parameters.Add(DataFactory.CreateParameter("@CreatedBy", item.CreatedBy ?? "0"));
-
-                var reader = DataFactory.ExecuteReader(cmd);
-                if (reader.Read())
+                using (conn = DataFactory.CreateConnection())
                 {
-                    int result = Convert.ToInt32(reader["Result"]);
-                    return result;
+                    if (conn.State == ConnectionState.Closed) conn.Open();
+                    using (cmd = DataFactory.CreateCommand("SP_GetFoodMenuCategoryById", conn))
+                    {
+                        ((SqlCommand)cmd).CommandType = CommandType.StoredProcedure;
+                        cmd.Parameters.Add(DataFactory.CreateParameter("@Id", id));
+                        reader = DataFactory.ExecuteReader(cmd);
+                        var list = this.List(reader);
+                        if (list != null && list.Count > 0) item = list[0];
+                    }
                 }
-                return 0;
             }
             catch (SqlException)
             {
-                return 0;
+                throw new Exception("Database error");
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                return 0;
+                throw new Exception(ex.StackTrace);
             }
             finally
             {
                 if (conn != null && conn.State != ConnectionState.Closed) conn.Close();
             }
+            return item;
         }
 
-        public int Update(FoodMenuCategory item)
+        public int Create(FoodMenuCategory item)
         {
-            if (item == null) return 0;
             IDbConnection? conn = null;
             IDbCommand? cmd = null;
             try
             {
-                conn = DataFactory.CreateConnection();
-                conn.Open();
-                cmd = DataFactory.CreateCommand("SP_UpdateFoodMenuCategory", conn);
-                cmd.CommandType = CommandType.StoredProcedure;
-
-                cmd.Parameters.Add(DataFactory.CreateParameter("@Id", item.Id ?? string.Empty));
-                cmd.Parameters.Add(DataFactory.CreateParameter("@Code", item.Code ?? string.Empty));
-                cmd.Parameters.Add(DataFactory.CreateParameter("@Name", item.Name ?? string.Empty));
-                cmd.Parameters.Add(DataFactory.CreateParameter("@IsActive", item.IsActive == "1" ? 1 : 0));
-                cmd.Parameters.Add(DataFactory.CreateParameter("@IsDeleted", 0));
-                cmd.Parameters.Add(DataFactory.CreateParameter("@UpdatedBy", item.UpdatedBy ?? "0"));
-
-                var reader = DataFactory.ExecuteReader(cmd);
-                if (reader.Read())
+                using (conn = DataFactory.CreateConnection())
                 {
-                    int result = Convert.ToInt32(reader["Result"]);
-                    return result;
+                    conn.Open();
+                    using (cmd = DataFactory.CreateCommand("SP_CreateFoodMenuCategory", conn))
+                    {
+                        ((SqlCommand)cmd).CommandType = CommandType.StoredProcedure;
+                        cmd.Parameters.Add(DataFactory.CreateParameter("@Code", (object?)item.Code ?? DBNull.Value));
+                        cmd.Parameters.Add(DataFactory.CreateParameter("@Name", (object?)item.Name ?? DBNull.Value));                       
+                        cmd.Parameters.Add(DataFactory.CreateParameter("@IsActive", item.IsActive));
+                        cmd.Parameters.Add(DataFactory.CreateParameter("@IsDeleted", item.IsDeleted));
+                        cmd.Parameters.Add(DataFactory.CreateParameter("@CreatedBy", item.CreatedBy));
+
+                        var result = DataFactory.ExecuteScalar(cmd);
+                        if (result != null)
+                        {
+                            item.Id = Convert.ToString(result) ?? item.Id;
+                            return Convert.ToInt32(item.Id);
+                        }
+                    }
                 }
-                return 0;
             }
             catch (SqlException)
             {
-                return 0;
+                throw new Exception("Database error");
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                return 0;
+                throw new Exception(ex.StackTrace);
+            }
+            finally
+            {
+                if (conn != null && conn.State != ConnectionState.Closed) conn.Close();
+            }
+            return 0;
+        }
+
+        public bool Update(FoodMenuCategory item)
+        {
+            IDbConnection? conn = null;
+            IDbCommand? cmd = null;
+            try
+            {
+                var idValue = int.TryParse(item.Id, out var parsedId) ? parsedId : 0;
+                using (conn = DataFactory.CreateConnection())
+                {
+                    conn.Open();
+                    using (cmd = DataFactory.CreateCommand("SP_UpdateFoodMenuCategory", conn))
+                    {
+                        ((SqlCommand)cmd).CommandType = CommandType.StoredProcedure;
+                        cmd.Parameters.Add(DataFactory.CreateParameter("@Id", idValue));
+                        cmd.Parameters.Add(DataFactory.CreateParameter("@Code", (object?)item.Code ?? DBNull.Value));
+                        cmd.Parameters.Add(DataFactory.CreateParameter("@Name", (object?)item.Name ?? DBNull.Value));
+                        cmd.Parameters.Add(DataFactory.CreateParameter("@IsActive", item.IsActive));
+                        cmd.Parameters.Add(DataFactory.CreateParameter("@IsDeleted", item.IsDeleted));
+                        cmd.Parameters.Add(DataFactory.CreateParameter("@UpdatedBy", item.UpdatedBy));
+
+                        var result = DataFactory.ExecuteScalar(cmd);
+                        return result != null && Convert.ToInt32(result) > 0;
+                    }
+                }
+            }
+            catch (SqlException)
+            {
+                throw new Exception("Database error");
+            }
+            catch (Exception ex)
+            {
+                throw new Exception(ex.StackTrace);
             }
             finally
             {
@@ -147,26 +163,65 @@ namespace GayatriCateringPortal.Repositories
 
         public bool Delete(string id)
         {
-            if (string.IsNullOrWhiteSpace(id)) return false;
+            IDbConnection? conn = null;
+            IDbCommand? cmd = null;
+            bool taskStatus = false;
+            try
+            {
+                using (conn = DataFactory.CreateConnection())
+                {
+                    if (conn.State == ConnectionState.Closed) conn.Open();
+                    using (cmd = DataFactory.CreateCommand("DeleteFoodMenuCategoryById", conn))
+                    {
+                        ((SqlCommand)cmd).CommandType = CommandType.StoredProcedure;
+                        cmd.Parameters.Add(DataFactory.CreateParameter("@Id", id));
+                        var r = DataFactory.ExecuteScalar(cmd);
+                        if (r != null && Convert.ToInt32(r) > 0)
+                            taskStatus = true;
+                    }
+                }
+            }
+            catch (SqlException)
+            {
+                throw new Exception("Database error");
+            }
+            catch (Exception ex)
+            {
+                throw new Exception(ex.StackTrace);
+            }
+            finally
+            {
+                if (conn != null && conn.State != ConnectionState.Closed) conn.Close();
+            }
+            return taskStatus;
+        }
+
+        public bool ActiveInActive(string id, bool status)
+        {
             IDbConnection? conn = null;
             IDbCommand? cmd = null;
             try
             {
-                conn = DataFactory.CreateConnection();
-                conn.Open();
-                cmd = DataFactory.CreateCommand("UPDATE FoodMenuCategory SET IsDeleted = 1, UpdatedDate = @UpdatedDate WHERE Id = @Id", conn);
-                cmd.Parameters.Add(DataFactory.CreateParameter("@Id", id));
-                cmd.Parameters.Add(DataFactory.CreateParameter("@UpdatedDate", DateTime.UtcNow));
-                DataFactory.ExecuteNonQuery(cmd);
-                return true;
+                using (conn = DataFactory.CreateConnection())
+                {
+                    if (conn.State == ConnectionState.Closed) conn.Open();
+                    using (cmd = DataFactory.CreateCommand("ActiveInActiveFoodMenuCategoryById", conn))
+                    {
+                        ((SqlCommand)cmd).CommandType = CommandType.StoredProcedure;
+                        cmd.Parameters.Add(DataFactory.CreateParameter("@Id", id));
+                        cmd.Parameters.Add(DataFactory.CreateParameter("@IsActive", status));
+                        var r = DataFactory.ExecuteScalar(cmd);
+                        return r != null && Convert.ToInt32(r) > 0;
+                    }
+                }
             }
             catch (SqlException)
             {
-                return false;
+                throw new Exception("Database error");
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                return false;
+                throw new Exception(ex.StackTrace);
             }
             finally
             {
@@ -174,34 +229,48 @@ namespace GayatriCateringPortal.Repositories
             }
         }
 
-        public bool ActiveInActive(string id, bool status)
+        #region Private Methods
+        private List<FoodMenuCategory> List(IDataReader reader)
         {
-            if (string.IsNullOrWhiteSpace(id)) return false;
-            IDbConnection? conn = null;
-            IDbCommand? cmd = null;
+            var list = new List<FoodMenuCategory>();
             try
             {
-                conn = DataFactory.CreateConnection();
-                conn.Open();
-                cmd = DataFactory.CreateCommand("UPDATE FoodMenuCategory SET IsActive = @IsActive, UpdatedDate = @UpdatedDate WHERE Id = @Id", conn);
-                cmd.Parameters.Add(DataFactory.CreateParameter("@Id", id));
-                cmd.Parameters.Add(DataFactory.CreateParameter("@IsActive", status ? 1 : 0));
-                cmd.Parameters.Add(DataFactory.CreateParameter("@UpdatedDate", DateTime.UtcNow));
-                DataFactory.ExecuteNonQuery(cmd);
-                return true;
+                while (reader.Read())
+                {
+                    var item = new FoodMenuCategory();
+                    if (reader["Id"] != DBNull.Value)
+                        item.Id = Convert.ToString(reader["Id"])!;
+                    if (reader["Code"] != DBNull.Value)
+                        item.Code = Convert.ToString(reader["Code"])!;
+                    if (reader["Name"] != DBNull.Value)
+                        item.Name = Convert.ToString(reader["Name"])!;                    
+                    if (reader["IsActive"] != DBNull.Value)
+                        item.IsActive = Convert.ToBoolean(reader["IsActive"]);
+                    if (reader["IsDeleted"] != DBNull.Value)
+                        item.IsDeleted = Convert.ToBoolean(reader["IsDeleted"]);
+                    if (reader["CreatedBy"] != DBNull.Value)
+                        item.CreatedBy = Convert.ToInt32(reader["CreatedBy"]);
+                    if (reader["CreatedDate"] != DBNull.Value)
+                        item.CreatedDate = Convert.ToString(reader["CreatedDate"]);
+                    if (reader["UpdatedBy"] != DBNull.Value)
+                        item.UpdatedBy = Convert.ToInt32(reader["UpdatedBy"]);
+                    if (reader["UpdatedDate"] != DBNull.Value)
+                        item.UpdatedDate = Convert.ToString(reader["UpdatedDate"]);
+
+                    list.Add(item);
+                }
             }
             catch (SqlException)
             {
-                return false;
+                throw new Exception("Database error");
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                return false;
+                throw new Exception(ex.StackTrace);
             }
-            finally
-            {
-                if (conn != null && conn.State != ConnectionState.Closed) conn.Close();
-            }
+
+            return list;
         }
+        #endregion
     }
 }

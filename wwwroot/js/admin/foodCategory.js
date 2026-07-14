@@ -8,7 +8,6 @@ function closeFoodCategoryModal() {
 
 function openFoodCategoryModal() {
     clearFoodCategoryForm();
-    $('#modal-title').html('Create Food Category');
     $('#foodCategoryModal').removeClass('hidden');
 
     initCategoryField('#categoryCode', '#categoryCodeError');
@@ -205,13 +204,15 @@ function saveFoodCategory() {
 
     var categoryId = $('#categoryId').val();
     var category = {
-        Id: categoryId ? parseInt(categoryId) : 0,
+        Id: categoryId || "",
         Code: $('#categoryCode').val().trim(),
         Name: $('#categoryName').val().trim(),
         IsActive: true,
         IsDeleted: false,
-        CreatedBy: 0,
-        UpdatedBy: 0
+        CreatedBy: 1,
+        CreatedDate: '',
+        UpdatedBy: 1,
+        UpdatedDate: ''
     };
 
     var endpoint = category.Id ? '/Admin/FoodMenuCategories/update' : '/Admin/FoodMenuCategories/create';

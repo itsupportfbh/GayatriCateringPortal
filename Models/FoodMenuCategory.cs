@@ -12,7 +12,7 @@ namespace GayatriCateringPortal.Models
         public string IsDeleted { get; set; } = null!;
         public string? CreatedBy { get; set; }
         public string CreatedDate { get; set; } = null!;
-        public string? UpdatedBy { get; set; }
+        public int UpdatedBy { get; set; }
         public string? UpdatedDate { get; set; }
     }
 }

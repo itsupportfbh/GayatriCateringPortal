@@ -99,9 +99,80 @@ function clearUtensilForm() {
     $('#utType').val('');
     $('#utPrice').val('');
     $('#utDepAmt').val('0.00');
+
+    clearutensilError('#utName', '#utNameError');
+    clearutensilError('#utType', '#utTypeError');
+    clearutensilError('#utPrice', '#utPriceError');
+    clearutensilError('#utDepAmt', '#utDepAmtError');
+}
+
+function setUtensilError(inputSelector, errorSelector, message) {
+    $(inputSelector).addClass('input-error');
+    $(errorSelector).removeClass('hidden').text(message);
+}
+
+function clearutensilError(inputSelector, errorSelector) {
+    $(inputSelector).removeClass('input-error');
+    $(errorSelector).addClass('hidden').text('');
+}
+
+function initCategoryField(inputSelector, errorSelector) {
+    clearCategoryError(inputSelector, errorSelector);
+    var el = document.querySelector(inputSelector);
+    if (el) {
+        el.oninput = function () {
+            clearCategoryError(inputSelector, errorSelector);
+        };
+    }
+}
+
+function validateForm() {
+    clearutensilError('#utName', '#utNameError');
+    clearutensilError('#utType', '#utTypeError');
+    clearutensilError('#utPrice', '#utPriceError');
+    clearutensilError('#utDepAmt', '#utDepAmtError'); 
+
+    var code = $('#utName').val();
+    if (code) {
+        code = code.toString().trim();
+    } else {
+        code = '';
+    }
+
+    var name = $('#ItemName').val();
+    if (name) {
+        name = name.toString().trim();
+    } else {
+        name = '';
+    }
+
+    var firstInvalid = null;
+
+    if (!code) {
+        setUtensilError('#utName', '#utNameError', 'Name is required');
+        firstInvalid = '#utName';
+    }
+
+    if (!name) {
+        setUtensilError('#utType', '#utTypeError', 'Type is required');
+        if (!firstInvalid) {
+            firstInvalid = '#utType';
+        }
+    }
+
+    if (firstInvalid) {
+        $(firstInvalid).focus();
+        return false;
+    }
+
+    return true;
 }
 
 function saveutensil() {
+    if (!validateForm()) {
+        return;
+    }
+
     var menu = {
         Id: $('#utensilId').val() || '',
         UtensilName: $('#utName').val() || '',
