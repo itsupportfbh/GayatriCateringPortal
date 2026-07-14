@@ -4,10 +4,9 @@ namespace GayatriCateringPortal.Models
 {
     public class CommunicationLog
     {
-        public string Id { get; set; } = null!;
-        public string? Code { get; set; }
+        public int Id { get; set; }
         public string? Channel { get; set; }
-        public string? ToEmail { get; set; }
+        public string? ToAddress { get; set; }
         public string? Message { get; set; }
         public string? IsActive { get; set; }
         public string? IsDeleted { get; set; }

@@ -1,4 +1,5 @@
 using GayatriCateringPortal.Interfaces;
+using GayatriCateringPortal.Models;
 using Microsoft.AspNetCore.Mvc;
 namespace GayatriCateringPortal.Controllers.Admin
 {
@@ -15,7 +16,7 @@ namespace GayatriCateringPortal.Controllers.Admin
         [HttpGet("")]
         public IActionResult Index()
         {
-            var settings = _repo.GetSettings();
+            var settings = _repo.GetAll();
             ViewData["Settings"] = settings;
             ViewData["Mode"] = "admin";
             ViewData["Page"] = "settings";
@@ -23,12 +24,53 @@ namespace GayatriCateringPortal.Controllers.Admin
             return View("~/Views/Admin/Settings.cshtml");
         }
 
-        [HttpPost("save")]
-        public IActionResult Save([FromBody] object settings)
+        [HttpGet("get")]
+        public IActionResult GetAll()
         {
-            if (settings == null) return BadRequest();
-            bool result = _repo.Update(settings);
-            return Ok(new { success = result });
+            var items = _repo.GetAll();
+            return Ok(items);
+        }
+
+        [HttpPost("create")]
+        public IActionResult Create([FromBody] Organization item)
+        {
+            if (!ModelState.IsValid)
+            {
+                var errors = string.Join("; ", ModelState.Values
+                .SelectMany(x => x.Errors)
+                .Select(x => x.ErrorMessage));
+            }
+
+            if (item == null) return BadRequest();
+            int newId = _repo.Create(item);
+
+            if (newId == -1)
+            {
+                return Ok(new { success = false, message = "Organization already exists" });
+            }
+
+            return Ok(new { success = newId > 0, id = newId });
+        }
+
+        [HttpPost("update")]
+        public IActionResult Update([FromBody] Organization item)
+        {
+            if (!ModelState.IsValid)
+            {
+                var errors = string.Join("; ", ModelState.Values
+                .SelectMany(x => x.Errors)
+                .Select(x => x.ErrorMessage));
+            }
+
+            if (item == null) return BadRequest();
+            int result = _repo.Update(item);
+
+            if (result == -1)
+            {
+                return Ok(new { success = false, message = "Organization already exists" });
+            }
+
+            return Ok(new { success = result > 0 });
         }
     }
 }

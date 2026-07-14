@@ -37,7 +37,7 @@
     <div class="table-wrap">
         <table class="tbl" id="usersList" data-page-size="10">
             <thead>
-                <tr><th class="sortable">#</th><th class="sortable">Code</th><th class="sortable">Name</th><th class="sortable">Email</th><th class="sortable">Contact</th><th class="sortable">Admin</th><th class="sortable">Status</th><th class="no-sort">Actions</th></tr>
+                <tr><th class="sortable">#</th><th class="sortable">Image</th><th class="sortable">Code</th><th class="sortable">Name</th><th class="sortable">Email</th><th class="sortable">Contact</th><th class="sortable">Admin</th><th class="sortable">Status</th><th class="no-sort">Actions</th></tr>
             </thead>
             <tbody>
             </tbody>
@@ -147,8 +147,11 @@
                 <label>Image Upload</label>
                 <input type="file" id="userImageFile" class="form-control" accept="image/*" />
                 <input type="hidden" id="userImage" />
-                <div style="margin-top:8px;">
+                <div class="user-image-preview-row">
                     <img id="userImagePreview" class="hidden" alt="User image preview" style="max-height: 80px; border-radius: 8px; border: 1px solid var(--gray-200);" />
+                    <div class="user-image-actions">
+                        <button type="button" id="btnViewUserImage" class="btn btn-outline hidden" onclick="viewCurrentUserImage()">View Image</button>
+                    </div>
                 </div>
             </div>
 
