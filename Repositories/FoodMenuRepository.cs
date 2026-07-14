@@ -43,6 +43,21 @@ namespace GayatriCateringPortal.Repositories
             }
         }
 
+        public List<FoodMenu> GetByCategoryId(int categoryId)
+        {
+            var list = new List<FoodMenu>();
+            if (categoryId <= 0) return list;
+
+            using var conn = DataFactory.CreateConnection();
+            conn.Open();
+            using var cmd = DataFactory.CreateCommand(
+                "SELECT Id, Code, Name, CategoryId, Price, PreparationTime, FoodType, Servicecharge, IsActive, IsDeleted, CreatedBy, CreatedDate, UpdatedBy, UpdatedDate " +
+                "FROM FoodMenu WHERE CategoryId = @CategoryId AND IsActive = 1 AND IsDeleted = 0 ORDER BY Name", conn);
+            cmd.Parameters.Add(DataFactory.CreateParameter("@CategoryId", categoryId));
+            using var reader = DataFactory.ExecuteReader(cmd);
+            return List(reader);
+        }
+
         public FoodMenu? GetById(int id)
         {
             IDbConnection? conn = null;

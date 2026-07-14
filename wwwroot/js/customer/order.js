@@ -66,10 +66,16 @@ $(function () {
     }
 
     var includedChoices = [];
+    var includedChoiceSelections = {};
     var packageCategoriesLoading = false;
 
     var extraRows = [];
+    var extraGroups = [];
+    var additionalMenusLoading = false;
+    var additionalMenusLoaded = false;
     var addonRows = [];
+    var addOnsLoading = false;
+    var addOnsLoaded = false;
     var utensilRows = [];
 
     function money(value) {
@@ -86,13 +92,13 @@ $(function () {
 
     function extraTotal() {
         return extraRows.reduce(function (sum, row) {
-            return sum + ((state.extraItems[row.dish] || 0) * row.price);
+            return sum + ((state.extraItems[row.key] || 0) * row.price);
         }, 0);
     }
 
     function addonTotal() {
         return addonRows.reduce(function (sum, row) {
-            return sum + ((state.addons[row.name] || 0) * row.price);
+            return sum + ((state.addons[row.key] || 0) * row.price);
         }, 0);
     }
 
@@ -196,9 +202,18 @@ $(function () {
 
     function renderChoiceBlock(category) {
         var requiredQuantity = Number(category.requiredQuantity) || 1;
+        var categoryId = String(category.categoryId);
+        var selections = includedChoiceSelections[categoryId] || [];
+        var options = (category.menus || []).map(function (menu) {
+            return '<option value="' + menu.id + '">' + escapeHtml(menu.name) + '</option>';
+        }).join('');
+
         return '<div class="choice-block"><div class="choice-header"><div class="choice-title">' + escapeHtml(category.categoryName) + '</div><div class="choice-title">Required: choose ' + requiredQuantity + '</div></div>' +
             Array.from({ length: requiredQuantity }, function (_, index) {
-                return '<div class="form-group"><label>Choice ' + (index + 1) + '</label><select disabled><option selected>Menu binding pending</option></select></div>';
+                var selectedId = selections[index] || '';
+                var selectedOptions = options.replace('value="' + selectedId + '"', 'value="' + selectedId + '" selected');
+                var placeholder = category.menusLoading ? 'Loading menus...' : (category.menus || []).length ? 'Select menu' : 'No menus available';
+                return '<div class="form-group"><label>Choice ' + (index + 1) + '</label><select class="included-menu-select" data-category-id="' + categoryId + '" data-choice-index="' + index + '"' + ((category.menus || []).length ? '' : ' disabled') + '><option value="">' + placeholder + '</option>' + selectedOptions + '</select></div>';
             }).join('') + '</div>';
     }
 
@@ -226,7 +241,9 @@ $(function () {
             return {
                 categoryId: category.categoryId ?? category.CategoryId ?? 0,
                 categoryName: category.categoryName ?? category.CategoryName ?? '',
-                requiredQuantity: Number(category.requiredQuantity ?? category.RequiredQuantity ?? 1) || 1
+                requiredQuantity: Number(category.requiredQuantity ?? category.RequiredQuantity ?? 1) || 1,
+                menus: [],
+                menusLoading: true
             };
         }).filter(function (category) {
             return category.categoryId && category.categoryName;
@@ -234,6 +251,32 @@ $(function () {
 
         packageCategoriesLoading = false;
         renderStep();
+        includedChoices.forEach(loadCategoryMenus);
+    }
+
+    function loadCategoryMenus(category) {
+        $.ajax({
+            url: '/Customer/Packages/categories/' + encodeURIComponent(category.categoryId) + '/menus',
+            type: 'GET',
+            success: function (rows) {
+                category.menus = (Array.isArray(rows) ? rows : []).map(function (menu) {
+                    return {
+                        id: String(menu.id ?? menu.Id ?? ''),
+                        name: menu.name ?? menu.Name ?? ''
+                    };
+                }).filter(function (menu) {
+                    return menu.id && menu.name;
+                });
+            },
+            error: function (xhr) {
+                category.menus = [];
+                showToast(xhr.responseJSON?.message || 'Unable to load menus for ' + category.categoryName + '.', 3000, { type: 'error', title: 'Menu load failed' });
+            },
+            complete: function () {
+                category.menusLoading = false;
+                renderStep();
+            }
+        });
     }
 
     function renderPackageCard(pkg) {
@@ -248,33 +291,112 @@ $(function () {
     }
 
     function renderStep2() {
+        if (!additionalMenusLoaded && !additionalMenusLoading) {
+            loadAdditionalMenus();
+        }
         var html = '<div class="card order-card"><div class="section-label">Step 2 - Additional Menu Items + Qty</div><div class="muted" style="font-size:13px;margin-bottom:16px">This tab is only for extra items the customer wants in addition to the selected package. Only this tab shows item prices because these are additional chargeable items outside the package.</div>' + renderExtraTable() + '</div>';
         $('#orderStepContent').html(html);
     }
 
     function renderExtraTable() {
-        var rows = extraRows.map(function (row) {
-            var qty = state.extraItems[row.dish] || 0;
-            var selected = qty > 0;
-            return '<tr class="' + (selected ? 'selected-row' : '') + '">' +
-                '<td><input type="checkbox" class="extra-check" data-dish="' + row.dish + '"' + (selected ? ' checked' : '') + '></td>' +
-                '<td><strong>' + row.dish + '</strong><div class="muted">' + row.code + '</div></td>' +
-                '<td>' + row.type + '</td>' +
-                '<td class="price-cell">' + money(row.price) + '</td>' +
-                '<td><input class="qty-input extra-qty" data-dish="' + row.dish + '" type="number" min="0" value="' + qty + '"></td>' +
-                '<td>' + row.unit + '</td>' +
-                '<td class="amount-cell">' + money(qty * row.price) + '</td></tr>';
+        if (additionalMenusLoading) return '<div class="muted">Loading additional menu items...</div>';
+        if (!extraGroups.length) return '<div class="data-table-card"><div class="muted" style="padding:18px">No additional items available.</div></div>';
+
+        return extraGroups.map(function (group) {
+            var selectedCount = group.items.filter(function (row) { return (state.extraItems[row.key] || 0) > 0; }).length;
+            var rows = group.items.map(function (row) {
+                var qty = state.extraItems[row.key] || 0;
+                var selected = qty > 0;
+                return '<tr class="' + (selected ? 'selected-row' : '') + '">' +
+                    '<td><input type="checkbox" class="extra-check" data-item-id="' + row.key + '"' + (selected ? ' checked' : '') + '></td>' +
+                    '<td><strong>' + escapeHtml(row.dish) + '</strong><div class="muted">' + escapeHtml(row.code) + '</div></td>' +
+                    '<td>' + escapeHtml(row.type) + '</td>' +
+                    '<td class="price-cell">' + money(row.price) + '</td>' +
+                    '<td><input class="qty-input extra-qty" data-item-id="' + row.key + '" type="number" min="0" value="' + qty + '"></td>' +
+                    '<td>' + escapeHtml(row.unit) + '</td>' +
+                    '<td class="amount-cell">' + money(qty * row.price) + '</td></tr>';
+            }).join('');
+            return '<div class="data-table-card" style="margin-bottom:18px"><div class="mini-head"><div><div class="mini-head-title">' + escapeHtml(group.name) + '</div><div class="muted">Optional extra items. Selected: ' + selectedCount + '</div></div><span class="badge badge-quotation">Additional</span></div><table class="item-table"><thead><tr><th>Select</th><th>Dish</th><th>Type</th><th>Guide Price</th><th>Qty</th><th>Unit</th><th>Amount</th></tr></thead><tbody>' + rows + '</tbody></table></div>';
         }).join('');
-        return '<div class="data-table-card"><div class="mini-head"><div><div class="mini-head-title">Additional Items</div><div class="muted">Optional extra items. Selected: ' + Object.keys(state.extraItems).length + '</div></div><span class="badge badge-quotation">Additional</span></div><table class="item-table"><thead><tr><th>Select</th><th>Dish</th><th>Type</th><th>Guide Price</th><th>Qty</th><th>Unit</th><th>Amount</th></tr></thead><tbody>' + (rows || '<tr><td colspan="7" class="muted">No additional items available.</td></tr>') + '</tbody></table></div>';
+    }
+
+    function loadAdditionalMenus() {
+        additionalMenusLoading = true;
+        $.ajax({
+            url: '/Customer/Packages/additional-menus',
+            type: 'GET',
+            success: function (rows) {
+                extraGroups = (Array.isArray(rows) ? rows : []).map(function (group) {
+                    var items = group.items ?? group.Items ?? [];
+                    return {
+                        name: group.categoryName ?? group.CategoryName ?? 'Menu Items',
+                        items: items.map(function (item) {
+                            return {
+                                key: String(item.id ?? item.Id ?? ''),
+                                code: item.code ?? item.Code ?? '',
+                                dish: item.name ?? item.Name ?? '',
+                                type: item.foodType ?? item.FoodType ?? '',
+                                price: Number(item.price ?? item.Price ?? 0),
+                                unit: item.unit ?? item.Unit ?? 'item'
+                            };
+                        })
+                    };
+                });
+                extraRows = extraGroups.reduce(function (rows, group) { return rows.concat(group.items); }, []);
+            },
+            error: function (xhr) {
+                extraGroups = [];
+                extraRows = [];
+                showToast(xhr.responseJSON?.message || 'Unable to load additional menu items.', 3000, { type: 'error', title: 'Load failed' });
+            },
+            complete: function () {
+                additionalMenusLoading = false;
+                additionalMenusLoaded = true;
+                if (currentStep === 2) renderStep();
+            }
+        });
     }
 
     function renderStep3() {
+        if (!addOnsLoaded && !addOnsLoading) {
+            loadAddOns();
+        }
         var html = '<div class="card order-card"><div class="section-label">Step 3 - Add-ons / Live Counters / Service</div><div class="muted" style="font-size:13px;margin-bottom:16px">Select optional items. Quantity is enabled for station/service based items.</div><div class="data-table-card"><table class="item-table"><thead><tr><th>Select</th><th>Add-on</th><th>Unit</th><th>Price</th><th>Qty</th><th>Amount</th></tr></thead><tbody>' +
             addonRows.map(function (row) {
-                var qty = state.addons[row.name] || 0;
-                return '<tr class="' + (qty > 0 ? 'selected-row' : '') + '"><td><input type="checkbox" class="addon-check" data-name="' + row.name + '"' + (qty > 0 ? ' checked' : '') + '></td><td><strong>' + row.name + '</strong></td><td>' + row.unit + '</td><td class="price-cell">' + (row.unit === 'pax' ? money(row.price) + '/pax' : money(row.price)) + '</td><td><input class="qty-input addon-qty" data-name="' + row.name + '" type="number" min="0" value="' + qty + '"></td><td class="amount-cell">' + money(qty * row.price) + '</td></tr>';
-            }).join('') + (addonRows.length ? '' : '<tr><td colspan="6" class="muted">No add-ons available.</td></tr>') + '</tbody></table></div></div>';
+                var qty = state.addons[row.key] || 0;
+                return '<tr class="' + (qty > 0 ? 'selected-row' : '') + '"><td><input type="checkbox" class="addon-check" data-addon-id="' + row.key + '"' + (qty > 0 ? ' checked' : '') + '></td><td><strong>' + escapeHtml(row.name) + '</strong><div class="muted">' + escapeHtml(row.code) + '</div></td><td>' + escapeHtml(row.unit) + '</td><td class="price-cell">' + (row.unit.toLowerCase() === 'pax' ? money(row.price) + '/pax' : money(row.price)) + '</td><td><input class="qty-input addon-qty" data-addon-id="' + row.key + '" type="number" min="0" value="' + qty + '"></td><td class="amount-cell">' + money(qty * row.price) + '</td></tr>';
+            }).join('') + (addonRows.length ? '' : '<tr><td colspan="6" class="muted">' + (addOnsLoading ? 'Loading add-ons...' : 'No add-ons available.') + '</td></tr>') + '</tbody></table></div></div>';
         $('#orderStepContent').html(html);
+    }
+
+    function loadAddOns() {
+        addOnsLoading = true;
+        $.ajax({
+            url: '/Customer/Order/addons',
+            type: 'GET',
+            success: function (rows) {
+                addonRows = (Array.isArray(rows) ? rows : []).map(function (item) {
+                    return {
+                        key: String(item.id ?? item.Id ?? ''),
+                        code: item.code ?? item.Code ?? '',
+                        name: item.addOnName ?? item.AddOnName ?? '',
+                        unit: item.unitType ?? item.UnitType ?? 'item',
+                        price: Number(item.rate ?? item.Rate ?? 0)
+                    };
+                }).filter(function (item) {
+                    return item.key && item.name;
+                });
+            },
+            error: function (xhr) {
+                addonRows = [];
+                showToast(xhr.responseJSON?.message || 'Unable to load add-ons.', 3000, { type: 'error', title: 'Load failed' });
+            },
+            complete: function () {
+                addOnsLoading = false;
+                addOnsLoaded = true;
+                if (currentStep === 3) renderStep();
+            }
+        });
     }
 
     function renderStep4() {
@@ -408,6 +530,7 @@ $(function () {
         state.addons = {};
         state.utensils = {};
         includedChoices = [];
+        includedChoiceSelections = {};
         renderStep();
     });
 
@@ -458,40 +581,48 @@ $(function () {
         state.pax = pkg.min;
         state.step1View = 'form';
         currentStep = 1;
+        includedChoiceSelections = {};
         loadPackageCategories(pkg.id);
     }
 
+    $(document).on('change', '.included-menu-select', function () {
+        var categoryId = String($(this).data('category-id'));
+        var choiceIndex = Number($(this).data('choice-index'));
+        includedChoiceSelections[categoryId] = includedChoiceSelections[categoryId] || [];
+        includedChoiceSelections[categoryId][choiceIndex] = String($(this).val() || '');
+    });
+
     $(document).on('change', '.extra-check', function () {
-        var dish = $(this).data('dish');
+        var itemId = String($(this).data('item-id'));
         if ($(this).is(':checked')) {
-            state.extraItems[dish] = state.extraItems[dish] || 1;
+            state.extraItems[itemId] = state.extraItems[itemId] || 1;
         } else {
-            delete state.extraItems[dish];
+            delete state.extraItems[itemId];
         }
         renderStep();
     });
 
     $(document).on('change', '.extra-qty', function () {
-        var dish = $(this).data('dish');
+        var itemId = String($(this).data('item-id'));
         var qty = parseInt($(this).val(), 10) || 0;
-        if (qty > 0) state.extraItems[dish] = qty; else delete state.extraItems[dish];
+        if (qty > 0) state.extraItems[itemId] = qty; else delete state.extraItems[itemId];
         renderStep();
     });
 
     $(document).on('change', '.addon-check', function () {
-        var name = $(this).data('name');
+        var addonId = String($(this).data('addon-id'));
         if ($(this).is(':checked')) {
-            state.addons[name] = state.addons[name] || 1;
+            state.addons[addonId] = state.addons[addonId] || 1;
         } else {
-            delete state.addons[name];
+            delete state.addons[addonId];
         }
         renderStep();
     });
 
     $(document).on('change', '.addon-qty', function () {
-        var name = $(this).data('name');
+        var addonId = String($(this).data('addon-id'));
         var qty = parseInt($(this).val(), 10) || 0;
-        if (qty > 0) state.addons[name] = qty; else delete state.addons[name];
+        if (qty > 0) state.addons[addonId] = qty; else delete state.addons[addonId];
         renderStep();
     });
 
