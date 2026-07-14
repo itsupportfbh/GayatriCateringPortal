@@ -7,6 +7,7 @@ namespace GayatriCateringPortal.Models
         public string Id { get; set; } = null!;
         public string Code { get; set; } = null!;
         public string Name { get; set; } = null!;
+        public int MaxChoice { get; set; }
         public string IsActive { get; set; } = null!;
         public string IsDeleted { get; set; } = null!;
         public string? CreatedBy { get; set; }

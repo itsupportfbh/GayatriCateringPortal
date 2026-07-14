@@ -136,71 +136,34 @@ public class FreebiesRepository : IFreebiesRepository
         Validate(item);
 
         if (item.Id <= 0)
-            throw new ArgumentException(
-                "Valid Id is required.");
+            throw new ArgumentException( "Valid Id is required.");
 
         try
         {
-            using IDbConnection conn =
-                DataFactory.CreateConnection();
+            using IDbConnection conn = DataFactory.CreateConnection();
 
             conn.Open();
 
-            EnsureNameAvailable(
-                conn,
-                item.Name,
-                item.Id);
+            EnsureNameAvailable( conn,item.Name,  item.Id);
 
-            EnsureDisplayOrderAvailable(
-                conn,
-                item.DisplayOrder,
-                item.Id);
+            EnsureDisplayOrderAvailable( conn,item.DisplayOrder,item.Id);
 
-            using IDbCommand cmd =
-                DataFactory.CreateCommand(
-                    "[dbo].[SP_UpdatePopularFreebieMaster]",
-                    conn);
+            using IDbCommand cmd = DataFactory.CreateCommand("[dbo].[SP_UpdatePopularFreebieMaster]", conn);
 
-            ((SqlCommand)cmd).CommandType =
-                CommandType.StoredProcedure;
+            ((SqlCommand)cmd).CommandType = CommandType.StoredProcedure;
 
-            cmd.Parameters.Add(
-                DataFactory.CreateParameter(
-                    "@Id",
-                    item.Id));
+            cmd.Parameters.Add( DataFactory.CreateParameter( "@Id", item.Id));
 
             AddSaveParameters(cmd, item, includeLegacyCreateParameters: false);
 
-            cmd.Parameters.Add(
-                DataFactory.CreateParameter(
-                    "@CreatedBy",
-                    item.CreatedBy ??
-                    (object)DBNull.Value));
+            cmd.Parameters.Add( DataFactory.CreateParameter("@CreatedBy", item.CreatedBy ?? (object)DBNull.Value));
+            cmd.Parameters.Add( DataFactory.CreateParameter("@CreatedDate", item.CreatedDate == default? (object)DBNull.Value : item.CreatedDate));
+            cmd.Parameters.Add( DataFactory.CreateParameter("@UpdatedBy",item.UpdatedBy ??(object)DBNull.Value));
+            cmd.Parameters.Add( DataFactory.CreateParameter("@UpdatedDate", DateTime.Now));
 
-            cmd.Parameters.Add(
-                DataFactory.CreateParameter(
-                    "@CreatedDate",
-                    item.CreatedDate == default
-                        ? (object)DBNull.Value
-                        : item.CreatedDate));
+            var result = DataFactory.ExecuteScalar(cmd);
 
-            cmd.Parameters.Add(
-                DataFactory.CreateParameter(
-                    "@UpdatedBy",
-                    item.UpdatedBy ??
-                    (object)DBNull.Value));
-
-            cmd.Parameters.Add(
-                DataFactory.CreateParameter(
-                    "@UpdatedDate",
-                    DateTime.Now));
-
-            var result =
-                DataFactory.ExecuteScalar(cmd);
-
-            return result != null &&
-                   result != DBNull.Value &&
-                   Convert.ToInt32(result) > 0;
+            return result != null && result != DBNull.Value && Convert.ToInt32(result) > 0;
         }
         catch (SqlException ex)
         {
@@ -218,30 +181,19 @@ public class FreebiesRepository : IFreebiesRepository
     {
         try
         {
-            using IDbConnection conn =
-                DataFactory.CreateConnection();
+            using IDbConnection conn =DataFactory.CreateConnection();
 
             conn.Open();
 
-            using IDbCommand cmd =
-                DataFactory.CreateCommand(
-                    "[dbo].[DeletePopularFreebieMasterById]",
-                    conn);
+            using IDbCommand cmd = DataFactory.CreateCommand("[dbo].[DeletePopularFreebieMasterById]", conn);
 
-            ((SqlCommand)cmd).CommandType =
-                CommandType.StoredProcedure;
+            ((SqlCommand)cmd).CommandType =CommandType.StoredProcedure;
 
-            cmd.Parameters.Add(
-                DataFactory.CreateParameter(
-                    "@Id",
-                    id));
+            cmd.Parameters.Add(DataFactory.CreateParameter( "@Id",id));
 
-            var result =
-                DataFactory.ExecuteScalar(cmd);
+            var result =DataFactory.ExecuteScalar(cmd);
 
-            return result != null &&
-                   result != DBNull.Value &&
-                   Convert.ToInt32(result) > 0;
+            return result != null && result != DBNull.Value &&  Convert.ToInt32(result) > 0;
         }
         catch (SqlException ex)
         {
@@ -261,35 +213,17 @@ public class FreebiesRepository : IFreebiesRepository
     {
         try
         {
-            using IDbConnection conn =
-                DataFactory.CreateConnection();
+            using IDbConnection conn =DataFactory.CreateConnection();
 
             conn.Open();
 
-            using IDbCommand cmd =
-                DataFactory.CreateCommand(
-                    "[dbo].[ActiveInActivePopularFreebieMasterById]",
-                    conn);
+            using IDbCommand cmd = DataFactory.CreateCommand("[dbo].[ActiveInActivePopularFreebieMasterById]", conn);
 
-            ((SqlCommand)cmd).CommandType =
-                CommandType.StoredProcedure;
-
-            cmd.Parameters.Add(
-                DataFactory.CreateParameter(
-                    "@Id",
-                    id));
-
-            cmd.Parameters.Add(
-                DataFactory.CreateParameter(
-                    "@IsActive",
-                    status));
-
-            var result =
-                DataFactory.ExecuteScalar(cmd);
-
-            return result != null &&
-                   result != DBNull.Value &&
-                   Convert.ToInt32(result) > 0;
+            ((SqlCommand)cmd).CommandType =CommandType.StoredProcedure;
+            cmd.Parameters.Add(DataFactory.CreateParameter("@Id",id));
+            cmd.Parameters.Add( DataFactory.CreateParameter("@IsActive", status));
+            var result =DataFactory.ExecuteScalar(cmd);
+            return result != null &&result != DBNull.Value && Convert.ToInt32(result) > 0;
         }
         catch (SqlException ex)
         {
@@ -343,28 +277,17 @@ public class FreebiesRepository : IFreebiesRepository
             DataFactory.CreateCommand(
                 @"SELECT COUNT(1)
                       FROM dbo.PopularFreebieMaster
-                      WHERE LTRIM(RTRIM(Name))
-                            =
-                            LTRIM(RTRIM(@Name))
+                      WHERE LTRIM(RTRIM(Name)) 
+                        =  LTRIM(RTRIM(@Name))
 
                         AND Id <> @CurrentId
 
                         AND ISNULL(IsDeleted, 0) = 0",
                 conn);
 
-        cmd.Parameters.Add(
-            DataFactory.CreateParameter(
-                "@Name",
-                name.Trim()));
-
-        cmd.Parameters.Add(
-            DataFactory.CreateParameter(
-                "@CurrentId",
-                currentId));
-
-        int count =
-            Convert.ToInt32(
-                DataFactory.ExecuteScalar(cmd));
+        cmd.Parameters.Add( DataFactory.CreateParameter("@Name", name.Trim()));
+        cmd.Parameters.Add( DataFactory.CreateParameter("@CurrentId", currentId));
+        int count = Convert.ToInt32(DataFactory.ExecuteScalar(cmd));
 
         if (count > 0)
         {
@@ -390,19 +313,9 @@ public class FreebiesRepository : IFreebiesRepository
                         AND ISNULL(IsDeleted, 0) = 0",
                 conn);
 
-        cmd.Parameters.Add(
-            DataFactory.CreateParameter(
-                "@DisplayOrder",
-                displayOrder));
-
-        cmd.Parameters.Add(
-            DataFactory.CreateParameter(
-                "@CurrentId",
-                currentId));
-
-        int count =
-            Convert.ToInt32(
-                DataFactory.ExecuteScalar(cmd));
+        cmd.Parameters.Add(DataFactory.CreateParameter("@DisplayOrder",  displayOrder));
+        cmd.Parameters.Add(DataFactory.CreateParameter("@CurrentId",currentId));
+        int count =Convert.ToInt32(    DataFactory.ExecuteScalar(cmd));
 
         if (count > 0)
         {
@@ -417,68 +330,17 @@ public class FreebiesRepository : IFreebiesRepository
         PopularFreebieMaster item,
         bool includeLegacyCreateParameters)
     {
-        cmd.Parameters.Add(
-            DataFactory.CreateParameter(
-                "@Name",
-                item.Name));
-
-        cmd.Parameters.Add(
-            DataFactory.CreateParameter(
-                "@PackageId",
-                item.PackageId ??
-                (object)DBNull.Value));
-
-        cmd.Parameters.Add(
-            DataFactory.CreateParameter(
-                "@MinPax",
-                item.MinPax ??
-                (object)DBNull.Value));
-               
-
-        cmd.Parameters.Add(
-            DataFactory.CreateParameter(
-                "@FreeQty",
-                item.FreeQty ??
-                (object)DBNull.Value));
-
-        cmd.Parameters.Add(
-            DataFactory.CreateParameter(
-                "@LocationId",
-                item.LocationId ??
-                (object)DBNull.Value));
-
-        cmd.Parameters.Add(
-            DataFactory.CreateParameter(
-                "@DisplayOrder",
-                item.DisplayOrder));
-
-        cmd.Parameters.Add(
-            DataFactory.CreateParameter(
-                "@IsActive",
-                item.IsActive));
-
-        cmd.Parameters.Add(
-            DataFactory.CreateParameter(
-                "@ValidFrom",
-                item.ValidFrom ??
-                (object)DBNull.Value));
-
-        cmd.Parameters.Add(
-            DataFactory.CreateParameter(
-                "@ValidTo",
-                item.ValidTo ??
-                (object)DBNull.Value));
-
-        cmd.Parameters.Add(
-            DataFactory.CreateParameter(
-                "@Remarks",
-                item.Remarks ??
-                (object)DBNull.Value));
-
-        cmd.Parameters.Add(
-            DataFactory.CreateParameter(
-                "@IsDeleted",
-                item.IsDeleted));
+        cmd.Parameters.Add(DataFactory.CreateParameter("@Name", item.Name));
+        cmd.Parameters.Add(DataFactory.CreateParameter("@PackageId", item.PackageId ??(object)DBNull.Value));
+        cmd.Parameters.Add(DataFactory.CreateParameter("@MinPax", item.MinPax ?? (object)DBNull.Value));             
+        cmd.Parameters.Add(DataFactory.CreateParameter("@FreeQty",item.FreeQty ??(object)DBNull.Value));
+        cmd.Parameters.Add(DataFactory.CreateParameter("@LocationId",item.LocationId ??(object)DBNull.Value));
+        cmd.Parameters.Add(DataFactory.CreateParameter("@DisplayOrder",item.DisplayOrder));
+        cmd.Parameters.Add(DataFactory.CreateParameter("@IsActive",item.IsActive));
+        cmd.Parameters.Add(DataFactory.CreateParameter("@ValidFrom", item.ValidFrom ?? (object)DBNull.Value));
+        cmd.Parameters.Add(DataFactory.CreateParameter("@ValidTo",item.ValidTo ?? (object)DBNull.Value));
+        cmd.Parameters.Add(DataFactory.CreateParameter("@Remarks",item.Remarks ?? (object)DBNull.Value));
+        cmd.Parameters.Add(DataFactory.CreateParameter("@IsDeleted", item.IsDeleted));
     }
 
 
