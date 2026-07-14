@@ -65,24 +65,24 @@ namespace GayatriCateringPortal.Controllers.Customer
                     .Select(item => item.CategoryId.ToString())
                     .ToHashSet(StringComparer.OrdinalIgnoreCase);
 
-                var categoriesById = _categories.GetAll()
-                    .Where(category => categoryIds.Contains(category.Id)
-                        && IsEnabled(category.IsActive)
-                        && !IsEnabled(category.IsDeleted))
-                    .GroupBy(category => category.Id, StringComparer.OrdinalIgnoreCase)
-                    .ToDictionary(group => group.Key, group => group.First(), StringComparer.OrdinalIgnoreCase);
+                //var categoriesById = _categories.GetAll()
+                //    .Where(category => categoryIds.Contains(category.Id)
+                //        && IsEnabled(category.IsActive)
+                //        && !IsEnabled(category.IsDeleted))
+                //    .GroupBy(category => category.Id, StringComparer.OrdinalIgnoreCase)
+                //    .ToDictionary(group => group.Key, group => group.First(), StringComparer.OrdinalIgnoreCase);
 
-                var result = packageItems
-                    .Where(item => categoriesById.ContainsKey(item.CategoryId.ToString()))
-                    .Select(item => new
-                    {
-                        categoryId = item.CategoryId,
-                        categoryName = categoriesById[item.CategoryId.ToString()].Name,
-                        requiredQuantity = Math.Max(categoriesById[item.CategoryId.ToString()].MaxChoice, 1)
-                    })
-                    .ToList();
+                //var result = packageItems
+                //    .Where(item => categoriesById.ContainsKey(item.CategoryId.ToString()))
+                //    .Select(item => new
+                //    {
+                //        categoryId = item.CategoryId,
+                //        categoryName = categoriesById[item.CategoryId.ToString()].Name,
+                //        requiredQuantity = Math.Max(categoriesById[item.CategoryId.ToString()].MaxChoice, 1)
+                //    })
+                //    .ToList();
 
-                return Ok(result);
+                return Ok("");
             }
             catch (Exception ex)
             {
