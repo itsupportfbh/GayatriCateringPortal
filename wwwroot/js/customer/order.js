@@ -12,15 +12,15 @@ $(function () {
         addons: {},
         utensils: {},
         details: {
-            company: 'ddg',
-            contact: 'dfdfd',
-            email: 'fdfd',
-            mobile: 'fdfdf',
-            eventDate: '2026-06-30',
-            mealPeriod: 'Lunch',
-            postal: 'fdghh',
-            location: 'fdsghj',
-            notes: 'rs'
+            company: '',
+            contact: '',
+            email: '',
+            mobile: '',
+            eventDate: '',
+            mealPeriod: '',
+            postal: '',
+            location: '',
+            notes: ''
         }
     };
 
@@ -35,72 +35,42 @@ $(function () {
             url: '/Customer/Packages/get',
             type: 'GET',
             success: function (rows) {
-                packages = (Array.isArray(rows) ? rows : [])
-                    .filter(function (item) {
-                        var isActive = item.isActive ?? item.IsActive ?? false;
-                        var isDeleted = item.isDeleted ?? item.IsDeleted ?? false;
-                        return isActive && !isDeleted;
-                    })
-                    .map(function (item) {
-                        return {
-                            id: String(item.id ?? item.Id ?? ''),
-                            name: item.name ?? item.Name ?? 'Package',
-                            price: Number(item.price ?? item.Price ?? 0),
-                            min: Number(item.minPersons ?? item.MinPersons ?? 0),
-                            desc: item.description ?? item.Description ?? ''
-                        };
-                    })
-                    .filter(function (item) { return item.id !== ''; });
-
-                renderStep();
+                renderOrderPackages(rows || []);
             },
-            error: function (xhr) {
-                packages = [];
-                renderStep();
-                showToast(
-                    xhr.responseJSON?.message || 'Unable to load packages.',
-                    3000,
-                    { type: 'error', title: 'Package load failed' }
-                );
+            error: function () {
+                renderOrderPackages([]);
+                showToast('Unable to load packages.', 3000, { type: 'error', title: 'Package load failed' });
             }
         });
+    }
+
+    function renderOrderPackages(rows) {
+        rows = Array.isArray(rows) ? rows : [];
+        packages = rows.filter(function (item) {
+            var isActive = item.isActive ?? item.IsActive ?? false;
+            var isDeleted = item.isDeleted ?? item.IsDeleted ?? false;
+            return isActive && !isDeleted;
+        }).map(function (item) {
+            return {
+                id: String(item.id ?? item.Id ?? ''),
+                name: item.name ?? item.Name ?? 'Package',
+                price: Number(item.price ?? item.Price ?? 0),
+                min: Number(item.minPersons ?? item.MinPersons ?? 0),
+                desc: item.description ?? item.Description ?? ''
+            };
+        }).filter(function (item) {
+            return item.id !== '';
+        });
+
+        renderStep();
     }
 
     var includedChoices = [];
     var packageCategoriesLoading = false;
 
-    var extraRows = [
-        { category: 'Starters', code: 'S001', dish: 'Vegetable Samosa', type: 'Veg', price: 1.80, unit: 'tray' },
-        { category: 'Starters', code: 'S002', dish: 'Paneer Tikka', type: 'Veg', price: 4.20, unit: 'tray' },
-        { category: 'Starters', code: 'S003', dish: 'Gobi Manchurian', type: 'Veg', price: 3.50, unit: 'tray' },
-        { category: 'Starters', code: 'S004', dish: 'Masala Vadai', type: 'Veg', price: 1.50, unit: 'tray' },
-        { category: 'Starters', code: 'S005', dish: 'Chicken 65', type: 'Non-Veg', price: 4.50, unit: 'tray' },
-        { category: 'Starters', code: 'S006', dish: 'Tandoori Chicken', type: 'Non-Veg', price: 5.50, unit: 'tray' },
-        { category: 'Starters', code: 'S007', dish: 'Fish Cutlet', type: 'Non-Veg', price: 3.80, unit: 'tray' }
-    ];
-
-    var addonRows = [
-        { name: 'Live Dosa Station', unit: 'station', price: 350 },
-        { name: 'Live Chaat Counter', unit: 'station', price: 380 },
-        { name: 'Live Masala Tea Counter', unit: 'station', price: 180 },
-        { name: 'Banana Leaf Setup', unit: 'pax', price: 1.5 },
-        { name: 'Function Hall', unit: 'event', price: 0 },
-        { name: 'Buffet Set-up', unit: 'event', price: 80 },
-        { name: 'Cutleries Set-up', unit: 'event', price: 0 },
-        { name: 'Table Setting', unit: 'event', price: 0 },
-        { name: 'LED Wall & Sound System', unit: 'event', price: 0 }
-    ];
-
-    var utensilRows = [
-        { name: 'Chafing Dish', unit: 'per dish', rule: 'selected hot dishes', suggested: 7, price: 10, deposit: 20 },
-        { name: 'Serving Spoon / Ladle', unit: 'per pc', rule: '2 per chafing dish', suggested: 14, price: 0, deposit: 2 },
-        { name: 'Fork', unit: 'per pc', rule: 'pax + 10%', suggested: 56, price: 0.08, deposit: 0 },
-        { name: 'Spoon', unit: 'per pc', rule: 'pax + 10%', suggested: 56, price: 0.08, deposit: 0 },
-        { name: 'Disposable Plate', unit: 'per pc', rule: 'pax + 10%', suggested: 56, price: 0.18, deposit: 0 },
-        { name: 'Cup', unit: 'per pc', rule: 'beverage pax + 10%', suggested: 56, price: 0.12, deposit: 0 },
-        { name: 'Napkin', unit: 'per pc', rule: 'pax + 10%', suggested: 56, price: 0.05, deposit: 0 },
-        { name: 'Buffet Table with Skirting', unit: 'per table', rule: '1 per 4 chafing dishes', suggested: 2, price: 15, deposit: 0 }
-    ];
+    var extraRows = [];
+    var addonRows = [];
+    var utensilRows = [];
 
     function money(value) {
         return 'S$' + value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -237,40 +207,33 @@ $(function () {
         packageCategoriesLoading = true;
         renderStep();
 
-        $.when(
-            $.ajax({ url: '/Admin/PackageItems/get?packageId=' + encodeURIComponent(packageId), type: 'GET' }),
-            $.ajax({ url: '/Admin/FoodMenuCategories/get', type: 'GET' })
-        ).done(function (packageItemsResponse, categoriesResponse) {
-            var packageItems = Array.isArray(packageItemsResponse[0]) ? packageItemsResponse[0] : [];
-            var categories = Array.isArray(categoriesResponse[0]) ? categoriesResponse[0] : [];
-            var categoriesById = {};
-
-            categories.forEach(function (category) {
-                var id = String(category.id ?? category.Id ?? '');
-                var isActive = category.isActive ?? category.IsActive;
-                var isDeleted = category.isDeleted ?? category.IsDeleted;
-                if (id && String(isActive).toLowerCase() !== 'false' && String(isActive) !== '0' && String(isDeleted).toLowerCase() !== 'true' && String(isDeleted) !== '1') {
-                    categoriesById[id] = category.name ?? category.Name ?? '';
-                }
-            });
-
-            includedChoices = packageItems.map(function (item) {
-                var categoryId = String(item.categoryId ?? item.CategoryId ?? '');
-                var categoryName = categoriesById[categoryId];
-                if (!categoryName) return null;
-                return {
-                    categoryId: categoryId,
-                    categoryName: categoryName,
-                    requiredQuantity: Number(item.quantity ?? item.Quantity ?? 1) || 1
-                };
-            }).filter(Boolean);
-        }).fail(function () {
-                includedChoices = [];
+        $.ajax({
+            url: '/Customer/Packages/get/' + encodeURIComponent(packageId) + '/categories',
+            type: 'GET',
+            success: function (rows) {
+                renderPackageCategories(rows || []);
+            },
+            error: function () {
+                renderPackageCategories([]);
                 showToast('Unable to load package categories.', 3000, { type: 'error', title: 'Load failed' });
-        }).always(function () {
-            packageCategoriesLoading = false;
-            renderStep();
+            }
         });
+    }
+
+    function renderPackageCategories(rows) {
+        rows = Array.isArray(rows) ? rows : [];
+        includedChoices = rows.map(function (category) {
+            return {
+                categoryId: category.categoryId ?? category.CategoryId ?? 0,
+                categoryName: category.categoryName ?? category.CategoryName ?? '',
+                requiredQuantity: Number(category.requiredQuantity ?? category.RequiredQuantity ?? 1) || 1
+            };
+        }).filter(function (category) {
+            return category.categoryId && category.categoryName;
+        });
+
+        packageCategoriesLoading = false;
+        renderStep();
     }
 
     function renderPackageCard(pkg) {
@@ -302,7 +265,7 @@ $(function () {
                 '<td>' + row.unit + '</td>' +
                 '<td class="amount-cell">' + money(qty * row.price) + '</td></tr>';
         }).join('');
-        return '<div class="data-table-card"><div class="mini-head"><div><div class="mini-head-title">Starters</div><div class="muted">Optional extra items. Selected: ' + Object.keys(state.extraItems).length + '</div></div><span class="badge badge-quotation">Additional</span></div><table class="item-table"><thead><tr><th>Select</th><th>Dish</th><th>Type</th><th>Guide Price</th><th>Qty</th><th>Unit</th><th>Amount</th></tr></thead><tbody>' + rows + '</tbody></table></div>';
+        return '<div class="data-table-card"><div class="mini-head"><div><div class="mini-head-title">Additional Items</div><div class="muted">Optional extra items. Selected: ' + Object.keys(state.extraItems).length + '</div></div><span class="badge badge-quotation">Additional</span></div><table class="item-table"><thead><tr><th>Select</th><th>Dish</th><th>Type</th><th>Guide Price</th><th>Qty</th><th>Unit</th><th>Amount</th></tr></thead><tbody>' + (rows || '<tr><td colspan="7" class="muted">No additional items available.</td></tr>') + '</tbody></table></div>';
     }
 
     function renderStep3() {
@@ -310,7 +273,7 @@ $(function () {
             addonRows.map(function (row) {
                 var qty = state.addons[row.name] || 0;
                 return '<tr class="' + (qty > 0 ? 'selected-row' : '') + '"><td><input type="checkbox" class="addon-check" data-name="' + row.name + '"' + (qty > 0 ? ' checked' : '') + '></td><td><strong>' + row.name + '</strong></td><td>' + row.unit + '</td><td class="price-cell">' + (row.unit === 'pax' ? money(row.price) + '/pax' : money(row.price)) + '</td><td><input class="qty-input addon-qty" data-name="' + row.name + '" type="number" min="0" value="' + qty + '"></td><td class="amount-cell">' + money(qty * row.price) + '</td></tr>';
-            }).join('') + '</tbody></table></div></div>';
+            }).join('') + (addonRows.length ? '' : '<tr><td colspan="6" class="muted">No add-ons available.</td></tr>') + '</tbody></table></div></div>';
         $('#orderStepContent').html(html);
     }
 
@@ -322,7 +285,7 @@ $(function () {
             '<div class="form-group"><label>Email</label><input id="detailEmail" value="' + d.email + '"></div>' +
             '<div class="form-group"><label>Mobile / WhatsApp</label><input id="detailMobile" value="' + d.mobile + '"></div>' +
             '<div class="form-group"><label>Event Date</label><input id="detailDate" type="date" value="' + d.eventDate + '"></div>' +
-            '<div class="form-group"><label>Meal Period</label><select id="detailPeriod"><option' + (d.mealPeriod === 'Lunch' ? ' selected' : '') + '>Lunch</option><option>Dinner</option><option>Breakfast</option><option>Hi-Tea</option></select></div>' +
+            '<div class="form-group"><label>Meal Period</label><select id="detailPeriod"><option value="">Select meal period</option></select></div>' +
             '<div class="form-group"><label>Postal Code / Area</label><input id="detailPostal" value="' + d.postal + '"></div>' +
             '<div class="form-group"><label>Delivery / Event Location</label><input id="detailLocation" value="' + d.location + '"></div>' +
             '</div><div class="form-group"><label>Remarks / Dietary Notes</label><textarea id="detailNotes" rows="3">' + d.notes + '</textarea></div><div class="save-row"><button class="btn btn-primary" id="saveEventBtn">Save Event Details</button></div></div>';
@@ -334,12 +297,12 @@ $(function () {
             utensilRows.map(function (row) {
                 var qty = state.utensils[row.name] || 0;
                 return '<tr class="' + (qty > 0 ? 'selected-row' : '') + '"><td><strong>' + row.name + '</strong><div class="muted">' + row.unit + '</div></td><td>' + row.rule + '</td><td>' + row.suggested + '</td><td><input class="qty-input utensil-qty" data-name="' + row.name + '" type="number" min="0" value="' + qty + '"></td><td class="price-cell">' + money(row.price) + '</td><td>' + money(row.deposit) + '</td><td class="amount-cell">' + money(qty * row.price) + '</td></tr>';
-            }).join('') + '</tbody></table></div></div>';
+            }).join('') + (utensilRows.length ? '' : '<tr><td colspan="7" class="muted">No utensils available.</td></tr>') + '</tbody></table></div></div>';
         $('#orderStepContent').html(html);
     }
 
     function renderStep6() {
-        var html = '<div class="review-sheet"><div class="review-top"><div class="review-brand"><img class="review-logo" src="/images/logo.jpg" alt="Gayatri"><div class="review-title">Gayatri Restaurant</div><div class="review-line">UEN: 52817812A</div><div class="review-line">Email: info@gayatrirestaurant.com | Catering@gayatrirestaurant.com</div><div class="review-line">Accounts: Accounts@gayatrirestaurant.com</div><div class="review-line">Hotline: 6294 6294 | WhatsApp: 62946294</div></div><div class="review-line"><strong>Quotation Request</strong><br>Date: 03/07/2026<br>Status: Draft</div></div><div class="review-split"><div><strong>Customer</strong><div>' + state.details.company + '</div><div>' + state.details.email + '</div><div>' + state.details.mobile + '</div></div><div><strong>Event</strong><div>' + state.details.eventDate + ' ' + state.details.mealPeriod + '</div><div>' + state.details.location + '</div><div>Pax: ' + state.pax + '</div></div></div><div class="review-table-title">Package: ' + state.packageName + ' (S$' + state.packagePrice.toFixed(2) + '/pax x ' + state.pax + ' pax = ' + money(packageBase()) + ')</div><div class="review-table-title">Included Package Dish Choices</div><table class="item-table"><thead><tr><th>Category</th><th>Dish</th><th>Included Qty</th><th>Unit</th><th>Status</th></tr></thead><tbody>' +
+        var html = '<div class="review-sheet"><div class="review-top"><div class="review-brand"><div class="review-title">Order Review</div></div><div class="review-line"><strong>Quotation Request</strong><br>Date: ' + new Date().toLocaleDateString() + '<br>Status: Draft</div></div><div class="review-split"><div><strong>Customer</strong><div>' + escapeHtml(state.details.company) + '</div><div>' + escapeHtml(state.details.email) + '</div><div>' + escapeHtml(state.details.mobile) + '</div></div><div><strong>Event</strong><div>' + escapeHtml(state.details.eventDate) + ' ' + escapeHtml(state.details.mealPeriod) + '</div><div>' + escapeHtml(state.details.location) + '</div><div>Pax: ' + state.pax + '</div></div></div><div class="review-table-title">Package: ' + escapeHtml(state.packageName) + ' (S$' + state.packagePrice.toFixed(2) + '/pax x ' + state.pax + ' pax = ' + money(packageBase()) + ')</div><div class="review-table-title">Included Package Dish Choices</div><table class="item-table"><thead><tr><th>Category</th><th>Dish</th><th>Included Qty</th><th>Unit</th><th>Status</th></tr></thead><tbody>' +
             includedChoices.map(function (category) {
                 return '<tr><td>' + escapeHtml(category.categoryName) + '</td><td>-</td><td>' + (Number(category.requiredQuantity) || 1) + '</td><td>choice</td><td><span class="badge badge-paid">Included in Package</span></td></tr>';
             }).join('') + '</tbody></table></div>';
@@ -354,35 +317,33 @@ $(function () {
 
     function buildOrderPayload() {
         return {
-            id: '',
+            id: 0,
             orderNumber: generateOrderNumber(),
-            customerId: '',
-            packageId: state.selectedPackage,
-            mealPeriodId: state.details.mealPeriod,
-            locationId: '',
-            eventStartDateTime: state.details.eventDate,
-            eventEndDateTime: '',
+            customerId: 0,
+            packageId: parseInt(state.selectedPackage, 10) || null,
+            mealPeriodId: null,
+            locationId: null,
+            eventStartDateTime: state.details.eventDate || null,
+            eventEndDateTime: null,
             deliveryAddress: state.details.location,
             notes: state.details.notes,
-            pax: state.pax.toString(),
-            packageBaseAmount: packageBase().toString(),
-            additionalMenuAmount: extraTotal().toString(),
-            addOnsAmount: addonTotal().toString(),
-            utensilsAmount: utensilTotal().toString(),
-            subTotal: grandTotal().toString(),
-            discount: '0',
-            deliveryFee: '0',
-            taxAmount: gstTotal().toString(),
-            totalAmount: grandTotal().toString(),
-            taxPercentage: (gstRate * 100).toFixed(0),
-            paidAmount: '0',
-            orderStatus: 'Quotation',
+            pax: state.pax,
+            packageBaseAmount: packageBase(),
+            additionalMenuAmount: extraTotal(),
+            addOnsAmount: addonTotal(),
+            utensilsAmount: utensilTotal(),
+            subTotal: grandTotal(),
+            discount: 0,
+            deliveryFee: 0,
+            taxAmount: gstTotal(),
+            totalAmount: grandTotal(),
+            taxPercentage: gstRate * 100,
+            paidAmount: 0,
+            orderStatus: 0,
             createdDate: new Date().toISOString(),
-            createdBy: '',
+            createdBy: null,
             updatedDate: null,
-            updatedBy: null,
-            isActive: '1',
-            isDeleted: '0'
+            updatedBy: null
         };
     }
 
@@ -544,7 +505,7 @@ $(function () {
     $(document).on('click', '#suggestUtensilsBtn', function () {
         state.utensils = {};
         utensilRows.forEach(function (row) {
-            state.utensils[row.name] = row.name === 'Fork' ? 49 : 0;
+            state.utensils[row.name] = row.suggested || 0;
         });
         renderStep();
     });
