@@ -39,22 +39,22 @@ namespace GayatriCateringPortal.Controllers.Admin
             return Ok(item);
         }
 
-        [HttpPost("save")]
-        public IActionResult Save([FromBody] CommunicationLog item)
-        {
-            if (item == null) return BadRequest();
-            var idValue = 0;
-            if (!string.IsNullOrWhiteSpace(item.Id)) int.TryParse(item.Id, out idValue);
+        //[HttpPost("save")]
+        //public IActionResult Save([FromBody] CommunicationLog item)
+        //{
+        //    if (item == null) return BadRequest();
+        //    var idValue = 0;
+        //    if (!string.IsNullOrWhiteSpace(item.Id)) int.TryParse(item.Id, out idValue);
 
-            if (idValue == 0)
-            {
-                int newId = _commsRepository.Create(item);
-                return Ok(new { success = newId > 0, id = newId });
-            }
+        //    if (idValue == 0)
+        //    {
+        //        int newId = _commsRepository.Create(item);
+        //        return Ok(new { success = newId > 0, id = newId });
+        //    }
 
-            bool result = _commsRepository.Update(item);
-            return Ok(new { success = result });
-        }
+        //    bool result = _commsRepository.Update(item);
+        //    return Ok(new { success = result });
+        //}
 
         [HttpPost("delete/{id}")]
         public IActionResult Delete(int id)

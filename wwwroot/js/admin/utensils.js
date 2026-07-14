@@ -163,8 +163,9 @@ function saveutensil() {
         return;
     }
 
-    var menu = {
-        Id: $('#utensilId').val() || '',
+    var utensilId = $('#menuId').val();
+    var utensil = {
+        Id: utensilId ? parseInt(utensilId) : 0,
         UtensilName: $('#utName').val() || '',
         UnitType: $('#utType').val() || '',
         Price: $('#utPrice').val() || '',
@@ -177,13 +178,13 @@ function saveutensil() {
         UpdatedDate: ''
     };
 
-    var endpoint = menu.Id ? '/Admin/Utensils/update' : '/Admin/Utensils/create';
+    var endpoint = utensil.Id ? '/Admin/Utensils/update' : '/Admin/Utensils/create';
 
     $.ajax({
         url: endpoint,
         type: 'POST',
         contentType: 'application/json',
-        data: JSON.stringify(menu),
+        data: JSON.stringify(utensil),
         success: function (res) {
             if (res && res.success) {
                 showToast('Utensils saved successfully.', 3000, { type: 'success', title: 'Saved' });

@@ -204,7 +204,7 @@ function saveFoodCategory() {
 
     var categoryId = $('#categoryId').val();
     var category = {
-        Id: categoryId || "",
+        Id: categoryId ? parseInt(categoryId) : 0,
         Code: $('#categoryCode').val().trim(),
         Name: $('#categoryName').val().trim(),
         IsActive: true,

@@ -1,9 +1,12 @@
+using GayatriCateringPortal.Models;
+
 namespace GayatriCateringPortal.Interfaces;
 
 public interface ISettingsRepository
 {
-    object GetSettings();
+    //object GetSettings();
     //bool Save(object settings);
-    int Create(object settings);
-    bool Update(object settings);
+    List<Organization> GetAll();
+    int Create(Organization settings);
+    int Update(Organization settings);
 }

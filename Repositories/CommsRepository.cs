@@ -92,7 +92,7 @@ public class CommsRepository : ICommsRepository
                 {
                     ((SqlCommand)cmd).CommandType = CommandType.StoredProcedure;
                     cmd.Parameters.Add(DataFactory.CreateParameter("@Id", item.Id));
-                    cmd.Parameters.Add(DataFactory.CreateParameter("@Code", (object?)item.Code ?? DBNull.Value));
+                    //cmd.Parameters.Add(DataFactory.CreateParameter("@Code", (object?)item.Code ?? DBNull.Value));
                     conn.Open();
                     var rows = DataFactory.ExecuteNonQuery(cmd);
                     return rows > 0 ? 1 : 0;
@@ -125,7 +125,7 @@ public class CommsRepository : ICommsRepository
                 {
                     ((SqlCommand)cmd).CommandType = CommandType.StoredProcedure;
                     cmd.Parameters.Add(DataFactory.CreateParameter("@Id", item.Id));
-                    cmd.Parameters.Add(DataFactory.CreateParameter("@Code", (object?)item.Code ?? DBNull.Value));
+                    //cmd.Parameters.Add(DataFactory.CreateParameter("@Code", (object?)item.Code ?? DBNull.Value));
                     conn.Open();
                     return DataFactory.ExecuteNonQuery(cmd) > 0;
                 }
