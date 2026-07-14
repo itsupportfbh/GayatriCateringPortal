@@ -87,6 +87,8 @@ function loadFreebieLocations(selectedId) {
 
 
 function loadPopularFreebies() {
+    showFreebiesLoader(true);
+
     $.ajax({
         url: '/Admin/Freebies/getAll',
         type: 'GET',
@@ -103,8 +105,19 @@ function loadPopularFreebies() {
                     title: 'Load failed'
                 }
             );
+        },
+        complete: function () {
+            showFreebiesLoader(false);
         }
     });
+}
+
+function showFreebiesLoader(show) {
+    var $panel = $('.pageloaderpanel');
+    if ($panel.length) {
+        $('#freebiesListPanel .table-wrap').toggleClass('hidden', show);
+        $panel.toggleClass('hidden', !show);
+    }
 }
 
 

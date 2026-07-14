@@ -409,7 +409,7 @@ function renderUsersList(rows) {
         html += `
             <tr data-id="${id}">
                 <td>${serial}</td>
-                <td><strong>${code || ''}<strong></td>
+                <td><strong>${code || ''}</strong></td>
                 <td><strong>${name || ''}</strong></td>
                 <td>${email || ''}</td>
                 <td>${contact || ''}</td>

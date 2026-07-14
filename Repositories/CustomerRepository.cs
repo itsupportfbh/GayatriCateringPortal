@@ -101,7 +101,7 @@ public class CustomerRepository : ICustomerRepository
 
                     cmd.Parameters.Add(DataFactory.CreateParameter("@MobileNo", customer.MobileNo ?? (object)DBNull.Value));
                     cmd.Parameters.Add(DataFactory.CreateParameter("@EmailId", customer.EmailId ?? (object)DBNull.Value));
-                    cmd.Parameters.Add(DataFactory.CreateParameter("@CompanyName", customer.CompanyName ?? (object)DBNull.Value));
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@Age", customer.Age ?? (object)DBNull.Value));
                     cmd.Parameters.Add(DataFactory.CreateParameter("@AddressLine1", customer.AddressLine1 ?? (object)DBNull.Value));
                     cmd.Parameters.Add(DataFactory.CreateParameter("@AddressLine2", customer.AddressLine2 ?? (object)DBNull.Value));
 
@@ -160,7 +160,7 @@ public class CustomerRepository : ICustomerRepository
                     cmd.Parameters.Add(DataFactory.CreateParameter("@Name", customer.Name ?? (object)DBNull.Value));
                     cmd.Parameters.Add(DataFactory.CreateParameter("@MobileNo", customer.MobileNo ?? (object)DBNull.Value));
                     cmd.Parameters.Add(DataFactory.CreateParameter("@EmailId", customer.EmailId ?? (object)DBNull.Value));
-                    cmd.Parameters.Add(DataFactory.CreateParameter("@CompanyName", customer.CompanyName ?? (object)DBNull.Value));
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@Age", customer.Age ?? (object)DBNull.Value));
                     cmd.Parameters.Add(DataFactory.CreateParameter("@AddressLine1", customer.AddressLine1 ?? (object)DBNull.Value));
                     cmd.Parameters.Add(DataFactory.CreateParameter("@AddressLine2", customer.AddressLine2 ?? (object)DBNull.Value));
 
@@ -318,47 +318,47 @@ public class CustomerRepository : ICustomerRepository
             {
                 var customer = new CustomerMaster();
 
-                if (reader["Id"] != DBNull.Value) customer.Id = ToInt(reader["Id"]);
+                if (reader["Id"] != DBNull.Value)customer.Id = Convert.ToInt32(reader["Id"]);
 
                 if (reader["Code"] != DBNull.Value)  customer.Code = Convert.ToString(reader["Code"]);
 
-                if (reader["Name"] != DBNull.Value) customer.Name = Convert.ToString(reader["Name"]) ?? string.Empty;
+                if (reader["Name"] != DBNull.Value)  customer.Name = Convert.ToString(reader["Name"]);
 
                 if (reader["MobileNo"] != DBNull.Value)customer.MobileNo = Convert.ToString(reader["MobileNo"]);
 
                 if (reader["EmailId"] != DBNull.Value)customer.EmailId = Convert.ToString(reader["EmailId"]);
 
-                if (reader["CompanyName"] != DBNull.Value) customer.CompanyName = Convert.ToString(reader["CompanyName"]);
+                if (HasColumn(reader, "Age") && reader["Age"] != DBNull.Value) customer.Age = Convert.ToInt32(reader["Age"]);
 
                 if (reader["AddressLine1"] != DBNull.Value) customer.AddressLine1 = Convert.ToString(reader["AddressLine1"]);
 
                 if (reader["AddressLine2"] != DBNull.Value)  customer.AddressLine2 = Convert.ToString(reader["AddressLine2"]);
 
-                if (reader["CityId"] != DBNull.Value) customer.CityId = ToInt(reader["CityId"]);
+                if (reader["CityId"] != DBNull.Value) customer.CityId = Convert.ToInt32(reader["CityId"]);
 
-                if (reader["StateId"] != DBNull.Value) customer.StateId = ToInt(reader["StateId"]);
+                if (reader["StateId"] != DBNull.Value)customer.StateId = Convert.ToInt32(reader["StateId"]);
 
-                if (reader["CountryId"] != DBNull.Value) customer.CountryId = ToInt(reader["CountryId"]);
+                if (reader["CountryId"] != DBNull.Value)customer.CountryId = Convert.ToInt32(reader["CountryId"]);
 
                 if (reader["Pincode"] != DBNull.Value) customer.Pincode = Convert.ToString(reader["Pincode"]);
 
-                if (reader["DateOfBirth"] != DBNull.Value) customer.DateOfBirth = ToNullableDate(reader["DateOfBirth"]);
+                if (reader["DateOfBirth"] != DBNull.Value)  customer.DateOfBirth = Convert.ToDateTime(reader["DateOfBirth"]);
 
-                if (reader["Gender"] != DBNull.Value) customer.Gender = ToNullableInt(reader["Gender"]);
+                if (reader["Gender"] != DBNull.Value)customer.Gender = Convert.ToInt32(reader["Gender"]);
 
                 if (reader["Remarks"] != DBNull.Value) customer.Remarks = Convert.ToString(reader["Remarks"]);
 
-                if (reader["IsActive"] != DBNull.Value) customer.IsActive = ToBool(reader["IsActive"]);
+                if (reader["IsActive"] != DBNull.Value)  customer.IsActive = Convert.ToBoolean(reader["IsActive"]);
 
-                if (reader["IsDeleted"] != DBNull.Value) customer.IsDeleted = ToBool(reader["IsDeleted"]);
+                if (reader["IsDeleted"] != DBNull.Value) customer.IsDeleted = Convert.ToBoolean(reader["IsDeleted"]);
 
-                if (reader["CreatedBy"] != DBNull.Value) customer.CreatedBy = ToInt(reader["CreatedBy"]);
+                if (reader["CreatedBy"] != DBNull.Value) customer.CreatedBy = Convert.ToInt32(reader["CreatedBy"]);
 
-                if (reader["CreatedDate"] != DBNull.Value) customer.CreatedDate = ToNullableDate(reader["CreatedDate"]) ?? default;
+                if (reader["CreatedDate"] != DBNull.Value)customer.CreatedDate = Convert.ToDateTime(reader["CreatedDate"]);
 
-                if (reader["UpdatedBy"] != DBNull.Value) customer.UpdatedBy = ToNullableInt(reader["UpdatedBy"]);
+                if (reader["UpdatedBy"] != DBNull.Value)  customer.UpdatedBy = Convert.ToInt32(reader["UpdatedBy"]);
 
-                if (reader["UpdatedDate"] != DBNull.Value) customer.UpdatedDate = ToNullableDate(reader["UpdatedDate"]);
+                if (reader["UpdatedDate"] != DBNull.Value)customer.UpdatedDate = Convert.ToDateTime(reader["UpdatedDate"]);
 
                 list.Add(customer);
             }
@@ -369,31 +369,22 @@ public class CustomerRepository : ICustomerRepository
         }
         catch (Exception ex)
         {
-            throw new Exception("Customer mapping error: " + ex.Message, ex);
+            throw new Exception("Customer mapping error: " + ex.Message);
         }
 
         return list;
     }
 
-    private static int ToInt(object value)
+    private static bool HasColumn(IDataReader reader, string columnName)
     {
-        return int.TryParse(Convert.ToString(value), out var result) ? result : 0;
-    }
-
-    private static int? ToNullableInt(object value)
-    {
-        return int.TryParse(Convert.ToString(value), out var result) ? result : null;
-    }
-
-    private static DateTime? ToNullableDate(object value)
-    {
-        return DateTime.TryParse(Convert.ToString(value), out var result) ? result : null;
-    }
-
-    private static bool ToBool(object value)
-    {
-        var text = Convert.ToString(value);
-        return text == "1" || bool.TryParse(text, out var result) && result;
+        try
+        {
+            return reader.GetOrdinal(columnName) >= 0;
+        }
+        catch (IndexOutOfRangeException)
+        {
+            return false;
+        }
     }
 
 
