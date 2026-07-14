@@ -125,10 +125,13 @@ function closeLocationModal() {
 
 function openLocationModal() {
     clearLocationForm();
+    $('#locations-title').text('Create Location');
 
     $('#locationsModal').removeClass('hidden');
 }
 function saveLocation() {
+    setButtonBusy('button[onclick="saveLocation()"]', true, 'Saving...');
+
     var location = {
         Id: parseInt($('#locationId').val()) || 0,
         Code: $('#locationCode').val() || '',
@@ -159,10 +162,12 @@ function saveLocation() {
                 $('#locationsModal').addClass('hidden');
                 loadLocation();
             } else {
+                setButtonBusy('button[onclick="saveLocation()"]', false);
                 showToast(res?.message || 'Unable to save Location.', 3000, { type: 'error', title: 'Save failed' });
             }
         },
         error: function (xhr) {
+            setButtonBusy('button[onclick="saveLocation()"]', false);
             showToast(xhr.responseJSON?.message || 'Save failed.', 3000, { type: 'error', title: 'Save failed' });
         }
     });
@@ -170,6 +175,7 @@ function saveLocation() {
 
 
 function editLocation(id) {
+    $('#locations-title').text('Edit Location');
     $.ajax({
         url: '/Admin/Locations/get/' + id,
         type: 'GET',

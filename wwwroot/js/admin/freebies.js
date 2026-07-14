@@ -334,6 +334,7 @@ function clearPopularFreebieForm() {
 
 function openPopularFreebieModal() {
     clearPopularFreebieForm();
+    $('#popularFreebie-title').text('Create Popular Freebie');
 
     $('#popularFreebieModal').removeClass('hidden');
 }
@@ -345,6 +346,7 @@ function closePopularFreebieModal() {
 
 
 function savePopularFreebie() {
+    setButtonBusy('button[onclick="savePopularFreebie()"]', true, 'Saving...');
     var id =
         parseInt($('#popularFreebieId').val()) || 0;
 
@@ -365,6 +367,7 @@ function savePopularFreebie() {
         );
 
         $('#freebieName').focus();
+        setButtonBusy('button[onclick="savePopularFreebie()"]', false);
         return;
     }
 
@@ -379,6 +382,7 @@ function savePopularFreebie() {
         );
 
         $('#freebieDisplayOrder').focus();
+        setButtonBusy('button[onclick="savePopularFreebie()"]', false);
         return;
     }
 
@@ -406,6 +410,7 @@ function savePopularFreebie() {
             }
         );
 
+        setButtonBusy('button[onclick="savePopularFreebie()"]', false);
         return;
     }
 
@@ -477,6 +482,7 @@ function savePopularFreebie() {
                 closePopularFreebieModal();
                 loadPopularFreebies();
             } else {
+                setButtonBusy('button[onclick="savePopularFreebie()"]', false);
                 showToast(
                     res?.message ||
                     'Unable to save Popular Freebie.',
@@ -490,6 +496,7 @@ function savePopularFreebie() {
         },
 
         error: function (xhr) {
+            setButtonBusy('button[onclick="savePopularFreebie()"]', false);
             showToast(
                 xhr.responseJSON?.message ||
                 xhr.responseText ||
@@ -509,6 +516,8 @@ function editPopularFreebie(id) {
     if (!id) {
         return;
     }
+
+    $('#popularFreebie-title').text('Edit Popular Freebie');
 
     $.ajax({
         url: '/Admin/Freebies/get/' + id,

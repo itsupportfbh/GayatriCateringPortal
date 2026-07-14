@@ -1,3 +1,5 @@
+using System;
+
 namespace GayatriCateringPortal.Models
 {
     public class Country
@@ -18,5 +20,50 @@ namespace GayatriCateringPortal.Models
         public int Id { get; set; }
         public string? Name { get; set; }
         public int StateId { get; set; }
+    }
+
+    public class EntityMaster
+    {
+        public int Id { get; set; }
+        public string? Name { get; set; }
+        public int? EntityNo { get; set; }
+        public bool? IsDeleted { get; set; }
+        public bool? IsActive { get; set; }
+        public int CreatedBy { get; set; }
+        public DateTime CreatedDate { get; set; }
+        public int? UpdatedBy { get; set; }
+        public DateTime? UpdatedDate { get; set; }
+    }
+
+    public class CreateRolePermissionRequest
+    {
+        public int RoleId { get; set; }
+        public int EntityNo { get; set; }
+        public bool View { get; set; }
+        public bool Create { get; set; }
+        public bool Edit { get; set; }
+        public bool Delete { get; set; }
+        public bool? ActiveInActive { get; set; }
+        public bool? Print { get; set; }
+        public bool? Download { get; set; }
+        public DateTime? CreatedDate { get; set; }
+        public int CreatedBy { get; set; }
+        public DateTime? UpdatedDate { get; set; }
+        public int UpdatedBy { get; set; }
+        public bool IsActive { get; set; }
+        public bool IsDeleted { get; set; }
+    }
+
+    public class RolePermissionItem
+    {
+        public int RoleId { get; set; }
+        public int EntityNo { get; set; }
+        public bool View { get; set; }
+        public bool Create { get; set; }
+        public bool Edit { get; set; }
+        public bool Delete { get; set; }
+        public bool ActiveInActive { get; set; }
+        public bool Download { get; set; }
+        public bool Print { get; set; }
     }
 }

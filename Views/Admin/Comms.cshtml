@@ -23,7 +23,7 @@
     <div class="muted" style="margin-bottom:16px">Track outbound communication across WhatsApp, email and SMS.</div>
     <div class="table-wrap" id="commsTable">
         <table class="tbl">
-            <thead><tr><th>Date/Time</th><th>Order</th><th>Customer</th><th>Channel</th><th>Message</th><th>Sent By</th></tr></thead>
+            <thead><tr><th class="sortable">Date/Time</th><th class="sortable">Order</th><th class="sortable">Customer</th><th class="sortable">Channel</th><th class="sortable">Message</th><th class="sortable">Sent By</th></tr></thead>
             <tbody>
                 <!-- rows rendered by ~/js/admin/comms.js -->
             </tbody>
@@ -38,8 +38,8 @@
             <span class="modal-title">Log Communication</span>
             <button class="modal-close">✕</button>
         </div>
-        <div class="form-group"><label>Channel</label><select id="cmChannel" class="form-control"><option>WhatsApp</option><option>Email</option><option>SMS</option></select></div>
-        <div class="form-group"><label>Message</label><textarea id="cmMsgField" class="form-control"></textarea></div>
+        <div class="form-group"><label>Channel</label><select id="cmChannel" class="form-control"><option value="">Select channel</option><option>WhatsApp</option><option>Email</option><option>SMS</option></select></div>
+        <div class="form-group"><label>Message</label><textarea id="cmMsgField" class="form-control" placeholder="Enter message details"></textarea></div>
         @Html.AntiForgeryToken()
         <div class="actions"><button class="btn btn-light" id="btnClearComms">Clear</button> <button class="btn btn-primary" id="btnSaveComms">Save</button></div>
     </div>

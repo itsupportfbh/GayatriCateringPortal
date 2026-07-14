@@ -8,6 +8,8 @@ function closeMenuModal() {
 
 function openMenuModal() {
     clearUtensilForm();
+    $('#utensils-title').text('Create Utensil');
+    setActionButtonLabel('#btnSaveUtensil', 'Save');
     $('#utensilsModal').removeClass('hidden');
 }
 
@@ -46,7 +48,7 @@ function renderUtensilList(rows) {
         html = rows.map(function (utensil) {
             var id = utensil.id || utensil.Id || '';
             var utensilName = utensil.utensilName || utensil.UtensilName || '';
-            var unitType = utensil.unitType || utensil.UnitType || '';
+            var rules = utensil.rules || utensil.Rules || '';
             var price = utensil.price || utensil.Price || '';
             var depAmt = utensil.depositAmount || utensil.DepositAmount || '';
             var active = utensil.isActive;
@@ -70,7 +72,7 @@ function renderUtensilList(rows) {
                 <tr>
                     <td>${id}</td>
                     <td>${utensilName}</td>
-                    <td>${unitType}</td>
+                    <td>${rules}</td>
                     <td>${price || ''}</td>
                     <td>${depAmt || ''}</td>
                     <td>${statusBadge}</td>
@@ -96,12 +98,12 @@ function renderUtensilList(rows) {
 function clearUtensilForm() {
     $('#utensilId').val('');
     $('#utName').val('');
-    $('#utType').val('');
+    $('#utRules').val('0.00');
     $('#utPrice').val('');
     $('#utDepAmt').val('0.00');
 
     clearUtensilError('#utName', '#utNameError');
-    clearUtensilError('#utType', '#utTypeError');
+    clearUtensilError('#utRules', '#utRulesError');
     clearUtensilError('#utPrice', '#utPriceError');
     clearUtensilError('#utDepAmt', '#utDepAmtError');
 }
@@ -118,7 +120,7 @@ function clearUtensilError(inputSelector, errorSelector) {
 
 function validateForm() {
     clearUtensilError('#utName', '#utNameError');
-    clearUtensilError('#utType', '#utTypeError');
+    clearUtensilError('#utRules', '#utRulesError');
     clearUtensilError('#utPrice', '#utPriceError');
     clearUtensilError('#utDepAmt', '#utDepAmtError');
 
@@ -129,11 +131,11 @@ function validateForm() {
         code = '';
     }
 
-    var name = $('#utType').val();
-    if (name) {
-        name = name.toString().trim();
+    var rules = $('#utRules').val();
+    if (rules) {
+        rules = rules.toString().trim();
     } else {
-        name = '';
+        rules = '';
     }
 
     var firstInvalid = null;
@@ -143,10 +145,10 @@ function validateForm() {
         firstInvalid = '#utName';
     }
 
-    if (!name) {
-        setUtensilError('#utType', '#utTypeError', 'Type is required');
+    if (!rules || isNaN(parseFloat(rules))) {
+        setUtensilError('#utRules', '#utRulesError', 'Rules is required');
         if (!firstInvalid) {
-            firstInvalid = '#utType';
+            firstInvalid = '#utRules';
         }
     }
 
@@ -163,10 +165,12 @@ function saveutensil() {
         return;
     }
 
+    setButtonBusy('#btnSaveUtensil', true, 'Saving...');
+
     var menu = {
         Id: $('#utensilId').val() || '',
         UtensilName: $('#utName').val() || '',
-        UnitType: $('#utType').val() || '',
+        Rules: parseFloat($('#utRules').val()) || 0,
         Price: $('#utPrice').val() || '',
         DepositAmount: $('#utDepAmt').val() || '',
         IsActive: true,
@@ -191,16 +195,19 @@ function saveutensil() {
                 $('#utensilsModal').addClass('hidden');
                 loadUtensils();
             } else {
+                setButtonBusy('#btnSaveUtensil', false);
                 showToast('Unable to save Utensils.', 3000, { type: 'error', title: 'Save failed' });
             }
         },
         error: function () {
+            setButtonBusy('#btnSaveUtensil', false);
             showToast('Save failed.', 3000, { type: 'error', title: 'Save failed' });
         }
     });
 }
 
 function editUtensil(id) {
+    $('#utensils-title').text('Edit Utensil');
     $.ajax({
         url: '/Admin/Utensils/get/' + id,
         type: 'GET',
@@ -211,9 +218,10 @@ function editUtensil(id) {
             }
             $('#utensilId').val(role.Id || role.id || '');
             $('#utName').val(role.UtensilName || role.utensilName || '');
-            $('#utType').val(role.UnitType || role.unitType || '');
+            $('#utRules').val(role.Rules || role.rules || '0.00');
             $('#utPrice').val(role.Price || role.price || '');
             $('#utDepAmt').val(role.DepositAmount || role.depositAmount || '');
+            setActionButtonLabel('#btnSaveUtensil', 'Update');
             $('#utensilsModal').removeClass('hidden');
         },
         error: function () { showToast('Unable to load Utensils.', 3000, { type: 'error', title: 'Load failed' }); }

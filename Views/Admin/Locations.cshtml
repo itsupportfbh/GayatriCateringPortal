@@ -37,15 +37,15 @@
         <table class="tbl" id="locationList" data-page-size="10">
             <thead>
                 <tr>
-                    <th>S.No</th>
-                    <th>Code</th>
-                    <th>Location</th>
-                    <th>Delivery Fee</th>
-                    <th>Minimum Pax</th>
-                    <th>Lead Time Days</th>
-                    <th>Remarks</th>
-                    <th>Active</th>
-                    <th>Actions</th>
+                    <th class="sortable">#</th>
+                    <th class="sortable">Code</th>
+                    <th class="sortable">Location</th>
+                    <th class="sortable">Delivery Fee</th>
+                    <th class="sortable">Minimum Pax</th>
+                    <th class="sortable">Lead Time Days</th>
+                    <th class="sortable">Remarks</th>
+                    <th class="sortable">Active</th>
+                    <th class="no-sort">Actions</th>
                 </tr>
             </thead>
             <tbody>
@@ -61,7 +61,7 @@
     <div class="modal-box">
 
         <div class="modal-header">
-            <span class="modal-title">Create / Edit Location</span>
+            <span class="modal-title" id="locations-title">Create Location</span>
 
             <button class="modal-close" type="button" onclick="closeLocationModal()">
                 ✕
@@ -73,36 +73,36 @@
         <div class="form-row col2">
             <div class="form-group">
                 <label>Code</label>
-                <input type="text" id="locationCode" class="form-control" placeholder="Location code" />
+                <input type="text" id="locationCode" class="form-control" placeholder="e.g. LOC001" />
             </div>
 
             <div class="form-group">
                 <label>Location Name<span class="field-required">*</span></label>
-                <input type="text" id="locationName" class="form-control" placeholder="Location name" />
+                <input type="text" id="locationName" class="form-control" placeholder="Enter location name" />
             </div>
         </div>
 
         <div class="form-row col2">
             <div class="form-group">
                 <label>Delivery Fee<span class="field-required">*</span></label>
-                <input type="number" id="locationDeliveryFee" class="form-control" placeholder="Delivery fee" />
+                <input type="number" id="locationDeliveryFee" class="form-control" placeholder="Enter delivery fee" />
             </div>
 
             <div class="form-group">
                 <label>Minimum Pax<span class="field-required">*</span></label>
-                <input type="number" id="locationMinimumPax" class="form-control" placeholder="Minimum pax" />
+                <input type="number" id="locationMinimumPax" class="form-control" placeholder="Enter minimum pax" />
             </div>
         </div>
 
         <div class="form-row col2">
             <div class="form-group">
                 <label>Lead Time Days</label>
-                <input type="number" id="locationLeadTimeDays" class="form-control" placeholder="Lead time days" />
+                <input type="number" id="locationLeadTimeDays" class="form-control" placeholder="Enter lead time in days" />
             </div>
 
             <div class="form-group">
                 <label>Remarks</label>
-                <input type="text" id="locationRemarks" class="form-control" placeholder="Remarks" />
+                <input type="text" id="locationRemarks" class="form-control" placeholder="Enter remarks (optional)" />
             </div>
         </div>
 

@@ -403,7 +403,7 @@ function initPackageForm() {
     currentPackageId = packageId;
 
     if (packageId > 0) {
-        $('#savePackage').text('Update');
+        setActionButtonLabel('#savePackage', 'Update');
         loadPackageForEdit(packageId);
         return;
     }
@@ -415,6 +415,8 @@ function savePackage() {
     if (!validateForm()) {
         return;
     }
+
+    setButtonBusy('#savePackage', true, 'Saving...');
 
     var payload = collectPayload();
     var packagePayload = {
@@ -446,11 +448,13 @@ function savePackage() {
                 var packageId = isUpdate ? packagePayload.Id : result.id;
                 savePackageItems(packageId, payload.PackageItems, isUpdate);
             } else {
+                setButtonBusy('#savePackage', false);
                 var errorMsg = result && result.message ? result.message : 'Unable to save package.';
                 showToast(errorMsg, 3000, { type: 'error', title: 'Save failed' });
             }
         },
         error: function () {
+            setButtonBusy('#savePackage', false);
             showToast('Unable to save package.', 3000, { type: 'error', title: 'Save failed' });
         }
     });
@@ -461,6 +465,7 @@ function savePackageItems(packageId, items, isUpdate) {
     if (!preparedItems.length) {
         var successMsg = isUpdate ? 'Package updated successfully.' : 'Package created successfully.';
         showToast(successMsg, 500, { type: 'success', title: 'Success' });
+        setButtonBusy('#savePackage', false);
         setTimeout(function () {
             window.location.href = '/Admin/Packages';
         }, 300);
@@ -488,14 +493,17 @@ function savePackageItems(packageId, items, isUpdate) {
             if (result && result.success) {
                 var successMsg = isUpdate ? 'Package updated successfully.' : 'Package created successfully.';
                 showToast(successMsg, 300, { type: 'success', title: 'Success' });
+                setButtonBusy('#savePackage', false);
                 setTimeout(function () {
                     window.location.href = '/Admin/Packages';
                 }, 300);
             } else {
+                setButtonBusy('#savePackage', false);
                 showToast('Unable to save package items.', 3000, { type: 'error', title: 'Save failed' });
             }
         },
         error: function () {
+            setButtonBusy('#savePackage', false);
             showToast('Unable to save package items.', 3000, { type: 'error', title: 'Save failed' });
         }
     });

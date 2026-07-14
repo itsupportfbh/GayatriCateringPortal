@@ -9,6 +9,7 @@ function closeMenuModal() {
 
 function openMenuModal() {
     clearMenuForm();
+    $('#menu-title').text('Create Menu');
     $('#MenuModal').removeClass('hidden');
      
     initCategoryField('#ItemCode', '#ItemCodeError');
@@ -243,6 +244,8 @@ function saveMenu() {
         return;
     }
 
+    setButtonBusy('#btnSaveMenu', true, 'Saving...');
+
     var menu = {
         Id: $('#menuId').val() || '',
         Code: $('#ItemCode').val() || '',
@@ -274,16 +277,19 @@ function saveMenu() {
                 $('#MenuModal').addClass('hidden');
                 loadMenus();
             } else {
+                setButtonBusy('#btnSaveMenu', false);
                 showToast('Unable to save Menus.', 3000, { type: 'error', title: 'Save failed' });
             }
         },
         error: function () {
+            setButtonBusy('#btnSaveMenu', false);
             showToast('Save failed.', 3000, { type: 'error', title: 'Save failed' });
         }
     });
 }
 
 function editMenu(id) {
+    $('#menu-title').text('Edit Menu');
     $.ajax({
         url: '/Admin/FoodMenus/get/' + id,
         type: 'GET',

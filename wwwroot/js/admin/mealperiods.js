@@ -125,11 +125,13 @@ function closeMealPeriodModal() {
 
 function openMealPeriodModal() {
     clearMealPeriodForm();
+    $('#mealPeriods-title').text('Create Meal Period');
     $('#mealPeriodsModal').removeClass('hidden');
 }
 
 
 function saveMealPeriod() {
+    setButtonBusy('button[onclick="saveMealPeriod()"]', true, 'Saving...');
     
     var id = parseInt($('#mealPeriodId').val(), 10) || 0;
 
@@ -161,6 +163,7 @@ function saveMealPeriod() {
             });
 
         $('#mealPeriodName').focus();
+        setButtonBusy('button[onclick="saveMealPeriod()"]', false);
 
         return;
     }
@@ -178,6 +181,7 @@ function saveMealPeriod() {
             });
 
         $('#mealPeriodStartTime').focus();
+        setButtonBusy('button[onclick="saveMealPeriod()"]', false);
 
         return;
     }
@@ -195,6 +199,7 @@ function saveMealPeriod() {
             });
 
         $('#mealPeriodEndTime').focus();
+        setButtonBusy('button[onclick="saveMealPeriod()"]', false);
 
         return;
     }
@@ -212,6 +217,7 @@ function saveMealPeriod() {
             });
 
         $('#mealPeriodDisplayOrder').focus();
+        setButtonBusy('button[onclick="saveMealPeriod()"]', false);
 
         return;
     }
@@ -229,6 +235,7 @@ function saveMealPeriod() {
             });
 
         $('#mealPeriodEndTime').focus();
+        setButtonBusy('button[onclick="saveMealPeriod()"]', false);
 
         return;
     }
@@ -272,6 +279,7 @@ function saveMealPeriod() {
             }
 
 
+            setButtonBusy('button[onclick="saveMealPeriod()"]', false);
             showToast(
                 res && res.message
                     ? res.message
@@ -296,6 +304,7 @@ function saveMealPeriod() {
                     message;
             }
 
+            setButtonBusy('button[onclick="saveMealPeriod()"]', false);
             showToast(
                 message,
                 3000,
@@ -311,6 +320,8 @@ function editMealPeriod(id) {
 
     if (!id)
         return;
+
+    $('#mealPeriods-title').text('Edit Meal Period');
 
 
     $.ajax({
