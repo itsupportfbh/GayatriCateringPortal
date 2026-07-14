@@ -10,6 +10,14 @@ function closeMenuModal() {
 function openMenuModal() {
     clearMenuForm();
     $('#MenuModal').removeClass('hidden');
+     
+    initCategoryField('#ItemCode', '#ItemCodeError');
+    initCategoryField('#ItemName', '#ItemNameError');
+    initCategoryField('#CategoryId', '#CategoryIdError');
+    initCategoryField('#Price', '#PriceError');
+    initCategoryField('#PreparationTime', '#PreparationTimeError');
+    initCategoryField('#FoodType', '#FoodTypeError');
+    initCategoryField('#ServiceCharge', '#ServiceChargeError');
 }
 
 function loadMenus() {
@@ -155,9 +163,86 @@ function clearMenuForm() {
     $('#PreparationTime').val('');
     $('#FoodType').val('1');
     $('#ServiceCharge').val('');
+
+    clearMenuError('#ItemCode', '#ItemCodeError');
+    clearMenuError('#ItemName', '#ItemNameError');
+    clearMenuError('#CategoryId', '#CategoryIdError');
+    clearMenuError('#Price', '#PriceError');
+    clearMenuError('#PreparationTime', '#PreparationTimeError');
+    clearMenuError('#FoodType', '#FoodTypeError');
+    clearMenuError('#ServiceCharge', '#ServiceChargeError');
+}
+
+function setMenuError(inputSelector, errorSelector, message) {
+    $(inputSelector).addClass('input-error');
+    $(errorSelector).removeClass('hidden').text(message);
+}
+
+function clearMenuError(inputSelector, errorSelector) {
+    $(inputSelector).removeClass('input-error');
+    $(errorSelector).addClass('hidden').text('');
+}
+
+function initCategoryField(inputSelector, errorSelector) {
+    clearCategoryError(inputSelector, errorSelector);
+    var el = document.querySelector(inputSelector);
+    if (el) {
+        el.oninput = function () {
+            clearCategoryError(inputSelector, errorSelector);
+        };
+    }
+}
+
+function validateForm() {
+    clearMenuError('#ItemCode', '#ItemCodeError');
+    clearMenuError('#ItemName', '#ItemNameError');
+    clearMenuError('#CategoryId', '#CategoryIdError');
+    clearMenuError('#Price', '#PriceError');
+    clearMenuError('#PreparationTime', '#PreparationTimeError');
+    clearMenuError('#FoodType', '#FoodTypeError');
+    clearMenuError('#ServiceCharge', '#ServiceChargeError');
+
+    var code = $('#ItemCode').val();
+    if (code) {
+        code = code.toString().trim();
+    } else {
+        code = '';
+    }
+
+    var name = $('#ItemName').val();
+    if (name) {
+        name = name.toString().trim();
+    } else {
+        name = '';
+    }
+
+    var firstInvalid = null;
+
+    if (!code) {
+        setMenuError('#ItemCode', '#ItemCodeError', 'Code is required');
+        firstInvalid = '#ItemCode';
+    }
+
+    if (!name) {
+        setMenuError('#ItemName', '#ItemNameError', 'Name is required');
+        if (!firstInvalid) {
+            firstInvalid = '#ItemName';
+        }
+    }
+
+    if (firstInvalid) {
+        $(firstInvalid).focus();
+        return false;
+    }
+
+    return true;
 }
 
 function saveMenu() {
+    if (!validateForm()) {
+        return;
+    }
+
     var menu = {
         Id: $('#menuId').val() || '',
         Code: $('#ItemCode').val() || '',

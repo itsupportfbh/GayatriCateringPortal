@@ -43,8 +43,7 @@ namespace GayatriCateringPortal.Controllers.Customer
         public IActionResult Save([FromBody] Orders item)
         {
             if (item == null) return BadRequest();
-            var idValue = 0;
-            if (!string.IsNullOrWhiteSpace(item.Id)) int.TryParse(item.Id, out idValue);
+            var idValue = item.Id;
 
             if (idValue == 0)
             {

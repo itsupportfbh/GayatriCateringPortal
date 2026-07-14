@@ -44,17 +44,43 @@ namespace GayatriCateringPortal.Controllers.Admin
         [HttpPost("create")]
         public IActionResult Create([FromBody] FoodMenu item)
         {
+            if (!ModelState.IsValid)
+            {
+                var errors = string.Join("; ", ModelState.Values
+                .SelectMany(x => x.Errors)
+                .Select(x => x.ErrorMessage));
+            }
+
             if (item == null) return BadRequest();
             int newId = _menusRepository.Create(item);
+
+            if (newId == -1)
+            {
+                return Ok(new { success = false, message = "Menu already exists" });
+            }
+
             return Ok(new { success = newId > 0, id = newId });
         }
 
         [HttpPost("update")]
         public IActionResult Update([FromBody] FoodMenu item)
         {
+            if (!ModelState.IsValid)
+            {
+                var errors = string.Join("; ", ModelState.Values
+                .SelectMany(x => x.Errors)
+                .Select(x => x.ErrorMessage));
+            }
+
             if (item == null) return BadRequest();
-            bool updated = _menusRepository.Update(item);
-            return Ok(new { success = updated });
+            int result = _menusRepository.Update(item);
+
+            if (result == -1)
+            {
+                return Ok(new { success = false, message = "Menu already exists" });
+            }
+
+            return Ok(new { success = result > 0 });
         }
 
         [HttpPost("delete/{id}")]

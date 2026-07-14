@@ -106,8 +106,8 @@ namespace GayatriCateringPortal.Repositories
                         var result = DataFactory.ExecuteScalar(cmd);
                         if (result != null)
                         {
-                            item.Id = Convert.ToString(result) ?? item.Id;
-                            return Convert.ToInt32(item.Id);
+                            //item.Id = Convert.ToString(result) ?? item.Id;
+                            return Convert.ToInt32(result);
                         }
                     }
                 }
@@ -127,20 +127,19 @@ namespace GayatriCateringPortal.Repositories
             return 0;
         }
 
-        public bool Update(FoodMenu item)
+        public int Update(FoodMenu item)
         {
             IDbConnection? conn = null;
             IDbCommand? cmd = null;
             try
             {
-                var idValue = int.TryParse(item.Id, out var parsedId) ? parsedId : 0;
                 using (conn = DataFactory.CreateConnection())
                 {
                     conn.Open();
                     using (cmd = DataFactory.CreateCommand("SP_UpdateFoodMenu", conn))
                     {
                         ((SqlCommand)cmd).CommandType = CommandType.StoredProcedure;
-                        cmd.Parameters.Add(DataFactory.CreateParameter("@Id", idValue));
+                        cmd.Parameters.Add(DataFactory.CreateParameter("@Id", item.Id));
                         cmd.Parameters.Add(DataFactory.CreateParameter("@Code", (object?)item.Code ?? DBNull.Value));
                         cmd.Parameters.Add(DataFactory.CreateParameter("@Name", (object?)item.Name ?? DBNull.Value));
                         cmd.Parameters.Add(DataFactory.CreateParameter("@CategoryId", (object?)item.CategoryId ?? DBNull.Value));
@@ -154,7 +153,11 @@ namespace GayatriCateringPortal.Repositories
                         cmd.Parameters.Add(DataFactory.CreateParameter("@UpdatedDate", DateTime.TryParse(item.UpdatedDate, out var updatedDate) ? updatedDate : (object?)DBNull.Value));
 
                         var result = DataFactory.ExecuteScalar(cmd);
-                        return result != null && Convert.ToInt32(result) > 0;
+                        if (result != null)
+                        {
+                            int status = Convert.ToInt32(result);
+                            return status;
+                        }
                     }
                 }
             }
@@ -170,6 +173,7 @@ namespace GayatriCateringPortal.Repositories
             {
                 if (conn != null && conn.State != ConnectionState.Closed) conn.Close();
             }
+            return 0;
         }
 
         public bool Delete(int id)
@@ -250,7 +254,7 @@ namespace GayatriCateringPortal.Repositories
                 {
                     var item = new FoodMenu();
                     if (reader["Id"] != DBNull.Value)
-                        item.Id = Convert.ToString(reader["Id"])!;
+                        item.Id = Convert.ToInt32(reader["Id"])!;
                     if (reader["Code"] != DBNull.Value)
                         item.Code = Convert.ToString(reader["Code"])!;
                     if (reader["Name"] != DBNull.Value)

@@ -3,80 +3,81 @@ $(function () {
     var gstRate = 0.09;
     var currentStep = 1;
     var state = {
-        pax: 50,
-        gstMode: 'apply',
+        pax: 0,
         selectedPackage: '',
         packageName: '-',
         packagePrice: 0,
         step1View: 'packages',
-        extraItems: { 'Vegetable Samosa': 1 },
-        addons: { 'Table Setting': 1 },
-        utensils: { 'Fork': 49 },
+        extraItems: {},
+        addons: {},
+        utensils: {},
         details: {
-            company: 'ddg',
-            contact: 'dfdfd',
-            email: 'fdfd',
-            mobile: 'fdfdf',
-            eventDate: '2026-06-30',
-            mealPeriod: 'Lunch',
-            postal: 'fdghh',
-            location: 'fdsghj',
-            notes: 'rs'
+            company: '',
+            contact: '',
+            email: '',
+            mobile: '',
+            eventDate: '',
+            mealPeriod: '',
+            postal: '',
+            location: '',
+            notes: ''
         }
     };
 
-    var packages = [
-        { id: 'veg-buffet', name: 'Vegetarian Indian Buffet', price: 18, min: 30, desc: 'Pure vegetarian buffet with North and South Indian choices.' },
-        { id: 'nonveg-buffet', name: 'Non-Vegetarian Indian Buffet', price: 22, min: 30, desc: 'Popular Indian non-veg buffet with biryani, curries and dessert.' },
-        { id: 'north-feast', name: 'Premium North Indian Feast', price: 28, min: 50, desc: 'Premium buffet for corporate and family functions.' },
-        { id: 'banana-leaf', name: 'South Indian Banana Leaf', price: 20, min: 30, desc: 'Banana leaf style meal with South Indian classics.' },
-        { id: 'hi-tea', name: 'Indian High Tea / Snacks', price: 15, min: 30, desc: 'Tea-time Indian snacks for office meetings and events.' },
-        { id: 'lunch-box', name: 'Indian Corporate Lunch Box', price: 13, min: 20, desc: 'Individual packed Indian meal boxes for offices.' },
-        { id: 'wedding-feast', name: 'Wedding / Special Event Indian Feast', price: 35, min: 100, desc: 'Celebration package for weddings and grand occasions.' }
-    ];
+    var packages = [];
 
-    var includedChoices = {
-        Starters: ['Vegetable Samosa', 'Paneer Tikka'],
-        'Rice & Biryani': ['Jeera Rice'],
-        'Non-Veg Curries': ['Chilli Chicken', 'Chicken Curry'],
-        Dessert: ['Gulab Jamun']
-    };
+    function loadOrderPackages() {
+        $('#orderStepContent').html(
+            '<div class="card order-card"><div class="muted">Loading packages...</div></div>'
+        );
 
-    var extraRows = [
-        { category: 'Starters', code: 'S001', dish: 'Vegetable Samosa', type: 'Veg', price: 1.80, unit: 'tray' },
-        { category: 'Starters', code: 'S002', dish: 'Paneer Tikka', type: 'Veg', price: 4.20, unit: 'tray' },
-        { category: 'Starters', code: 'S003', dish: 'Gobi Manchurian', type: 'Veg', price: 3.50, unit: 'tray' },
-        { category: 'Starters', code: 'S004', dish: 'Masala Vadai', type: 'Veg', price: 1.50, unit: 'tray' },
-        { category: 'Starters', code: 'S005', dish: 'Chicken 65', type: 'Non-Veg', price: 4.50, unit: 'tray' },
-        { category: 'Starters', code: 'S006', dish: 'Tandoori Chicken', type: 'Non-Veg', price: 5.50, unit: 'tray' },
-        { category: 'Starters', code: 'S007', dish: 'Fish Cutlet', type: 'Non-Veg', price: 3.80, unit: 'tray' }
-    ];
+        $.ajax({
+            url: '/Customer/Packages/get',
+            type: 'GET',
+            success: function (rows) {
+                renderOrderPackages(rows || []);
+            },
+            error: function () {
+                renderOrderPackages([]);
+                showToast('Unable to load packages.', 3000, { type: 'error', title: 'Package load failed' });
+            }
+        });
+    }
 
-    var addonRows = [
-        { name: 'Live Dosa Station', unit: 'station', price: 350 },
-        { name: 'Live Chaat Counter', unit: 'station', price: 380 },
-        { name: 'Live Masala Tea Counter', unit: 'station', price: 180 },
-        { name: 'Banana Leaf Setup', unit: 'pax', price: 1.5 },
-        { name: 'Function Hall', unit: 'event', price: 0 },
-        { name: 'Buffet Set-up', unit: 'event', price: 80 },
-        { name: 'Cutleries Set-up', unit: 'event', price: 0 },
-        { name: 'Table Setting', unit: 'event', price: 0 },
-        { name: 'LED Wall & Sound System', unit: 'event', price: 0 }
-    ];
+    function renderOrderPackages(rows) {
+        rows = Array.isArray(rows) ? rows : [];
+        packages = rows.filter(function (item) {
+            var isActive = item.isActive ?? item.IsActive ?? false;
+            var isDeleted = item.isDeleted ?? item.IsDeleted ?? false;
+            return isActive && !isDeleted;
+        }).map(function (item) {
+            return {
+                id: String(item.id ?? item.Id ?? ''),
+                name: item.name ?? item.Name ?? 'Package',
+                price: Number(item.price ?? item.Price ?? 0),
+                min: Number(item.minPersons ?? item.MinPersons ?? 0),
+                desc: item.description ?? item.Description ?? ''
+            };
+        }).filter(function (item) {
+            return item.id !== '';
+        });
 
-    var utensilRows = [
-        { name: 'Chafing Dish', unit: 'per dish', rule: 'selected hot dishes', suggested: 7, price: 10, deposit: 20 },
-        { name: 'Serving Spoon / Ladle', unit: 'per pc', rule: '2 per chafing dish', suggested: 14, price: 0, deposit: 2 },
-        { name: 'Fork', unit: 'per pc', rule: 'pax + 10%', suggested: 56, price: 0.08, deposit: 0 },
-        { name: 'Spoon', unit: 'per pc', rule: 'pax + 10%', suggested: 56, price: 0.08, deposit: 0 },
-        { name: 'Disposable Plate', unit: 'per pc', rule: 'pax + 10%', suggested: 56, price: 0.18, deposit: 0 },
-        { name: 'Cup', unit: 'per pc', rule: 'beverage pax + 10%', suggested: 56, price: 0.12, deposit: 0 },
-        { name: 'Napkin', unit: 'per pc', rule: 'pax + 10%', suggested: 56, price: 0.05, deposit: 0 },
-        { name: 'Buffet Table with Skirting', unit: 'per table', rule: '1 per 4 chafing dishes', suggested: 2, price: 15, deposit: 0 }
-    ];
+        renderStep();
+    }
+
+    var includedChoices = [];
+    var packageCategoriesLoading = false;
+
+    var extraRows = [];
+    var addonRows = [];
+    var utensilRows = [];
 
     function money(value) {
         return 'S$' + value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+
+    function escapeHtml(value) {
+        return $('<div>').text(value ?? '').html();
     }
 
     function packageBase() {
@@ -109,7 +110,7 @@ $(function () {
 
     function gstTotal() {
         var subtotal = packageBase() + extraTotal() + addonTotal() + utensilTotal();
-        return state.gstMode === 'apply' ? subtotal * gstRate : 0;
+        return subtotal * gstRate;
     }
 
     function grandTotal() {
@@ -164,7 +165,9 @@ $(function () {
             html = '<div class="card order-card">' +
                 '<div class="section-label">All Package Types</div>' +
                 '<div class="muted" style="font-size:13px;margin-bottom:12px">Select one package to continue to Step 1 form.</div>' +
-                '<div class="pkg-grid">' + packages.map(renderPackageCard).join('') + '</div>' +
+                (packages.length
+                    ? '<div class="pkg-grid">' + packages.map(renderPackageCard).join('') + '</div>'
+                    : '<div class="muted">No active packages are available right now.</div>') +
                 '</div>';
             $('#orderStepContent').html(html);
             return;
@@ -175,34 +178,71 @@ $(function () {
             '<div class="actions" style="justify-content:flex-end;margin-bottom:10px"><button class="btn btn-light btn-sm" id="btnChangePackage">Change Package</button></div>' +
             '<div class="order-fields">' +
             '<div><label>No. of Pax</label><input type="number" id="paxCount" min="1" value="' + state.pax + '"></div>' +
-            '<div><label>Package Type</label><select id="packageSelect">' + packages.map(function (p) { return '<option value="' + p.id + '"' + (p.id === state.selectedPackage ? ' selected' : '') + '>' + p.name + ' - S$' + p.price + '/pax</option>'; }).join('') + '</select></div>' +
-            '<div><label>GST</label><select id="gstMode"><option value="apply"' + (state.gstMode === 'apply' ? ' selected' : '') + '>Apply 9% GST</option><option value="none"' + (state.gstMode === 'none' ? ' selected' : '') + '>No GST</option></select></div>' +
+            '<div><label>Package Type</label><input type="text" value="' + escapeHtml(state.packageName) + ' - S$' + state.packagePrice.toFixed(2) + '/pax" readonly></div>' +
+            '<div><label>GST</label><input type="text" value="' + (gstRate * 100).toFixed(0) + '% GST" readonly></div>' +
             '</div>' +
             '<div class="choice-block"><div class="section-label">Package Choice Selection - ' + state.packageName.toUpperCase() + '</div>' +
             '<div class="package-value-box"><div>Package Rate<b>' + money(state.packagePrice) + ' / pax</b></div><div>No. of Pax<b>' + state.pax + '</b></div><div>Package Value<b>' + money(packageBase()) + '</b></div></div>' +
             '<div class="muted" style="font-size:13px">Choose only the dishes included in this package. Dish prices are not shown here because these selections are already covered by the package value above. Additional chargeable items with prices are in Step 2.</div>' +
-            Object.keys(includedChoices).map(function (key, idx) { return renderChoiceBlock(key, includedChoices[key], idx === 0 ? 'Required: choose 2' : 'Required: choose 1'); }).join('') +
+            (packageCategoriesLoading
+                ? '<div class="muted">Loading package categories...</div>'
+                : includedChoices.length
+                    ? includedChoices.map(renderChoiceBlock).join('')
+                    : '<div class="muted">No categories are configured for this package.</div>') +
             '</div>' +
             '</div>';
         $('#orderStepContent').html(html);
     }
 
-    function renderChoiceBlock(title, choices, requirement) {
-        return '<div class="choice-block"><div class="choice-header"><div class="choice-title">' + title + '</div><div class="choice-title">' + requirement + '</div></div>' +
-            choices.map(function (choice, index) {
-                return '<div class="form-group"><label>Choice ' + (index + 1) + '</label><select><option selected>' + choice + '</option></select></div>';
+    function renderChoiceBlock(category) {
+        var requiredQuantity = Number(category.requiredQuantity) || 1;
+        return '<div class="choice-block"><div class="choice-header"><div class="choice-title">' + escapeHtml(category.categoryName) + '</div><div class="choice-title">Required: choose ' + requiredQuantity + '</div></div>' +
+            Array.from({ length: requiredQuantity }, function (_, index) {
+                return '<div class="form-group"><label>Choice ' + (index + 1) + '</label><select disabled><option selected>Menu binding pending</option></select></div>';
             }).join('') + '</div>';
+    }
+
+    function loadPackageCategories(packageId) {
+        includedChoices = [];
+        packageCategoriesLoading = true;
+        renderStep();
+
+        $.ajax({
+            url: '/Customer/Packages/get/' + encodeURIComponent(packageId) + '/categories',
+            type: 'GET',
+            success: function (rows) {
+                renderPackageCategories(rows || []);
+            },
+            error: function () {
+                renderPackageCategories([]);
+                showToast('Unable to load package categories.', 3000, { type: 'error', title: 'Load failed' });
+            }
+        });
+    }
+
+    function renderPackageCategories(rows) {
+        rows = Array.isArray(rows) ? rows : [];
+        includedChoices = rows.map(function (category) {
+            return {
+                categoryId: category.categoryId ?? category.CategoryId ?? 0,
+                categoryName: category.categoryName ?? category.CategoryName ?? '',
+                requiredQuantity: Number(category.requiredQuantity ?? category.RequiredQuantity ?? 1) || 1
+            };
+        }).filter(function (category) {
+            return category.categoryId && category.categoryName;
+        });
+
+        packageCategoriesLoading = false;
+        renderStep();
     }
 
     function renderPackageCard(pkg) {
         var selected = pkg.id === state.selectedPackage;
         return '<div class="pkg-card ' + (selected ? 'selected' : '') + '" data-package-id="' + pkg.id + '">' +
-            '<div class="pkg-name">' + pkg.name + '</div>' +
-            '<div class="pkg-price">S$' + pkg.price + '<span>/pax</span></div>' +
+            '<div class="pkg-name">' + escapeHtml(pkg.name) + '</div>' +
+            '<div class="pkg-price">S$' + pkg.price.toFixed(2) + '<span>/pax</span></div>' +
             '<div class="pkg-min">Min ' + pkg.min + ' pax</div>' +
-            '<div class="pkg-desc">' + pkg.desc + '</div>' +
-            '<div class="pkg-pill">' + (selected ? 'Selected package' : 'Select package to choose dishes') + '</div>' +
-            '<div class="muted" style="font-size:13px;margin-bottom:16px">Dish choice dropdowns are hidden until this package is selected.</div>' +
+            '<div class="pkg-desc" role="button" tabindex="0" aria-expanded="false" title="Click to show full description">' + escapeHtml(pkg.desc) + '</div>' +
             '<button class="btn ' + (selected ? 'btn-orange' : 'btn-primary') + ' select-package-btn">' + (selected ? 'Selected' : 'Select Package') + '</button>' +
             '</div>';
     }
@@ -225,7 +265,7 @@ $(function () {
                 '<td>' + row.unit + '</td>' +
                 '<td class="amount-cell">' + money(qty * row.price) + '</td></tr>';
         }).join('');
-        return '<div class="data-table-card"><div class="mini-head"><div><div class="mini-head-title">Starters</div><div class="muted">Optional extra items. Selected: ' + Object.keys(state.extraItems).length + '</div></div><span class="badge badge-quotation">Additional</span></div><table class="item-table"><thead><tr><th>Select</th><th>Dish</th><th>Type</th><th>Guide Price</th><th>Qty</th><th>Unit</th><th>Amount</th></tr></thead><tbody>' + rows + '</tbody></table></div>';
+        return '<div class="data-table-card"><div class="mini-head"><div><div class="mini-head-title">Additional Items</div><div class="muted">Optional extra items. Selected: ' + Object.keys(state.extraItems).length + '</div></div><span class="badge badge-quotation">Additional</span></div><table class="item-table"><thead><tr><th>Select</th><th>Dish</th><th>Type</th><th>Guide Price</th><th>Qty</th><th>Unit</th><th>Amount</th></tr></thead><tbody>' + (rows || '<tr><td colspan="7" class="muted">No additional items available.</td></tr>') + '</tbody></table></div>';
     }
 
     function renderStep3() {
@@ -233,7 +273,7 @@ $(function () {
             addonRows.map(function (row) {
                 var qty = state.addons[row.name] || 0;
                 return '<tr class="' + (qty > 0 ? 'selected-row' : '') + '"><td><input type="checkbox" class="addon-check" data-name="' + row.name + '"' + (qty > 0 ? ' checked' : '') + '></td><td><strong>' + row.name + '</strong></td><td>' + row.unit + '</td><td class="price-cell">' + (row.unit === 'pax' ? money(row.price) + '/pax' : money(row.price)) + '</td><td><input class="qty-input addon-qty" data-name="' + row.name + '" type="number" min="0" value="' + qty + '"></td><td class="amount-cell">' + money(qty * row.price) + '</td></tr>';
-            }).join('') + '</tbody></table></div></div>';
+            }).join('') + (addonRows.length ? '' : '<tr><td colspan="6" class="muted">No add-ons available.</td></tr>') + '</tbody></table></div></div>';
         $('#orderStepContent').html(html);
     }
 
@@ -245,7 +285,7 @@ $(function () {
             '<div class="form-group"><label>Email</label><input id="detailEmail" value="' + d.email + '"></div>' +
             '<div class="form-group"><label>Mobile / WhatsApp</label><input id="detailMobile" value="' + d.mobile + '"></div>' +
             '<div class="form-group"><label>Event Date</label><input id="detailDate" type="date" value="' + d.eventDate + '"></div>' +
-            '<div class="form-group"><label>Meal Period</label><select id="detailPeriod"><option' + (d.mealPeriod === 'Lunch' ? ' selected' : '') + '>Lunch</option><option>Dinner</option><option>Breakfast</option><option>Hi-Tea</option></select></div>' +
+            '<div class="form-group"><label>Meal Period</label><select id="detailPeriod"><option value="">Select meal period</option></select></div>' +
             '<div class="form-group"><label>Postal Code / Area</label><input id="detailPostal" value="' + d.postal + '"></div>' +
             '<div class="form-group"><label>Delivery / Event Location</label><input id="detailLocation" value="' + d.location + '"></div>' +
             '</div><div class="form-group"><label>Remarks / Dietary Notes</label><textarea id="detailNotes" rows="3">' + d.notes + '</textarea></div><div class="save-row"><button class="btn btn-primary" id="saveEventBtn">Save Event Details</button></div></div>';
@@ -257,16 +297,14 @@ $(function () {
             utensilRows.map(function (row) {
                 var qty = state.utensils[row.name] || 0;
                 return '<tr class="' + (qty > 0 ? 'selected-row' : '') + '"><td><strong>' + row.name + '</strong><div class="muted">' + row.unit + '</div></td><td>' + row.rule + '</td><td>' + row.suggested + '</td><td><input class="qty-input utensil-qty" data-name="' + row.name + '" type="number" min="0" value="' + qty + '"></td><td class="price-cell">' + money(row.price) + '</td><td>' + money(row.deposit) + '</td><td class="amount-cell">' + money(qty * row.price) + '</td></tr>';
-            }).join('') + '</tbody></table></div></div>';
+            }).join('') + (utensilRows.length ? '' : '<tr><td colspan="7" class="muted">No utensils available.</td></tr>') + '</tbody></table></div></div>';
         $('#orderStepContent').html(html);
     }
 
     function renderStep6() {
-        var html = '<div class="review-sheet"><div class="review-top"><div class="review-brand"><img class="review-logo" src="/images/logo.jpg" alt="Gayatri"><div class="review-title">Gayatri Restaurant</div><div class="review-line">UEN: 52817812A</div><div class="review-line">Email: info@gayatrirestaurant.com | Catering@gayatrirestaurant.com</div><div class="review-line">Accounts: Accounts@gayatrirestaurant.com</div><div class="review-line">Hotline: 6294 6294 | WhatsApp: 62946294</div></div><div class="review-line"><strong>Quotation Request</strong><br>Date: 03/07/2026<br>Status: Draft</div></div><div class="review-split"><div><strong>Customer</strong><div>' + state.details.company + '</div><div>' + state.details.email + '</div><div>' + state.details.mobile + '</div></div><div><strong>Event</strong><div>' + state.details.eventDate + ' ' + state.details.mealPeriod + '</div><div>' + state.details.location + '</div><div>Pax: ' + state.pax + '</div></div></div><div class="review-table-title">Package: ' + state.packageName + ' (S$' + state.packagePrice.toFixed(2) + '/pax x ' + state.pax + ' pax = ' + money(packageBase()) + ')</div><div class="review-table-title">Included Package Dish Choices</div><table class="item-table"><thead><tr><th>Category</th><th>Dish</th><th>Included Qty</th><th>Unit</th><th>Status</th></tr></thead><tbody>' +
-            Object.keys(includedChoices).map(function (key) {
-                return includedChoices[key].map(function (dish) {
-                    return '<tr><td>' + key + '</td><td>' + dish + '</td><td>5</td><td>tray</td><td><span class="badge badge-paid">Included in Package</span></td></tr>';
-                }).join('');
+        var html = '<div class="review-sheet"><div class="review-top"><div class="review-brand"><div class="review-title">Order Review</div></div><div class="review-line"><strong>Quotation Request</strong><br>Date: ' + new Date().toLocaleDateString() + '<br>Status: Draft</div></div><div class="review-split"><div><strong>Customer</strong><div>' + escapeHtml(state.details.company) + '</div><div>' + escapeHtml(state.details.email) + '</div><div>' + escapeHtml(state.details.mobile) + '</div></div><div><strong>Event</strong><div>' + escapeHtml(state.details.eventDate) + ' ' + escapeHtml(state.details.mealPeriod) + '</div><div>' + escapeHtml(state.details.location) + '</div><div>Pax: ' + state.pax + '</div></div></div><div class="review-table-title">Package: ' + escapeHtml(state.packageName) + ' (S$' + state.packagePrice.toFixed(2) + '/pax x ' + state.pax + ' pax = ' + money(packageBase()) + ')</div><div class="review-table-title">Included Package Dish Choices</div><table class="item-table"><thead><tr><th>Category</th><th>Dish</th><th>Included Qty</th><th>Unit</th><th>Status</th></tr></thead><tbody>' +
+            includedChoices.map(function (category) {
+                return '<tr><td>' + escapeHtml(category.categoryName) + '</td><td>-</td><td>' + (Number(category.requiredQuantity) || 1) + '</td><td>choice</td><td><span class="badge badge-paid">Included in Package</span></td></tr>';
             }).join('') + '</tbody></table></div>';
         $('#orderStepContent').html(html);
     }
@@ -279,35 +317,33 @@ $(function () {
 
     function buildOrderPayload() {
         return {
-            id: '',
+            id: 0,
             orderNumber: generateOrderNumber(),
-            customerId: '',
-            packageId: state.selectedPackage,
-            mealPeriodId: state.details.mealPeriod,
-            locationId: '',
-            eventStartDateTime: state.details.eventDate,
-            eventEndDateTime: '',
+            customerId: 0,
+            packageId: parseInt(state.selectedPackage, 10) || null,
+            mealPeriodId: null,
+            locationId: null,
+            eventStartDateTime: state.details.eventDate || null,
+            eventEndDateTime: null,
             deliveryAddress: state.details.location,
             notes: state.details.notes,
-            pax: state.pax.toString(),
-            packageBaseAmount: packageBase().toString(),
-            additionalMenuAmount: extraTotal().toString(),
-            addOnsAmount: addonTotal().toString(),
-            utensilsAmount: utensilTotal().toString(),
-            subTotal: grandTotal().toString(),
-            discount: '0',
-            deliveryFee: '0',
-            taxAmount: gstTotal().toString(),
-            totalAmount: grandTotal().toString(),
-            taxPercentage: state.gstMode === 'apply' ? '9' : '0',
-            paidAmount: '0',
-            orderStatus: 'Quotation',
+            pax: state.pax,
+            packageBaseAmount: packageBase(),
+            additionalMenuAmount: extraTotal(),
+            addOnsAmount: addonTotal(),
+            utensilsAmount: utensilTotal(),
+            subTotal: grandTotal(),
+            discount: 0,
+            deliveryFee: 0,
+            taxAmount: gstTotal(),
+            totalAmount: grandTotal(),
+            taxPercentage: gstRate * 100,
+            paidAmount: 0,
+            orderStatus: 0,
             createdDate: new Date().toISOString(),
-            createdBy: '',
+            createdBy: null,
             updatedDate: null,
-            updatedBy: null,
-            isActive: '1',
-            isDeleted: '0'
+            updatedBy: null
         };
     }
 
@@ -367,9 +403,11 @@ $(function () {
         state.selectedPackage = '';
         state.packageName = '-';
         state.packagePrice = 0;
-        state.extraItems = { 'Vegetable Samosa': 1 };
-        state.addons = { 'Table Setting': 1 };
-        state.utensils = { 'Fork': 49 };
+        state.pax = 0;
+        state.extraItems = {};
+        state.addons = {};
+        state.utensils = {};
+        includedChoices = [];
         renderStep();
     });
 
@@ -384,15 +422,6 @@ $(function () {
         renderStep();
     });
 
-    $(document).on('change', '#packageSelect', function () {
-        selectPackage($(this).val());
-    });
-
-    $(document).on('change', '#gstMode', function () {
-        state.gstMode = $(this).val();
-        updateSummary();
-    });
-
     $(document).on('click', '.pkg-card, .select-package-btn', function (e) {
         var card = $(e.target).closest('.pkg-card');
         if (card.length) {
@@ -400,15 +429,36 @@ $(function () {
         }
     });
 
+    function togglePackageDescription(description) {
+        var isExpanded = description.toggleClass('expanded').hasClass('expanded');
+        description.attr('aria-expanded', isExpanded);
+        description.attr('title', isExpanded ? 'Click to hide full description' : 'Click to show full description');
+    }
+
+    $(document).on('click', '.pkg-desc', function (e) {
+        e.stopPropagation();
+        togglePackageDescription($(this));
+    });
+
+    $(document).on('keydown', '.pkg-desc', function (e) {
+        if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            e.stopPropagation();
+            togglePackageDescription($(this));
+        }
+    });
+
     function selectPackage(packageId) {
+        packageId = String(packageId);
         var pkg = packages.find(function (x) { return x.id === packageId; });
         if (!pkg) return;
         state.selectedPackage = pkg.id;
         state.packageName = pkg.name;
         state.packagePrice = pkg.price;
+        state.pax = pkg.min;
         state.step1View = 'form';
         currentStep = 1;
-        renderStep();
+        loadPackageCategories(pkg.id);
     }
 
     $(document).on('change', '.extra-check', function () {
@@ -455,7 +505,7 @@ $(function () {
     $(document).on('click', '#suggestUtensilsBtn', function () {
         state.utensils = {};
         utensilRows.forEach(function (row) {
-            state.utensils[row.name] = row.name === 'Fork' ? 49 : 0;
+            state.utensils[row.name] = row.suggested || 0;
         });
         renderStep();
     });
@@ -480,5 +530,5 @@ $(function () {
         showToast('Event details saved');
     });
 
-    renderStep();
+    loadOrderPackages();
 });

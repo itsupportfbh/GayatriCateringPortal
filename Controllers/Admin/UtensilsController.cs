@@ -43,17 +43,43 @@ namespace GayatriCateringPortal.Controllers.Admin
         [HttpPost("create")]
         public IActionResult Create([FromBody] UtensilMaster item)
         {
+            if (!ModelState.IsValid)
+            {
+                var errors = string.Join("; ", ModelState.Values
+                .SelectMany(x => x.Errors)
+                .Select(x => x.ErrorMessage));
+            }
+
             if (item == null) return BadRequest();
             int newId = _repo.Create(item);
+
+            if (newId == -1)
+            {
+                return Ok(new { success = false, message = "Utensil already exists" });
+            }
+
             return Ok(new { success = newId > 0, id = newId });
         }
 
         [HttpPost("update")]
         public IActionResult Update([FromBody] UtensilMaster item)
         {
+            if (!ModelState.IsValid)
+            {
+                var errors = string.Join("; ", ModelState.Values
+                .SelectMany(x => x.Errors)
+                .Select(x => x.ErrorMessage));
+            }
+
             if (item == null) return BadRequest();
-            bool updated = _repo.Update(item);
-            return Ok(new { success = updated });
+            int result = _repo.Update(item);
+
+            if (result == -1)
+            {
+                return Ok(new { success = false, message = "Utensil already exists" });
+            }
+
+            return Ok(new { success = result > 0 });
         }
 
         [HttpPost("delete/{id}")]
