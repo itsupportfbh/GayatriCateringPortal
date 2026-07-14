@@ -1,11 +1,118 @@
 $(document).ready(function () {
-    bindUserImageUpload();
-    bindDobAgeAutoCalc();
-    loadUserRolesOptions();
     loadUsers();
 });
 
-var userRolesCache = [];
+function loadCountries(selectedCountryId) {
+    return $.ajax({
+        url: '/Common/GetCountry',
+        type: 'GET',
+        dataType: 'json',
+        success: function (rows) {
+            var list = Array.isArray(rows) ? rows : [];
+            var html = '<option value="0">--Select Country--</option>';
+
+            for (var i = 0; i < list.length; i++) {
+                var row = list[i] || {};
+          
+                html += '<option value="' + row.id + '">' + (row.name || '') + '</option>';
+            }
+
+            $('#userCountry').html(html);
+
+            if (selectedCountryId) {
+                $('#userCountry').val(selectedCountryId.toString());
+            }
+
+            $('#userCountry').off('change.location').on('change.location', function () {
+                var countryId = parseInt($(this).val(), 10) || 0;
+                $('#userState').html('<option value="0">--Select State--</option>');
+                $('#userCity').html('<option value="0">--Select City--</option>');
+                if (countryId > 0) {
+                    loadStatesByCountryId(countryId);
+                }
+            });
+        },
+        error: function () {
+            $('#userCountry').html('<option value="0">--Select Country--</option>');
+            showToast('Unable to load countries.', 3000, { type: 'error', title: 'Load failed' });
+        }
+    });
+}
+
+function loadStatesByCountryId(countryId, selectedStateId) {
+    if (!countryId) {
+        $('#userState').html('<option value="0">--Select State--</option>');
+        $('#userCity').html('<option value="0">--Select City--</option>');
+        return $.Deferred().resolve().promise();
+    }
+
+    return $.ajax({
+        url: '/Common/GetStateByCountryId?countryId=' + parseInt(countryId, 10),
+        type: 'GET',
+        dataType: 'json',
+        success: function (rows) {
+            var list = Array.isArray(rows) ? rows : [];
+            var html = '<option value="0">--Select State--</option>';
+
+            for (var i = 0; i < list.length; i++) {
+                var row = list[i] || {};
+              
+                html += '<option value="' + row.id + '">' + (row.name || '') + '</option>';
+            }
+
+            $('#userState').html(html);
+
+            if (selectedStateId) {
+                $('#userState').val(selectedStateId.toString());
+            }
+
+            $('#userState').off('change.location').on('change.location', function () {
+                var stateId = parseInt($(this).val(), 10) || 0;
+                $('#userCity').html('<option value="0">--Select City--</option>');
+                if (stateId > 0) {
+                    loadCitiesByStateId(stateId);
+                }
+            });
+        },
+        error: function () {
+            $('#userState').html('<option value="0">--Select State--</option>');
+            showToast('Unable to load states.', 3000, { type: 'error', title: 'Load failed' });
+        }
+    });
+}
+
+function loadCitiesByStateId(stateId, selectedCityId) {
+    if (!stateId) {
+        $('#userCity').html('<option value="0">--Select City--</option>');
+        return $.Deferred().resolve().promise();
+    }
+
+    return $.ajax({
+        url: '/Common/GetCityByStateId?stateId=' + parseInt(stateId, 10),
+        type: 'GET',
+        dataType: 'json',
+        success: function (rows) {
+            var list = Array.isArray(rows) ? rows : [];
+            var html = '<option value="0">--Select City--</option>';
+
+            for (var i = 0; i < list.length; i++) {
+                var row = list[i] || {};
+               
+                html += '<option value="' + row.id + '">' + (row.name || '') + '</option>';
+            }
+
+            $('#userCity').html(html);
+
+            if (selectedCityId) {
+                $('#userCity').val(selectedCityId.toString());
+            }
+        },
+        error: function () {
+            $('#userCity').html('<option value="0">--Select City--</option>');
+            showToast('Unable to load cities.', 3000, { type: 'error', title: 'Load failed' });
+        }
+    });
+}
 
 function initUserRolesDropdown() {
     var $roles = $('#userRoles');
@@ -19,6 +126,20 @@ function initUserRolesDropdown() {
             dropdownParent: $('#usersModal .modal-box')
         });
     }
+
+    $roles.off('change.roles').on('change.roles', function () {
+        clearRolesError();
+    });
+}
+
+function setRolesError(message) {
+    $('#userRolesError').removeClass('hidden').text(message || 'Roles is required');
+    $('#usersModal .select2-container--default .select2-selection--multiple').addClass('input-error');
+}
+
+function clearRolesError() {
+    $('#userRolesError').addClass('hidden').text('');
+    $('#usersModal .select2-container--default .select2-selection--multiple').removeClass('input-error');
 }
 
 function normalizeRoleIds(roleIds) {
@@ -28,44 +149,42 @@ function normalizeRoleIds(roleIds) {
         .filter(function (x) { return !isNaN(x) && x > 0; });
 }
 
-function renderUserRolesOptions(selectedRoleIds) {
+function loadUserRolesOptions(selectedRoleIds) {
     var selected = normalizeRoleIds(selectedRoleIds);
     var selectedMap = {};
     for (var i = 0; i < selected.length; i++) {
         selectedMap[selected[i]] = true;
     }
 
-    var html = '';
-    for (var j = 0; j < userRolesCache.length; j++) {
-        var role = userRolesCache[j];
-        var id = parseInt(role.id || role.Id, 10);
-        if (isNaN(id)) continue;
-
-        var text = (role.name || role.Name || '') + ' (' + (role.code || role.Code || '') + ')';
-        var selectedAttr = selectedMap[id] ? ' selected' : '';
-        html += '<option value="' + id + '"' + selectedAttr + '>' + text + '</option>';
-    }
-
-    $('#userRoles').html(html);
-    initUserRolesDropdown();
-    $('#userRoles').trigger('change.select2');
-}
-
-function loadUserRolesOptions(selectedRoleIds) {
     $.ajax({
         url: '/Admin/Roles/get',
         type: 'GET',
         dataType: 'json',
         success: function (roles) {
             var list = Array.isArray(roles) ? roles : [];
-            userRolesCache = list.filter(function (r) {
-                return (r.isActive !== undefined ? r.isActive : r.IsActive) !== false;
+            var activeRoles = list.filter(function (r) {
+                return r.isActive !== false;
             });
-            renderUserRolesOptions(selectedRoleIds);
+
+            var html = '';
+            for (var j = 0; j < activeRoles.length; j++) {
+                var role = activeRoles[j];
+                var id = parseInt(role.id || role.Id, 10);
+                if (isNaN(id)) continue;
+
+                var text = (role.name || role.Name || '') + ' (' + (role.code || role.Code || '') + ')';
+                var selectedAttr = selectedMap[id] ? ' selected' : '';
+                html += '<option value="' + id + '"' + selectedAttr + '>' + text + '</option>';
+            }
+
+            $('#userRoles').html(html);
+            initUserRolesDropdown();
+            $('#userRoles').trigger('change.select2');
         },
         error: function () {
-            userRolesCache = [];
-            renderUserRolesOptions(selectedRoleIds);
+            $('#userRoles').html('');
+            initUserRolesDropdown();
+            $('#userRoles').trigger('change.select2');
         }
     });
 }
@@ -78,7 +197,7 @@ function getSelectedUserRoleIds() {
 
 function loadUserRoleMappings(userId) {
     if (!userId || parseInt(userId, 10) <= 0) {
-        renderUserRolesOptions([]);
+        loadUserRolesOptions([]);
         return;
     }
 
@@ -91,10 +210,10 @@ function loadUserRoleMappings(userId) {
             var roleIds = list
                 .map(function (x) { return parseInt(x.roleId || x.RoleId, 10); })
                 .filter(function (x) { return !isNaN(x) && x > 0; });
-            renderUserRolesOptions(roleIds);
+            loadUserRolesOptions(roleIds);
         },
         error: function () {
-            renderUserRolesOptions([]);
+            loadUserRolesOptions([]);
         }
     });
 }
@@ -185,32 +304,26 @@ function calculateAgeFromDateValue(dateValue) {
 }
 
 function syncUserAgeFromDob() {
-    var dobValue = $('#userDob').val();
-    var age = calculateAgeFromDateValue(dobValue);
-    $('#userAge').val(age === '' ? '' : age.toString());
+    var age = calculateAgeFromDateValue($('#userDob').val());
+    $('#userAge').val(age === '' ? '' : String(age));
 }
 
 function bindDobAgeAutoCalc() {
     $('#userAge').prop('disabled', true);
-    $('#userDob').off('change.userage input.userage').on('change.userage input.userage', function () {
-        syncUserAgeFromDob();
-    });
+    $('#userDob').off('change.userage input.userage').on('change.userage input.userage', syncUserAgeFromDob);
 }
 
 function setUserDobValue(dateValue) {
     var val = toDateInputValue(dateValue);
     var dobInput = document.getElementById('userDob');
+
     if (dobInput && dobInput._flatpickr) {
-        if (val) {
-            dobInput._flatpickr.setDate(val, true, 'Y-m-d');
-        } else {
-            dobInput._flatpickr.clear();
-        }
-        syncUserAgeFromDob();
-        return;
+        if (val) dobInput._flatpickr.setDate(val, true, 'Y-m-d');
+        else dobInput._flatpickr.clear();
+    } else {
+        $('#userDob').val(val);
     }
 
-    $('#userDob').val(val);
     syncUserAgeFromDob();
 }
 
@@ -219,6 +332,10 @@ function closeUsersModal() {
 }
 
 function openUsersModal() {
+    bindUserImageUpload();
+    bindDobAgeAutoCalc();
+    loadUserRolesOptions([]);
+
     clearUsersForm();
     $('#users-title').html('Create User');
     $('#usersModal').removeClass('hidden');
@@ -227,12 +344,8 @@ function openUsersModal() {
     initUserField('#userName', '#userNameError');
     initUserField('#userEmail', '#userEmailError');
 
-    if (!userRolesCache.length) {
-        loadUserRolesOptions([]);
-    } else {
-        renderUserRolesOptions([]);
-    }
-    
+    loadCountries();
+
     $('#saveUserBtn').text('Save');
 }
 
@@ -296,10 +409,10 @@ function renderUsersList(rows) {
         html += `
             <tr data-id="${id}">
                 <td>${serial}</td>
-                <td><strong>${code}<strong></td>
-                <td><strong>${name}</strong></td>
-                <td>${email}</td>
-                <td>${contact}</td>
+                <td><strong>${code || ''}<strong></td>
+                <td><strong>${name || ''}</strong></td>
+                <td>${email || ''}</td>
+                <td>${contact || ''}</td>
                 <td>${adminBadge}</td>
                 <td>${statusBadge}</td>
                 <td>
@@ -347,9 +460,9 @@ function clearUsersForm(keepId) {
     $('#userEmail').val('');
     $('#userContact').val('');
     $('#userRemarks').val('');
-    $('#userCountry').val('');
-    $('#userState').val('');
-    $('#userCity').val('');
+    $('#userCountry').html('<option value="0">--Select Country--</option>');
+    $('#userState').html('<option value="0">--Select State--</option>');
+    $('#userCity').html('<option value="0">--Select City--</option>');
     $('#userPostalCode').val('');
     $('#userAge').val('');
     $('#userAddress1').val('');
@@ -359,7 +472,8 @@ function clearUsersForm(keepId) {
     $('#userIsActive').val('true');
     $('#userImagePreview').attr('src', '').addClass('hidden');
     $('#userIsAdmin').prop('checked', false);
-    renderUserRolesOptions([]);
+    loadUserRolesOptions([]);
+    clearRolesError();
     setUserDobValue('');
     clearUserError('#userCode', '#userCodeError');
     clearUserError('#userName', '#userNameError');
@@ -367,6 +481,9 @@ function clearUsersForm(keepId) {
 }
 
 function editUser(id) {
+    bindUserImageUpload();
+    bindDobAgeAutoCalc();
+
     $('#users-title').html('Edit User');
 
     $.ajax({
@@ -378,19 +495,33 @@ function editUser(id) {
                 showToast('User not found.', 3000, { type: 'warning', title: 'Not found' });
                 return;
             }
-            $('#userId').val(user.Id || user.id || '');
-            $('#userCode').val(user.Code || user.code || '');
-            $('#userName').val(user.Name || user.name || '');
-            $('#userEmail').val(user.Email || user.email || '');
-            $('#userContact').val(user.ContactNo || user.contactNo || '');
-            $('#userRemarks').val(user.Remarks || user.remarks || '');
-            $('#userCountry').val((user.Country || user.country || '').toString());
-            $('#userState').val((user.State || user.state || '').toString());
-            $('#userCity').val((user.City || user.city || '').toString());
-            $('#userPostalCode').val(user.PostalCode || user.postalCode || '');
-            setUserDobValue(user.DOB || user.dob);
-            $('#userAddress1').val(user.Address1 || user.address1 || '');
-            $('#userAddress2').val(user.Address2 || user.address2 || '');
+            $('#userId').val(user.id || 0);
+            $('#userCode').val(user.code || '');
+            $('#userName').val(user.name || '');
+            $('#userEmail').val(user.email || '');
+            $('#userContact').val(user.contactNo || '');
+            $('#userRemarks').val(user.remarks || '');
+
+            var selectedCountryId = parseInt(user.country, 10) || 0;
+            var selectedStateId = parseInt(user.state, 10) || 0;
+            var selectedCityId = parseInt(user.city, 10) || 0;
+
+            $('#userState').html('<option value="0">--Select State--</option>');
+            $('#userCity').html('<option value="0">--Select City--</option>');
+
+            loadCountries(selectedCountryId).done(function () {
+                if (!selectedCountryId) return;
+
+                loadStatesByCountryId(selectedCountryId, selectedStateId).done(function () {
+                    if (!selectedStateId) return;
+                    loadCitiesByStateId(selectedStateId, selectedCityId);
+                });
+            });
+
+            $('#userPostalCode').val(user.postalCode || '');
+            setUserDobValue(user.dob);
+            $('#userAddress1').val(user.address1 || '');
+            $('#userAddress2').val(user.address2 || '');
 
             var imageValue = user.Image || user.image || '';
             $('#userImage').val(imageValue);
@@ -401,15 +532,12 @@ function editUser(id) {
             }
 
             $('#userImageFile').val('');
-            $('#userIsAdmin').prop('checked', user.IsAdmin || user.isAdmin || false);
-            $('#userIsActive').val(((user.IsActive !== undefined ? user.IsActive : user.isActive) ? true : false).toString());
+            $('#userIsAdmin').prop('checked', user.isAdmin || false);
+            $('#userIsActive').val(((user.isActive) ? true : false).toString());
 
-            var userId = user.Id || user.id || 0;
-            if (!userRolesCache.length) {
-                loadUserRolesOptions([]);
-            }
+            var userId = user.id || 0;
             loadUserRoleMappings(userId);
-            
+
             initUserField('#userCode', '#userCodeError');
             initUserField('#userName', '#userNameError');
             initUserField('#userEmail', '#userEmailError');
@@ -427,6 +555,7 @@ function validateUserForm() {
     clearUserError('#userCode', '#userCodeError');
     clearUserError('#userName', '#userNameError');
     clearUserError('#userEmail', '#userEmailError');
+    clearRolesError();
 
     var firstInvalid = null;
     var code = $('#userCode').val().toString().trim();
@@ -454,12 +583,16 @@ function validateUserForm() {
 
     var selectedRoles = getSelectedUserRoleIds();
     if (!selectedRoles.length) {
-        showToast('Select at least one role.', 3000, { type: 'error', title: 'Validation' });
-        return false;
+        setRolesError('Select at least one role');
+        if (!firstInvalid) firstInvalid = '#userRoles';
     }
 
     if (firstInvalid) {
-        $(firstInvalid).focus();
+        if (firstInvalid === '#userRoles') {
+            $('#userRoles').select2('open');
+        } else {
+            $(firstInvalid).focus();
+        }
         return false;
     }
 

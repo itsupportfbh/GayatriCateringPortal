@@ -1038,7 +1038,7 @@ label {
     overflow: visible
 }
 
-/* Richer table visuals: stronger dividers, zebra rows, sticky header, spacing */
+/* Richer table visuals: stronger dividers, sticky header, spacing */
 .tbl th, .tbl td {
     border-right: 1px solid var(--gray-200);
 }
@@ -1048,25 +1048,22 @@ label {
     }
 
 .tbl thead th {
-    background: linear-gradient(180deg, #ffffff 0%, #f9fcfa 100%);
-    color: var(--gray-700);
+    background: linear-gradient(180deg, #f3faf6 0%, #e6f3eb 100%);
+    color: var(--green-dark);
     font-size: 11.5px;
-    font-weight: 800;
+    font-weight: 900;
     letter-spacing: .45px;
     text-transform: uppercase;
-    border-bottom: 1px solid #d7e8de;
+    line-height: 1.2;
+    border-bottom: 2px solid #7fb596;
     position: sticky;
     top: 0;
     z-index: 3;
-    box-shadow: inset 0 -2px 0 rgba(26,110,60,.18), 0 4px 12px rgba(15,23,42,.04);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.9), 0 6px 14px rgba(15,23,42,.06);
 }
 
 .tbl tr:last-child td {
     border-bottom: none
-}
-
-.tbl tbody tr:nth-child(even) td {
-    background: var(--gray-50);
 }
 
 .tbl tr:hover td {
@@ -1075,7 +1072,7 @@ label {
 }
 
 .tbl th {
-    padding: 8px 12px;
+    padding: 10px 12px;
     vertical-align: middle;
 }
 
@@ -1704,27 +1701,31 @@ body.admin-mode.logged-in .sidebar {
 .tbl th.sortable {
     cursor: pointer;
     user-select: none;
-    position: relative
+    position: relative;
+    padding-right: 26px
 }
 
     .tbl th.sortable:after {
         content: '⬍';
         font-size: 10px;
+        color: var(--gray-500);
         position: absolute;
-        right: 12px;
+        right: 10px;
         top: 50%;
         transform: translateY(-50%);
-        opacity: .45
+        opacity: .55
     }
 
     .tbl th.sortable.sorted-asc:after {
         content: '⬆';
-        opacity: .8
+        color: var(--green-dark);
+        opacity: .9
     }
 
     .tbl th.sortable.sorted-desc:after {
         content: '⬇';
-        opacity: .8
+        color: var(--green-dark);
+        opacity: .9
     }
 
 .datatable-footer {

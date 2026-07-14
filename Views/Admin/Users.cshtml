@@ -83,8 +83,9 @@
                 </label>
             </div>
             <div class="form-group">
-                <label>Roles</label>
+                <label>Roles <span class="field-required">*</span></label>
                 <select id="userRoles" class="form-control" multiple data-placeholder="Select roles"></select>
+                <div class="field-error hidden" id="userRolesError"></div>
             </div>
         </div>
 
@@ -98,52 +99,37 @@
                 <input type="text" id="userAge" class="form-control" placeholder="Age" disabled />
             </div>
             <div class="form-group">
-                <label>Postal Code</label>
-                <input type="text" id="userPostalCode" class="form-control" placeholder="Postal code" />
+                <label>Address 1</label>
+                <input type="text" id="userAddress1" class="form-control" placeholder="Address line 1" />
             </div>
         </div>
 
         <div class="form-row col3">
             <div class="form-group">
+                <label>Address 2</label>
+                <input type="text" id="userAddress2" class="form-control" placeholder="Address line 2" />
+            </div>
+            <div class="form-group">
                 <label>Country</label>
                 <select id="userCountry" class="form-control">
-                    <option value="">Select Country</option>
-                    <option value="1">Singapore</option>
-                    <option value="2">India</option>
-                    <option value="3">Malaysia</option>
                 </select>
             </div>
             <div class="form-group">
                 <label>State</label>
                 <select id="userState" class="form-control">
-                    <option value="">Select State</option>
-                    <option value="1">Central</option>
-                    <option value="2">North</option>
-                    <option value="3">South</option>
-                    <option value="4">East</option>
-                    <option value="5">West</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label>City</label>
-                <select id="userCity" class="form-control">
-                    <option value="">Select City</option>
-                    <option value="1">Singapore</option>
-                    <option value="2">Chennai</option>
-                    <option value="3">Mumbai</option>
-                    <option value="4">Kuala Lumpur</option>
                 </select>
             </div>
         </div>
 
         <div class="form-row col3">
             <div class="form-group">
-                <label>Address 1</label>
-                <input type="text" id="userAddress1" class="form-control" placeholder="Address line 1" />
+                <label>City</label>
+                <select id="userCity" class="form-control">
+                </select>
             </div>
             <div class="form-group">
-                <label>Address 2</label>
-                <input type="text" id="userAddress2" class="form-control" placeholder="Address line 2" />
+                <label>Postal Code</label>
+                <input type="text" id="userPostalCode" class="form-control" placeholder="Postal code" />
             </div>
             <div class="form-group">
                 <label>Image Upload</label>

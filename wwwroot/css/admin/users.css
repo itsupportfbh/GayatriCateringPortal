@@ -7,8 +7,8 @@
 
 /* users modal is wider because it contains more fields */
 #usersModal .modal-box {
-    width: 1100px;
-    max-width: 96vw;
+    width: 1020px;
+    max-width: calc(100vw - 56px);
     max-height: 88vh;
     overflow-y: auto;
     overflow-x: hidden;
@@ -29,16 +29,19 @@
     min-height: 42px;
     border: 1px solid var(--gray-300);
     border-radius: 10px;
-    padding: 5px 8px;
+    padding: 4px 8px;
     background: #fff;
+    display: flex;
+    align-items: center;
 }
 
 #usersModal .select2-container--default .select2-selection--multiple .select2-selection__rendered {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: 6px;
-    padding: 0;
+    gap: 4px;
+    min-height: 30px;
+    padding: 0 !important;
 }
 
 #usersModal .select2-container--default.select2-container--focus .select2-selection--multiple {
@@ -49,13 +52,22 @@
 #usersModal .select2-container--default .select2-selection--multiple .select2-selection__choice {
     display: inline-flex;
     align-items: center;
-    gap: 6px;
+    gap: 4px;
     background: var(--green-light);
     border: 1px solid #cbe7d8;
     color: var(--green-dark);
     border-radius: 999px;
-    padding: 2px 10px;
+    padding: 1px 8px;
+    font-size: 13px;
+    line-height: 1.25;
     margin: 0;
+    max-width: 180px;
+}
+
+#usersModal .select2-container--default .select2-selection--multiple .select2-selection__choice__display {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 #usersModal .select2-container--default .select2-selection--multiple .select2-selection__choice__remove {
@@ -80,8 +92,17 @@
 }
 
 #usersModal .select2-container--default .select2-search--inline .select2-search__field {
-    margin-top: 0;
-    margin-left: 0;
+    margin: 0 !important;
+    margin-left: 0 !important;
+    height: 30px;
+    line-height: 30px;
+    font-size: 14px;
+}
+
+#usersModal .select2-container--default .select2-selection--multiple.input-error,
+#usersModal .select2-container--default.select2-container--focus .select2-selection--multiple.input-error {
+    border-color: var(--red);
+    box-shadow: 0 0 0 3px rgba(239,68,68,.12);
 }
 
 #usersModal .select2-dropdown {
@@ -91,6 +112,10 @@
 }
 
 @media (max-width: 900px) {
+    #usersModal .modal-box {
+        max-width: calc(100vw - 28px);
+    }
+
     #usersModal .form-row.col3 {
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }
