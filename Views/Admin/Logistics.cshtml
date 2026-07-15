@@ -4,26 +4,56 @@
 
 @section Styles {
     <link rel="stylesheet" href="~/css/admin/logistics.css" asp-append-version="true">
-}
+    }
 
-<div class="page-header">
-    <div>
-        <div class="page-title">Logistics</div>
-        <div class="page-subtitle">Dispatch and delivery tracking for all active orders</div>
+    <div class="page-header">
+        <div>
+            <div class="page-title">Logistics</div>
+            <div class="page-subtitle">Dispatch and delivery tracking for all active orders</div>
+        </div>
     </div>
-</div>
 
-<div class="card">
-    <div class="panel-header">
-        <div class="panel-title">Dispatch Board</div>
-    </div>
-    <div class="muted" style="margin-bottom:16px">Track delivery assignments and active order dispatch progress.</div>
-    <div class="table-wrap" id="logisticsTable">
-        <p class="muted">Loading...</p>
-    </div>
-</div>
 
-@section Scripts {
-    <script src="~/js/admin/table-utils.js" asp-append-version="true"></script>
-    <script src="~/js/admin/logistics.js" asp-append-version="true"></script>
-}
+
+    <div id="commsListPanel" class="card">
+        <div class="panel-header">
+            <div class="panel-title">Dispatch Board</div>
+        </div>
+        <div class="muted" style="margin-bottom:16px">Track delivery assignments and active order dispatch progress.</div>
+        <div class="table-wrap" id="logisticsTable">
+            <p class="muted">Loading...</p>
+        </div>
+        <div class="table-wrap">
+            <table class="tbl" id="LogisticsList" data-page-size="10">
+                <thead>
+                    <tr>
+                        <th class="sortable">#</th>
+                        <th class="sortable">Order Date</th>
+                        <th class="sortable">Order Number</th>
+                        <th class="sortable">Location</th>
+                        <th class="sortable">DriverName </th>
+                        <th class="sortable">Status</th>
+                        <th class="sortable">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- rows rendered by ~/js/admin/comms.js -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="d-flex gap-2 mb-3">
+        <button type="button" id="btnPending" class="btn btn-warning active">
+            🚚 Pending Delivery
+        </button>
+
+        <button type="button" id="btnDelivered" class="btn btn-success">
+            ✅ Delivered
+        </button>
+    </div>
+
+    @section Scripts {
+        <script src="~/js/admin/table-utils.js" asp-append-version="true"></script>
+        <script src="~/js/admin/logistics.js" asp-append-version="true"></script>
+    }
