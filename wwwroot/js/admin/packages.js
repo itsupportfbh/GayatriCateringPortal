@@ -427,9 +427,9 @@ function savePackage() {
         MinPersons: payload.MinPersons,
         MaxPersons: payload.MaxPersons,
         IsActive: payload.IsActive,
-        CreatedBy: 0,
+        CreatedBy: window.getCurrentUserId ? window.getCurrentUserId() : 0,
         CreatedDate: null,
-        UpdatedBy: 0,
+        UpdatedBy: window.getCurrentUserId ? window.getCurrentUserId() : 0,
         UpdatedDate: null,
         IsDeleted: false
     };
@@ -477,7 +477,7 @@ function savePackageItems(packageId, items, isUpdate) {
             PackageId: packageId,
             CategoryId: parseInt(item.CategoryId || item.categoryId, 10),
             Quantity: parseInt(item.Quantity || item.quantity, 10) || 1,
-            CreatedBy: 1,
+            CreatedBy: window.getCurrentUserId ? window.getCurrentUserId() : 0,
             CreatedDate: new Date().toISOString(),
             IsActive: true,
             IsDeleted: false

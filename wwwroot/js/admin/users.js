@@ -1,6 +1,33 @@
+var allUsers = [];
+
 $(document).ready(function () {
+    bindUsersSearch();
     loadUsers();
 });
+
+function bindUsersSearch() {
+    $('#usersSearch').off('input.users').on('input.users', function () {
+        applyUsersFilter($(this).val());
+    });
+}
+
+function applyUsersFilter(searchText) {
+    var term = (searchText || '').toLowerCase().trim();
+    if (!term) {
+        renderUsersList(allUsers);
+        return;
+    }
+
+    var filtered = allUsers.filter(function (u) {
+        var code = String(u.code || u.Code || '').toLowerCase();
+        var name = String(u.name || u.Name || '').toLowerCase();
+        var email = String(u.email || u.Email || '').toLowerCase();
+        var contact = String(u.contactNo || u.ContactNo || '').toLowerCase();
+        return code.indexOf(term) > -1 || name.indexOf(term) > -1 || email.indexOf(term) > -1 || contact.indexOf(term) > -1;
+    });
+
+    renderUsersList(filtered);
+}
 
 function loadCountries(selectedCountryId) {
     return $.ajax({
@@ -232,8 +259,8 @@ function saveUserRoleMappings(userId, roleIds, isUpdate, emailStatus) {
             RoleId: roleId,
             IsActive: true,
             IsDeleted: false,
-            CreatedBy: 0,
-            UpdatedBy: 0
+            CreatedBy: window.getCurrentUserId ? window.getCurrentUserId() : 0,
+            UpdatedBy: window.getCurrentUserId ? window.getCurrentUserId() : 0
         };
     });
 
@@ -353,10 +380,6 @@ function viewCurrentUserImage() {
     openUserImageInNewTab(getCurrentUserImageUrl());
 }
 
-function viewUserImage(imageValue) {
-    openUserImageInNewTab(buildUserImageUrl(imageValue));
-}
-
 function syncUserAgeFromDob() {
     var age = calculateAgeFromDateValue($('#userDob').val());
     $('#userAge').val(age === '' ? '' : String(age));
@@ -411,9 +434,11 @@ function loadUsers() {
         type: 'GET',
         dataType: 'json',
         success: function (rows) {
-            renderUsersList(Array.isArray(rows) ? rows : []);
+            allUsers = Array.isArray(rows) ? rows : [];
+            applyUsersFilter($('#usersSearch').val());
         },
         error: function () {
+            allUsers = [];
             renderUsersList([]);
             showToast('Unable to load users.', 3000, { type: 'error', title: 'Load failed' });
         },
@@ -426,7 +451,7 @@ function loadUsers() {
 function showUsersLoader(show) {
     var $panel = $('.pageloaderpanel');
     if ($panel.length) {
-        $('#usersListPanel .table-wrap').toggleClass('hidden', show);
+        $('#usersCardsWrap').toggleClass('hidden', show);
         $panel.toggleClass('hidden', !show);
         return;
     }
@@ -438,7 +463,6 @@ function renderUsersList(rows) {
 
     for (var i = 0; i < rows.length; i++) {
         var u = rows[i];
-        var serial = i + 1;
         var code = u.code || '';
         var name = u.name || '';
         var email = u.email || '';
@@ -449,7 +473,7 @@ function renderUsersList(rows) {
         var imageValue = u.image || u.Image || '';
         var imageUrl = buildUserImageUrl(imageValue);
         var imageCell = imageUrl
-            ? '<div class="user-list-image-cell"><img src="' + imageUrl + '" alt="' + (name || 'User') + '" class="user-list-image" /><button type="button" class="user-image-view-btn" onclick="viewUserImage(\'' + imageValue + '\')" title="View Image" aria-label="View Image"><span class="user-image-view-icon" aria-hidden="true">&#128065;</span></button></div>'
+            ? '<div class="user-list-image-cell"><img src="' + imageUrl + '" alt="' + (name || 'User') + '" class="user-list-image" /></div>'
             : '<div class="user-list-image user-list-image-placeholder">' + ((name || '?').charAt(0).toUpperCase()) + '</div>';
 
         var adminBadge = isAdmin
@@ -466,31 +490,28 @@ function renderUsersList(rows) {
             <button type="button" class="action-item btn-toggle" data-id="${id}" data-state="${isActive ? 'active' : 'inactive'}" onclick="setUserActive(this.dataset.id, ${isActive ? 'false' : 'true'})"><span class="action-icon p-p-${isActive ? 'lock' : 'unlock'}"></span>${isActive ? 'Inactive' : 'Active'}</button>`;
 
         html += `
-            <tr data-id="${id}">
-                <td>${serial}</td>
-                <td><div class="user-list-image-wrap">${imageCell}</div></td>
-                <td><strong>${code || ''}</strong></td>
-                <td><strong>${name || ''}</strong></td>
-                <td>${email || ''}</td>
-                <td>${contact || ''}</td>
-                <td>${adminBadge}</td>
-                <td>${statusBadge}</td>
-                <td>
-                    <div class="row-actions">
-                        <button type="button" class="dots-btn" title="Actions">⋯</button>
-                        <div class="actions-menu hidden">
-                            ${actions}
-                        </div>
+            <div class="user-card" data-id="${id}">
+                <div class="user-card-top">
+                    <div class="user-card-profile">${imageCell}</div>
+                    <div class="user-card-title-wrap">
+                        <div class="user-card-name">${name || '-'}</div>
+                        <div class="user-card-code">${code || '-'}</div>
                     </div>
-                </td>
-            </tr>`;
+                    <div class="row-actions user-card-actions">
+                        <button type="button" class="dots-btn" title="Actions">⋯</button>
+                        <div class="actions-menu hidden">${actions}</div>
+                    </div>
+                </div>
+                <div class="user-card-tags">${statusBadge}${adminBadge}</div>
+                <div class="user-card-meta-grid">
+                    <div class="user-card-detail"><label>Email</label><div>${email || '-'}</div></div>
+                    <div class="user-card-detail user-card-detail-inline"><label>Contact</label><div>${contact || '-'}</div></div>
+                </div>
+            </div>`;
     }
 
-    $('#usersList tbody').html(html);
-
-    if (typeof renderDataTable === 'function') {
-        renderDataTable('usersList');
-    }
+    $('#usersCards').html(html);
+    $('#usersCardsEmpty').toggleClass('hidden', rows.length > 0);
 }
 
 function setUserError(inputSelector, errorSelector, message) {
@@ -700,8 +721,8 @@ function saveUser() {
         IsAdmin: $('#userIsAdmin').prop('checked'),
         IsActive: isActive,
         IsDeleted: false,
-        CreatedBy: 0,
-        UpdatedBy: 0
+        CreatedBy: window.getCurrentUserId ? window.getCurrentUserId() : 0,
+        UpdatedBy: window.getCurrentUserId ? window.getCurrentUserId() : 0
     };
 
     var endpoint = isUpdate ? '/Admin/Users/update' : '/Admin/Users/create';

@@ -1,8 +1,10 @@
 using GayatriCateringPortal.Interfaces.Customer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace GayatriCateringPortal.Controllers.Customer
 {
+    [AllowAnonymous]
     [Route("Customer/Packages")]
     public class PackagesController : Controller
     {

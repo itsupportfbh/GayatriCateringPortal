@@ -278,7 +278,7 @@ function saveCustomer() {
         Remarks: $('#customerRemarks').val() || '',
         IsActive: true,
         IsDeleted: false,
-        CreatedBy: 1,
+        CreatedBy: window.getCurrentUserId ? window.getCurrentUserId() : 0,
         CreatedDate: new Date().toISOString(),
         UpdatedBy: null,
         UpdatedDate: null

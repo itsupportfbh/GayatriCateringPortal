@@ -90,7 +90,7 @@ function renderRolesList(rows) {
                             <div class="actions-menu hidden">
                                 ${actions}
                                 <button type="button" class="action-item btn-delete" data-id="${id}" onclick="deleteRole(this.dataset.id)"><span class="action-icon p-p-trash"></span>Delete</button>
-                                <button type="button" class="action-item btn-role-permission" data-id="${id}" data-code="${code}" onclick="showRolePermission(this.dataset.id, this.dataset.code)"><span class="action-icon p-p-cog"></span>Role Permission</button>
+                                <button type="button" class="action-item btn-role-permission" data-permission="" data-id="${id}" data-code="${code}" onclick="showRolePermission(this.dataset.id, this.dataset.code)"><span class="action-icon p-p-cog"></span>Role Permission</button>
                             </div>
                         </div>
                     </td>
@@ -185,8 +185,8 @@ function saveRole() {
         Remarks: $('#roleRemarks').val() || '',
         IsActive: true,
         IsDeleted: false,
-        CreatedBy: 0,
-        UpdatedBy: 0,
+        CreatedBy: window.getCurrentUserId ? window.getCurrentUserId() : 0,
+        UpdatedBy: window.getCurrentUserId ? window.getCurrentUserId() : 0,
     };
 
     var endpoint = role.Id ? '/Admin/Roles/update' : '/Admin/Roles/create';
@@ -246,7 +246,7 @@ function editRole(id) {
 
 function showRolePermission(id, code) {
     if (!id) return;
-    window.location.href = '/Admin/RolePermission?RoleId=' + encodeURIComponent(id);
+    window.location.href = '/Admin/Roles/RolePermission?RoleId=' + encodeURIComponent(id);
 }
 
 function hideRolePermission() {

@@ -282,15 +282,17 @@ window.buildRowActions = function (id, opts) {
     var showToggle = opts.showToggle !== false;
     var showWA = !!opts.showWA;
     var showPermission = opts.showPermission !== false;
+    var showPrint = opts.showPrint !== false;
     var active = opts.active;
     var code = opts.code || '';
     var html = '<div class="row-actions">';
     html += '<button type="button" class="dots-btn" title="Actions">⋯</button>';
     html += '<div class="actions-menu hidden">';
-    if (showEdit) html += '<button type="button" class="action-item btn-edit" data-id="' + id + '"><span class="action-icon p-p-pencil"></span>Edit</button>';
-    if (showDelete) html += '<button type="button" class="action-item btn-delete" data-id="' + id + '"><span class="action-icon p-p-trash"></span>Delete</button>';
-    if (showToggle) html += '<button type="button" class="action-item btn-toggle" data-id="' + id + '" data-state="' + (active ? 'active' : 'inactive') + '"><span class="action-icon p-p-' + (active ? 'lock' : 'unlock') + '"></span>' + (active ? 'Inactive' : 'Active') + '</button>';
-    if (showPermission) html += '<button type="button" class="action-item btn-role-permission" data-id="' + id + '" data-code="' + code + '"><span class="action-icon p-p-cog"></span>Role Permission</button>';
+    if (showEdit) html += '<button type="button" class="action-item btn-edit" data-permission="edit" data-id="' + id + '"><span class="action-icon p-p-pencil"></span>Edit</button>';
+    if (showDelete) html += '<button type="button" class="action-item btn-delete" data-permission="delete" data-id="' + id + '"><span class="action-icon p-p-trash"></span>Delete</button>';
+    if (showToggle) html += '<button type="button" class="action-item btn-toggle" data-permission="activeinactive" data-id="' + id + '" data-state="' + (active ? 'active' : 'inactive') + '"><span class="action-icon p-p-' + (active ? 'lock' : 'unlock') + '"></span>' + (active ? 'Inactive' : 'Active') + '</button>';
+    if (showPermission) html += '<button type="button" class="action-item btn-role-permission" data-permission="rolepermission" data-id="' + id + '" data-code="' + code + '"><span class="action-icon p-p-cog"></span>Role Permission</button>';
+    if (showPrint) html += '<button type="button" class="action-item btn-print" data-permission="print" data-id="' + id + '"><span class="action-icon" aria-hidden="true">🖨</span>Print</button>';
     if (showWA) html += '<button type="button" class="action-item btn-wa" data-id="' + id + '"><span class="action-icon p-p-phone"></span>WA</button>';
     html += '</div></div>';
     return html;
@@ -375,15 +377,10 @@ function initRowActionMenus() {
             top = rect.top - menuHeight - 6;
         }
 
-        if (rect.left + menuWidth > viewportWidth - 12) {
-            menu.style.left = 'auto';
-            menu.style.right = '12px';
-        } else {
-            var left = rect.right - menuWidth;
-            left = Math.max(12, Math.min(left, viewportWidth - menuWidth - 12));
-            menu.style.left = left + 'px';
-            menu.style.right = 'auto';
-        }
+        var left = rect.right - menuWidth;
+        left = Math.max(12, Math.min(left, viewportWidth - menuWidth - 12));
+        menu.style.left = left + 'px';
+        menu.style.right = 'auto';
 
         menu.style.top = top + 'px';
         menu.style.visibility = '';

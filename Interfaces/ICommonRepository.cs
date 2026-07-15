@@ -7,7 +7,7 @@ namespace GayatriCateringPortal.Interfaces
 {
     public interface ICommonRepository
     {
-        List<MenuGroup> GetMenuGroups();
+        List<MenuGroup> GetMenuGroups(int roleId);
         List<EntityMaster> GetEntityMaster();
         List<RolePermissionItem> GetRolePermissionsByRoleId(int roleId);
         int CreateRolePermission(List<CreateRolePermissionRequest> requests);

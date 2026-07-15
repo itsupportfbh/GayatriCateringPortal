@@ -18,9 +18,14 @@ namespace GayatriCateringPortal.Controllers
         }
 
         [HttpGet("menus")]
-        public IActionResult Menus()
+        public IActionResult Menus(int roleId)
         {
-            var items = _common.GetMenuGroups();
+            if (roleId <= 0)
+            {
+                return BadRequest(new { success = false, message = "RoleId is required." });
+            }
+
+            var items = _common.GetMenuGroups(roleId);
             return Ok(items);
         }
 

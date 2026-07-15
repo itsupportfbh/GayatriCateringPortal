@@ -176,9 +176,9 @@ function saveutensil() {
         DepositAmount: $('#utDepAmt').val() || '',
         IsActive: true,
         IsDeleted: false,
-        CreatedBy: 1,
+        CreatedBy: window.getCurrentUserId ? window.getCurrentUserId() : 0,
         CreatedDate: '',
-        UpdatedBy: 1,
+        UpdatedBy: window.getCurrentUserId ? window.getCurrentUserId() : 0,
         UpdatedDate: ''
     };
 

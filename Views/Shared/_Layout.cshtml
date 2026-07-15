@@ -31,8 +31,18 @@
             <button class="btn btn-outline btn-sm sidebar-toggle" id="sidebarToggle" type="button" aria-label="Toggle sidebar">&#9776;</button>
         }
         <div class="nav-user">
-            <span id="nav-status">&#128994; Guest</span>
             <button class="btn btn-outline btn-sm" id="loginBtn" style="color:#fff;border-color:rgba(255,255,255,.45)">Login</button>
+
+            <div class="nav-profile hidden" id="navProfile">
+                <div class="nav-avatar" id="navAvatarInitials">G</div>
+                <img class="nav-avatar-img hidden" id="navAvatarImage" alt="User" />
+                <div class="nav-profile-meta">
+                    <div class="nav-profile-name" id="navProfileName">Guest User</div>
+                    <div class="nav-profile-role" id="navProfileRole">Guest</div>
+                    <div class="nav-profile-email" id="navProfileEmail"></div>
+                </div>
+                <button class="btn btn-outline btn-sm nav-logout-btn" id="logoutBtn" style="color:#fff;border-color:rgba(255,255,255,.45)">Logout</button>
+            </div>
         </div>
     </nav>
 
@@ -55,12 +65,24 @@
                 <div class="footer-logo">Gayatri Catering</div>
                 <div class="footer-copy">Copyright © 2026 Gayatri Restaurant. All rights reserved.</div>
             </div>
-            <div class="footer-links">
-                <a href="/Admin/Dashboard">Dashboard</a>
-                <a href="/Admin/Orders">Orders</a>
-                <a href="/Admin/Finance">Finance</a>
-                <a href="/Admin/Reports">Reports</a>
-            </div>
+            @if (ViewData["Mode"]?.ToString() == "admin")
+            {
+                <div class="footer-links">
+                    <a href="/Admin/Dashboard">Dashboard</a>
+                    <a href="/Admin/Orders">Orders</a>
+                    <a href="/Admin/Finance">Finance</a>
+                    <a href="/Admin/Reports">Reports</a>
+                </div>
+            }
+            else
+            {
+                <div class="footer-links">
+                    <a href="/Customer/Packages">Packages</a>
+                    <a href="/Customer/MyOrders">My Orders</a>
+                    <a href="/Customer/Track">Track Order</a>
+                    <a href="/Customer/Venue">Venue</a>
+                </div>
+            }
             <div class="footer-contact">
                 <div>Contact: +65 6294 6294</div>
                 <div>122 Race Course Road, Singapore 218583</div>
@@ -76,32 +98,26 @@
                 <button class="login-close" id="loginCloseBtn">&times;</button>
                 <img class="login-brand-img" src="~/images/logo.jpg" alt="Gayatri Restaurant Logo">
                 <div class="login-title">Gayatri Backend Login</div>
-                <div class="login-sub">Demo OTP: 123456. Role access is controlled at backend.</div>
+                <div class="login-sub">Enter your registered email and verify OTP to continue.</div>
             </div>
             <div class="login-body">
                 <div class="form-group">
                     <label>Email</label>
-                    <input id="loginEmail" value="admin@gayatrirestaurant.com" placeholder="email@gayatrirestaurant.com">
-                </div>
-                <div class="form-group">
-                    <label>Password</label>
-                    <input id="loginPassword" type="password" placeholder="Password">
+                    <input id="loginEmail" placeholder="email@gayatrirestaurant.com">
                 </div>
                 <div class="form-group">
                     <label>OTP / Access Code</label>
                     <div style="display:grid;grid-template-columns:1fr 120px;gap:8px">
-                        <input id="loginCode" placeholder="123456">
+                        <input id="loginCode" placeholder="Enter OTP code">
                         <button class="btn btn-light" id="sendCodeBtn">Send Code</button>
                     </div>
-                    <div class="hint">Use password <strong>password123</strong> or code <strong>123456</strong>. Live system loads roles from Users, UserRoles and RolePermissions tables.</div>
+                    <div id="otpExpiryText" class="hint hidden"></div>
+                    <div class="hint">OTP is valid for 30 seconds from the time you click Send Code.</div>
                 </div>
-                <div class="form-group">
-                    <label>Demo Role</label>
-                    <select id="loginRole">
-                        <option value="admin">Admin</option>
-                        <option value="kitchen">Kitchen Staff</option>
-                        <option value="driver">Driver</option>
-                        <option value="customer">Customer</option>
+                <div class="form-group hidden" id="loginRoleWrap">
+                    <label>Role</label>
+                    <select id="loginRole" disabled>
+                        <option value="">Select role</option>
                     </select>
                 </div>
                 <button class="btn btn-orange" id="signInBtn" style="width:100%;padding:12px">Sign In</button>
@@ -113,6 +129,9 @@
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
+    <script src="~/js/permissions.js" asp-append-version="true"></script>
+    <script src="~/js/export.js" asp-append-version="true"></script>
+    <script src="~/js/login.js" asp-append-version="true"></script>
     @if (ViewData["Mode"]?.ToString() == "admin")
     {
         <script src="~/js/common/menus.js" asp-append-version="true"></script>
