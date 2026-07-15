@@ -12,25 +12,29 @@
             <div class="page-subtitle">Communication log — WhatsApp, email and SMS history</div>
         </div>
         <div class="page-header-actions">
-            <button class="btn btn-orange btn-add" id="btnAddComms">+ Log Communication</button>
+            <button class="btn btn-orange btn-add" id="btnAddComms" onclick="openCommsModal()">+ Log Communication</button>
         </div>
     </div>
 
-    <div class="card">
+    <div id="commsListPanel" class="card">
         <div class="panel-header">
             <div class="panel-title">Communication Log</div>
         </div>
         <div class="muted" style="margin-bottom:16px">Track outbound communication across WhatsApp, email and SMS.</div>
-        <div class="table-wrap" id="commsTable">
-            <table class="tbl">
+        <div class="pageloaderpanel hidden">
+            <div class="spinner"></div>
+            <div class="loader-text">Loading comms...</div>
+        </div>
+        <div class="table-wrap">
+            <table class="tbl" id="commsList" data-page-size="10">
                 <thead>
                     <tr>
-                        <th class="sortable">Date/Time</th>
-                        <th class="sortable">Order</th>
-                        <th class="sortable">Customer</th>
+                        <th class="sortable">#</th>
                         <th class="sortable">Channel</th>
+                        <th class="sortable">To Address</th>
                         <th class="sortable">Message</th>
-                        <th class="sortable">Sent By</th>
+                        <th class="sortable">Status</th>
+                        <th class="sortable">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -45,7 +49,7 @@
         <div class="modal-box">
             <div class="modal-header">
                 <span class="modal-title">Log Communication</span>
-                <button class="modal-close">✕</button>
+                <button class="modal-close" type="button" onclick="closeCommsModal()">✕</button>
             </div>
             <div class="form-group">
                 <label>Channel</label>
@@ -58,17 +62,18 @@
             </div>
             <div class="form-group">
                 <label>To Address</label>
-                <input id="Address" maxlength="100" class="form-control" placeholder="Enter To Address">
+                <input id="cmAddress" maxlength="100" class="form-control" placeholder="Enter To Address">
             </div>
             <div class="form-group">
                 <label>Message</label>
                 <textarea id="cmMsgField" class="form-control" placeholder="Enter message details"></textarea>
-            </div>            
+            </div>
             <div class="actions">
-                <button class="btn btn-light" id="btnClearComms">Clear</button> 
-                <button class="btn btn-primary" id="btnSaveComms">Save</button>
+                <button class="btn btn-light" id="btnClearComms" onclick="clearCommsForm()">Clear</button>
+                <button class="btn btn-primary" id="btnSaveComms" onclick="saveComms()">Save</button>
             </div>
         </div>
+        <input type="hidden" id="CommsId" />
     </div>
 
     @section Scripts {
