@@ -1,5 +1,6 @@
 $(document).ready(function () {
     $('#utRuleOperator').on('change', updateRuleOperatorDescription);
+    $('#utRuleType, #utRuleValue, #utRulePercentage').on('input change', updateGeneratedRuleDescription);
     updateRuleOperatorDescription();
     loadUtensils();
 });
@@ -17,6 +18,47 @@ function updateRuleOperatorDescription() {
     var operator = ($('#utRuleOperator').val() || '').toUpperCase();
     $('#utRuleOperatorDescription').text(ruleOperatorDescriptions[operator] || '');
     $('#utRulePercentage').prop('disabled', operator !== 'PERCENTAGE');
+    $('#utRuleValue').prop('disabled', operator === 'PERCENTAGE');
+    updateGeneratedRuleDescription();
+}
+
+function formatRuleNumber(value) {
+    var number = Number(value);
+    return Number.isFinite(number) ? number.toString() : '0';
+}
+
+function updateGeneratedRuleDescription() {
+    var ruleType = ($('#utRuleType').val() || '').trim().toUpperCase();
+    var operator = ($('#utRuleOperator').val() || 'SAME').toUpperCase();
+    var ruleValue = formatRuleNumber($('#utRuleValue').val());
+    var rulePercentage = formatRuleNumber($('#utRulePercentage').val());
+    var description = '';
+
+    if (ruleType) {
+        switch (operator) {
+            case 'ADD':
+                description = ruleType + ' + ' + ruleValue;
+                break;
+            case 'MULTIPLY':
+                description = ruleType + ' x ' + ruleValue;
+                break;
+            case 'DIVIDE':
+                description = ruleType + ' / ' + ruleValue;
+                break;
+            case 'PERCENTAGE':
+                description = ruleType + ' + ' + rulePercentage + '%';
+                break;
+            case 'FIXED':
+                description = ruleValue + ' (FIXED)';
+                break;
+            case 'SAME':
+            default:
+                description = ruleType;
+                break;
+        }
+    }
+
+    $('#utRuleDescription').val(description);
 }
 
 function closeMenuModal() {
@@ -122,7 +164,7 @@ function clearUtensilForm() {
     $('#utRuleValue').val('1');
     $('#utRulePercentage').val('0');
     $('#utMinimumQty').val('0');
-    $('#utRuleDescription').val('');
+    updateGeneratedRuleDescription();
     $('#utPrice').val('');
     $('#utDepAmt').val('0.00');
 
@@ -238,7 +280,7 @@ function editUtensil(id) {
             $('#utRuleValue').val(role.RuleValue ?? role.ruleValue ?? 0);
             $('#utRulePercentage').val(role.RulePercentage ?? role.rulePercentage ?? 0);
             $('#utMinimumQty').val(role.MinimumQty ?? role.minimumQty ?? 0);
-            $('#utRuleDescription').val(role.RuleDescription ?? role.ruleDescription ?? '');
+            updateGeneratedRuleDescription();
             $('#utPrice').val(role.Price || role.price || '');
             $('#utDepAmt').val(role.DepositAmount || role.depositAmount || '');
             setActionButtonLabel('#btnSaveUtensil', 'Update');
