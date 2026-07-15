@@ -2,6 +2,7 @@
     var otpExpiresAt = null;
     var otpInterval = null;
     var otpVerified = false;
+    var isRedirecting = false;
 
     function ensureSendCodeButtonMarkup() {
         var $btn = $('#sendCodeBtn');
@@ -86,6 +87,7 @@
     }
 
     function resetLoginState() {
+        isRedirecting = false;
         stopOtpTimer();
         otpExpiresAt = null;
         otpVerified = false;
@@ -97,6 +99,17 @@
         setSendCodeVisible(true);
         setSendCodeButtonState(false, 'Send Code', false);
         setOtpHint('', false);
+        $('#loginCloseBtn, #cancelLoginBtn').prop('disabled', false);
+        $('#loginRole').prop('disabled', true);
+    }
+
+    function setRedirectingState() {
+        isRedirecting = true;
+        setSignInButtonState(true, 'Redirecting...', true);
+        $('#sendCodeBtn').prop('disabled', true);
+        $('#loginCloseBtn, #cancelLoginBtn').prop('disabled', true);
+        $('#loginEmail, #loginCode, #loginRole').prop('disabled', true);
+        setOtpHint('Login successful. Redirecting to your portal...', false);
     }
 
     function bindRoles(roles) {
@@ -275,6 +288,7 @@
     function completeLogin() {
         var email = ($('#loginEmail').val() || '').trim();
         var roleId = parseInt($('#loginRole').val() || '0', 10);
+        var redirectStarted = false;
 
         if (!otpVerified) {
             verifyOtp();
@@ -297,8 +311,8 @@
             data: JSON.stringify({ email: email, roleId: roleId }),
             success: function (res) {
                 if (res && res.success) {
+                    redirectStarted = true;
                     stopOtpTimer();
-                    setOtpHint('', false);
 
                     var roleLabel = res.roleLabel || 'User';
                     var userName = res.userName || 'User';
@@ -328,7 +342,7 @@
                         window.renderHeaderProfile();
                     }
 
-                    closeLogin();
+                    setRedirectingState();
                     showToast(res.message || 'Signed in successfully.', 2500, { type: 'success', title: 'Welcome' });
 
                     if (typeof window.redirectAfterLogin === 'function') {
@@ -351,7 +365,9 @@
                 setSignInIdleState();
             },
             complete: function () {
-                setSignInIdleState();
+                if (!redirectStarted) {
+                    setSignInIdleState();
+                }
             }
         });
     }
