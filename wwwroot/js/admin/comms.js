@@ -1,59 +1,304 @@
-// Communications page - render logs and actions
-$(function () {
-    var data = [
-        { id: 'CM-001', dt: '2024-12-15 10:30', order: 'GC-2024-024', customer: 'Raj Kumar', channel: 'WhatsApp', msg: 'Quotation QT-2024-024 sent', by: 'Admin' },
-        { id: 'CM-002', dt: '2024-12-14 14:15', order: 'GC-2024-023', customer: 'Priya Nair', channel: 'Email', msg: 'Order confirmation sent', by: 'Admin' }
-    ];
-
-    function render() {
-        var html = '<table class="tbl"><thead><tr><th>Date/Time</th><th>Order</th><th>Customer</th><th>Channel</th><th>Message</th><th>Sent By</th><th>Actions</th></tr></thead><tbody>';
-        data.forEach(function (r) {
-            html += '<tr data-id="' + r.id + '"><td>' + r.dt + '</td><td>' + r.order + '</td><td>' + r.customer + '</td><td><span class="badge badge-confirmed">' + r.channel + '</span></td><td>' + r.msg + '</td><td>' + r.by + '</td>' +
-                '<td>' + window.buildRowActions(r.id, { active: true }) + '</td></tr>';
-        });
-        html += '</tbody></table>';
-        $('#commsTable').html(html);
-    }
-
-    var editId = null;
-
-    function openCommsModal(id) {
-        editId = id || null;
-        if (id) {
-            var it = data.find(function (d) { return d.id === id; });
-            $('#commsModal .modal-title').text('Edit Communication');
-            $('#cmChannel').val(it.channel);
-            $('#cmMsgField').val(it.msg);
-        } else {
-            $('#commsModal .modal-title').text('Log Communication');
-            $('#commsModal').find('input, textarea').val('');
-            $('#cmChannel').val('WhatsApp');
-        }
-        $('#commsModal').removeClass('hidden');
-    }
-
-    $(document).on('click', '.btn-delete', function () { var id = $(this).data('id'); data = data.filter(d => d.id !== id); render(); });
-    $(document).on('click', '.btn-edit', function () { openCommsModal($(this).data('id')); });
-
-    // static create modal handlers
-    $(document).on('click', '#btnAddComms, .btn-add', function () { openCommsModal(); });
-    $(document).on('click', '#commsModal .modal-close', function () { $('#commsModal').addClass('hidden'); });
-    $(document).on('click', '#btnClearComms', function () { $('#commsModal').find('input, textarea').val(''); });
-    $(document).on('click', '#btnSaveComms', function () {
-        setButtonBusy('#btnSaveComms', true, 'Saving...');
-        var payload = { channel: $('#cmChannel').val() || 'WhatsApp', msg: $('#cmMsgField').val() || '' };
-        if (editId) {
-            var item = data.find(function (d) { return d.id === editId; });
-            if (item) {
-                item.channel = payload.channel;
-                item.msg = payload.msg;
-            }
-        } else {
-            data.push({ id: 'CM-' + Math.floor(Math.random()*900+100), dt: new Date().toISOString().slice(0,16).replace('T',' '), order: '', customer: '', channel: payload.channel, msg: payload.msg, by: 'Admin' });
-        }
-        $('#commsModal').addClass('hidden');
-        render();
-        setButtonBusy('#btnSaveComms', false);
-    });
-    render();
+$(document).ready(function () {
+    loadComms();   
 });
+
+function closeCommsModal() {
+    $('#commsModal').addClass('hidden');
+}
+
+function openCommsModal() {
+    clearCommsForm();
+    $('#menu-title').text('Create Menu');
+    setActionButtonLabel('#btnSaveComms', 'Save');
+    $('#commsModal').removeClass('hidden');
+
+    initCategoryField('#cmChannel', '#cmChannelError');
+    initCategoryField('#cmAddress', '#cmAddressError');
+    initCategoryField('#cmMsgField', '#cmMsgFieldError'); 
+}
+
+function loadComms() {
+    showCommsLoader(true);
+
+    $.ajax({
+        url: '/Admin/Comms/get',
+        type: 'GET',
+        dataType: 'json',
+        success: function (rows) {
+            renderCommsList(Array.isArray(rows) ? rows : []);
+        },
+        error: function () {
+            renderCommsList([]);
+            showToast('Unable to load Comms.', 3000, { type: 'error', title: 'Load failed' });
+        },
+        complete: function () {
+            showCommsLoader(false);
+        }
+    });
+}
+
+function showCommsLoader(show) {
+    var $panel = $('.pageloaderpanel');
+    if ($panel.length) {
+        $('#commsListPanel .table-wrap').toggleClass('hidden', show);
+        $panel.toggleClass('hidden', !show);
+        return;
+    }
+}
+
+function renderCommsList(rows) {
+    rows = Array.isArray(rows) ? rows : [];
+    var html = '';
+    if (rows.length) {
+        html = rows.map(function (comms) {
+            var id = comms.id || comms.Id || '';
+            var Channel = comms.channel || comms.Channel || '';
+            var ToAddress = comms.toAddress || comms.ToAddress || '';
+            var Message = comms.message || comms.Message || '';
+            var active = comms.isActive;
+
+            var actions;
+            if (active) {
+                actions = `<button type="button" class="action-item btn-edit" data-id="${id}" onclick="editComms(this.dataset.id)"><span class="action-icon p-p-pencil"></span>Edit</button>
+                           <button type="button" class="action-item btn-set-inactive" data-id="${id}" onclick="setCommsActive(this.dataset.id, false)"><span class="action-icon p-p-lock"></span>Inactive</button>`;
+            } else {
+                actions = `<button type="button" class="action-item btn-set-active" data-id="${id}" onclick="setCommsActive(this.dataset.id, true)"><span class="action-icon p-p-unlock"></span>Active</button>`;
+            }
+
+            var statusBadge;
+            if (active) {
+                statusBadge = '<span class="badge-pill badge-pill--success">Active</span>';
+            } else {
+                statusBadge = '<span class="badge-pill badge-pill--warning">Inactive</span>';
+            }
+
+            return `
+                <tr>
+                    <td>${id}</td>
+                    <td>${Channel}</td>
+                    <td>${ToAddress}</td>
+                    <td>${Message || ''}</td>
+                    <td>${statusBadge}</td>
+                    <td>
+                        <div class="row-actions">
+                            <button class="dots-btn" title="Actions">⋯</button>
+                            <div class="actions-menu hidden">
+                                ${actions}
+                                <button type="button" class="action-item btn-delete" data-id="${id}" onclick="deleteComms(this.dataset.id)"><span class="action-icon p-p-trash"></span>Delete</button>
+                            </div>
+                        </div>
+                    </td>
+                </tr>`;
+        }).join('');
+    }
+
+    $('#commsList tbody').html(html);
+    if (typeof renderDataTable === 'function') {
+        renderDataTable('commsList');
+    }
+}
+
+function clearCommsForm() {
+    $('#CommsId').val('');
+    $('#cmChannel').val('');
+    $('#cmAddress').val('');
+    $('#cmMsgField').val('');
+    setActionButtonLabel('#btnSaveComms', 'Save');
+
+    clearCommsError('#cmChannel', '#cmChannelError');
+    clearCommsError('#cmAddress', '#cmAddressError');
+    clearCommsError('#cmMsgField', '#cmMsgFieldError');
+}
+
+function setCommsError(inputSelector, errorSelector, message) {
+    $(inputSelector).addClass('input-error');
+    $(errorSelector).removeClass('hidden').text(message);
+}
+
+function clearCommsError(inputSelector, errorSelector) {
+    $(inputSelector).removeClass('input-error');
+    $(errorSelector).addClass('hidden').text('');
+}
+
+function initCategoryField(inputSelector, errorSelector) {
+    clearCommsError(inputSelector, errorSelector);
+    var el = document.querySelector(inputSelector);
+    if (el) {
+        el.oninput = function () {
+            clearCommsError(inputSelector, errorSelector);
+        };
+    }
+}
+
+function validateForm() {
+    clearCommsError('#cmChannel', '#cmChannelError');
+    clearCommsError('#cmAddress', '#cmAddressError');
+    clearCommsError('#cmMsgField', '#cmMsgFieldError');
+
+    var code = $('#cmChannel').val();
+    if (code) {
+        code = code.toString().trim();
+    } else {
+        code = '';
+    }
+
+    var name = $('#cmAddress').val();
+    if (name) {
+        name = name.toString().trim();
+    } else {
+        name = '';
+    }
+
+    var firstInvalid = null;
+
+    if (!code) {
+        setMenuError('#cmChannel', '#cmChannelError', 'Channel is required');
+        firstInvalid = '#cmChannel';
+    }
+
+    if (!name) {
+        setMenuError('#cmAddress', '#cmAddressError', 'Address is required');
+        if (!firstInvalid) {
+            firstInvalid = '#cmAddress';
+        }
+    }
+
+    if (firstInvalid) {
+        $(firstInvalid).focus();
+        return false;
+    }
+
+    return true;
+}
+
+function saveComms() {
+    if (!validateForm()) {
+        return;
+    }
+
+    setButtonBusy('#btnSaveComms', true, 'Saving...');
+
+    var commsId = $('#CommsId').val();
+    var comms = {
+        Id: commsId ? parseInt(commsId) : 0,
+        Channel: $('#cmChannel').val() || '',
+        ToAddress: $('#cmAddress').val() || '',
+        Message: $('#cmMsgField').val() || '',
+        IsActive: true,
+        IsDeleted: false,
+        CreatedBy: 1,
+        CreatedDate: '',
+        UpdatedBy: 1,
+        UpdatedDate: ''
+    };
+
+    var endpoint = comms.Id ? '/Admin/Comms/update' : '/Admin/Comms/create';
+
+    $.ajax({
+        url: endpoint,
+        type: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify(comms),
+        success: function (res) {
+            if (res && res.success) {
+                showToast('Comms saved successfully.', 3000, { type: 'success', title: 'Saved' });
+                clearCommsForm();
+                $('#commsModal').addClass('hidden');
+                loadComms();
+            } else {
+                setButtonBusy('#btnSaveComms', false);
+                showToast('Unable to save Comms.', 3000, { type: 'error', title: 'Save failed' });
+            }
+        },
+        error: function () {
+            setButtonBusy('#btnSaveComms', false);
+            showToast('Save failed.', 3000, { type: 'error', title: 'Save failed' });
+        }
+    });
+}
+
+function editComms(id) {
+    $('#menu-title').text('Edit Comms');
+    $.ajax({
+        url: '/Admin/Comms/get/' + id,
+        type: 'GET',
+        success: function (comms) {
+            if (!comms) {
+                showToast('Comms not found.', 3000, { type: 'warning', title: 'Not found' });
+                return;
+            }
+
+            $('#CommsId').val(comms.Id || comms.id || '');
+            $('#cmChannel').val(comms.Channel || comms.channel || '');
+            $('#cmAddress').val(comms.ToAddress || comms.toAddress || '');
+            $('#cmMsgField').val(comms.Message || comms.message || '');
+            setActionButtonLabel('#btnSaveComms', 'Update');
+            $('#commsModal').removeClass('hidden');
+        },
+        error: function () { showToast('Unable to load Comms.', 3000, { type: 'error', title: 'Load failed' }); }
+    });
+}
+
+function deleteComms(id) {
+    if (!id) return;
+    showToast('Delete this Comms?', 0, {
+        confirm: true,
+        type: 'warning',
+        title: 'Confirm',
+        yesText: 'Delete',
+        noText: 'Cancel',
+        onYes: function () {
+            $.ajax({
+                url: '/Admin/Comms/delete/' + id,
+                type: 'POST',
+                success: function (res) {
+                    if (res && res.success) {
+                        showToast('Comms deleted successfully.', 3000, { type: 'success', title: 'Deleted' });
+                    } else {
+                        showToast('Unable to delete Comms.', 3000, { type: 'error', title: 'Delete failed' });
+                    }
+                    setTimeout(loadComms, 300);
+                },
+                error: function () { showToast('Delete failed.', 3000, { type: 'error', title: 'Delete failed' }); }
+            });
+        },
+        onNo: function () {
+            showToast('Delete cancelled.', 3000, { type: 'info', title: 'Cancelled' });
+        }
+    });
+}
+
+function setCommsActive(id, isActive) {
+    if (!id) return;
+
+    var confirmMessage = isActive ? 'Mark this Comms active?' : 'Mark this Comms inactive?';
+    var successMessage = isActive ? 'Comms activated.' : 'Comms marked inactive.';
+
+    showToast(confirmMessage, 0, {
+        confirm: true,
+        type: 'warning',
+        title: 'Confirm',
+        yesText: 'Yes',
+        noText: 'No',
+        onYes: function () {
+            $.ajax({
+                url: '/Admin/Comms/activeinactive/' + id + '?status=' + isActive,
+                type: 'POST',
+                success: function (res) {
+                    if (res && res.success) {
+                        showToast(successMessage, 3000, { type: 'success', title: 'Updated' });
+                    } else {
+                        showToast('Unable to update Comms status.', 3000, { type: 'error', title: 'Update failed' });
+                    }
+                    setTimeout(loadComms, 350);
+                },
+                error: function () {
+                    showToast('Request failed.', 3000, { type: 'error', title: 'Request failed' });
+                }
+            });
+        },
+        onNo: function () {
+            showToast('Action cancelled.', 3000, { type: 'info', title: 'Cancelled' });
+        }
+    });
+}

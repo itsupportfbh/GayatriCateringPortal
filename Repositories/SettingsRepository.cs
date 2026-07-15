@@ -55,7 +55,6 @@ public class SettingsRepository : ISettingsRepository
                 using (cmd = DataFactory.CreateCommand("SP_CreateOrganization", conn))
                 {
                     ((SqlCommand)cmd).CommandType = CommandType.StoredProcedure;
-                    cmd.Parameters.Add(DataFactory.CreateParameter("@Id", item.Id));
                     cmd.Parameters.Add(DataFactory.CreateParameter("@Name", (object?)item.Name ?? DBNull.Value));
                     cmd.Parameters.Add(DataFactory.CreateParameter("@UEN", (object?)item.UEN ?? DBNull.Value));
                     cmd.Parameters.Add(DataFactory.CreateParameter("@Address", (object?)item.Address ?? DBNull.Value));

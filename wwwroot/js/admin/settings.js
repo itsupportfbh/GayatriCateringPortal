@@ -3,17 +3,17 @@ $(document).ready(function () {
 });
 
 function validateForm() {
-    //clearsettingError('#Compname', '#CompnameError');
-    //clearsettingError('#uen', '#uenError');
-    //clearsettingError('#address', '#addressError');
-    //clearsettingError('#email', '#emailError');
-    //clearsettingError('#hotline', '#hotlineError');
-    //clearsettingError('#whatsapp', '#whatsappError');
-    //clearsettingError('#defaultdep', '#defaultdepError');
-    //clearsettingError('#Quotaval', '#QuotavalError');
-    //clearsettingError('#Minorder', '#MinorderError');
-    //clearsettingError('#gstrate', '#gstrateError');
-    //clearsettingError('#Servicechar', '#ServicecharError');
+    clearsettingError('#Compname', '#CompnameError');
+    clearsettingError('#uen', '#uenError');
+    clearsettingError('#address', '#addressError');
+    clearsettingError('#email', '#emailError');
+    clearsettingError('#hotline', '#hotlineError');
+    clearsettingError('#whatsapp', '#whatsappError');
+    clearsettingError('#defaultdep', '#defaultdepError');
+    clearsettingError('#Quotaval', '#QuotavalError');
+    clearsettingError('#Minorder', '#MinorderError');
+    clearsettingError('#gstrate', '#gstrateError');
+    clearsettingError('#Servicechar', '#ServicecharError');
 
     var code = $('#Compname').val();
     if (code) {
@@ -22,7 +22,7 @@ function validateForm() {
         code = '';
     }
 
-    var name = $('#ItemName').val();
+    var name = $('#uen').val();
     if (name) {
         name = name.toString().trim();
     } else {
@@ -52,23 +52,28 @@ function validateForm() {
 }
 
 function savesettings() {
-    //if (!validateForm()) {
-    //    return;
-    //}
+    if (!validateForm()) {
+        return;
+    }
 
+    setButtonBusy('#btnSaveSettings', true, 'Saving...');
+
+    var settingId = $('#settingId').val();
     var setting = {
-        Id: $('#settingId').val() || '',
+        Id: settingId ? parseInt(settingId) : 0,
         Name: $('#Compname').val() || '',
         UEN: $('#uen').val() || '',
         Address: $('#address').val() || '',
         Email: $('#email').val() || '',
         Hotline: $('#hotline').val() || '',
         Whatsapp: $('#whatsapp').val() || '',
-        defautdep: $('#defaultdep').val() || '',
-        Quotaval: $('#Quotaval').val() || '',
-        Minorder: $('#Minorder').val() || '',
-        gstrate: $('#gstrate').val() || '',
-        servicechar: $('#Servicechar').val() || '',
+        DefaultDeposit: $('#defaultdep').val() || '',
+        QuotationValidity: $('#Quotaval').val() || '',
+        MinOrderPax: $('#Minorder').val() || '',
+        GSTRate: $('#gstrate').val() || '',
+        Servicecharge: $('#Servicechar').val() || '',
+        PortalMode: $('#portalmode').val() || '',
+        GSTNO : 'GUH84945',
         IsActive: true,
         IsDeleted: false,
         CreatedBy: window.getCurrentUserId ? window.getCurrentUserId() : 0,
@@ -87,20 +92,21 @@ function savesettings() {
         success: function (res) {
             if (res && res.success) {
                 showToast('settings saved successfully.', 3000, { type: 'success', title: 'Saved' });
-                clearUtensilForm();
-                loadUtensils();
+                clearsettingForm();
             } else {
+                setButtonBusy('#saveCategoryBtn', false);
                 showToast('Unable to save settings.', 3000, { type: 'error', title: 'Save failed' });
             }
         },
         error: function () {
+            setButtonBusy('#saveCategoryBtn', false);
             showToast('Save failed.', 3000, { type: 'error', title: 'Save failed' });
         }
-$(function () {
-    $('#btnSaveSettings').on('click', function () {
-        setButtonBusy('#btnSaveSettings', true, 'Saving...');
-        showToast('Settings saved successfully');
-        setTimeout(function () { setButtonBusy('#btnSaveSettings', false); }, 300);
+//$(function () {
+//    $('#btnSaveSettings').on('click', function () {
+//        setButtonBusy('#btnSaveSettings', true, 'Saving...');
+//        showToast('Settings saved successfully');
+//        setTimeout(function () { setButtonBusy('#btnSaveSettings', false); }, 300);
     });
 }
 
@@ -108,23 +114,28 @@ function editsetting() {
     $.ajax({
         url: '/Admin/settings/get',
         type: 'GET',
-        success: function (setting) {
-            if (!setting) {
-                showToast('settings not found.', 3000, { type: 'warning', title: 'Not found' });
+        success: function (setting) {          
+
+            if (!setting || setting.length === 0) {
+                showToast('Settings not found.');
                 return;
             }
-            $('#settingId').val(setting.Id || setting.id || '');
-            $('#Compname').val(setting.Name || setting.name || '');
-            $('#UEN').val(setting.UEN || setting.uen || '');
-            $('#address').val(setting.Address || setting.address || '');
-            $('#email').val(setting.Email || setting.email || '');
-            $('#hotline').val(setting.Hotline || setting.hotline || '');
-            $('#whatsapp').val(setting.Whatsapp || setting.whatsapp || '');
-            $('#defaultdep').val(setting.DefaultDeposit || setting.defaultdeposit || '');
-            $('#Quotaval').val(setting.QuotationValidity || setting.quotationValidity || '');
-            $('#Minorder').val(setting.MinOrderPax || setting.minOrderPax || '');           
-            $('#gstrate').val(setting.GSTRate || setting.gstate || '');
-            $('#Servicechar').val(setting.Servicecharge || setting.servicecharge || '');
+
+            var data = setting[0]; 
+           
+            $('#settingId').val(data.id);
+            $('#Compname').val(data.name);
+            $('#uen').val(data.uen);
+            $('#address').val(data.address);
+            $('#email').val(data.email);
+            $('#hotline').val(data.hotline);
+            $('#whatsapp').val(data.whatsapp);
+            $('#defaultdep').val(data.defaultDeposit);
+            $('#Quotaval').val(data.quotationValidity);
+            $('#Minorder').val(data.minOrderPax);
+            $('#gstrate').val(data.gstRate);
+            $('#Servicechar').val(data.servicecharge);
+            $('#portalmode').val(data.portalMode);
         },
         error: function () { showToast('Unable to load settings.', 3000, { type: 'error', title: 'Load failed' }); }
     });

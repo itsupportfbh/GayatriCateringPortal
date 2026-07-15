@@ -8,6 +8,7 @@ public interface IOrdersRepository
     List<Orders> GetAll();
     Orders? GetById(int id);
     int Create(Orders order);
+    int CreateCompleteOrder(CreateOrderRequest request);
     bool Update(Orders order);
     bool Delete(int id);
     bool ActiveInActive(int id);

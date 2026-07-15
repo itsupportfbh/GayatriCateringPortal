@@ -52,19 +52,32 @@ namespace GayatriCateringPortal.Controllers.Customer
         }
 
         [HttpPost("save")]
-        public IActionResult Save([FromBody] Orders item)
+        public IActionResult Save([FromBody] CreateOrderRequest request)
         {
-            if (item == null) return BadRequest();
-            var idValue = item.Id;
-
-            if (idValue == 0)
+            if (request == null)
             {
-                int newId = _orders.Create(item);
-                return Ok(new { success = newId > 0, id = newId });
+                return BadRequest(new { success = false, message = "Customer and order details are required." });
             }
 
-            bool result = _orders.Update(item);
-            return Ok(new { success = result });
+            if (string.IsNullOrWhiteSpace(request.Customer.Name))
+            {
+                return BadRequest(new { success = false, message = "Customer name is required." });
+            }
+
+            if (string.IsNullOrWhiteSpace(request.Customer.MobileNo))
+            {
+                return BadRequest(new { success = false, message = "Customer mobile number is required." });
+            }
+
+            try
+            {
+                int newId = _orders.CreateCompleteOrder(request);
+                return Ok(new { success = newId > 0, id = newId, message = "Order submitted successfully." });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { success = false, message = ex.Message });
+            }
         }
 
         [HttpPost("delete/{id}")]

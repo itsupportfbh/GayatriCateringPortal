@@ -121,7 +121,6 @@ namespace GayatriCateringPortal.Repositories
                         var result = DataFactory.ExecuteScalar(cmd);
                         if (result != null)
                         {
-                            //item.Id = Convert.ToString(result) ?? item.Id;
                             return Convert.ToInt32(result);
                         }
                     }
