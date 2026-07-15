@@ -95,15 +95,13 @@ public class UtensilsRepository : IUtensilsRepository
                 {
                     ((SqlCommand)cmd).CommandType = CommandType.StoredProcedure;
                     cmd.Parameters.Add(DataFactory.CreateParameter("@UtensilName", (object?)item.UtensilName ?? DBNull.Value));
-                    cmd.Parameters.Add(DataFactory.CreateParameter("@Rules", (object?)item.Rules ?? DBNull.Value));
+                    AddRuleParameters(cmd, item);
                     cmd.Parameters.Add(DataFactory.CreateParameter("@Price", (object?)item.Price ?? DBNull.Value));
                     cmd.Parameters.Add(DataFactory.CreateParameter("@DepositAmount", (object?)item.DepositAmount ?? DBNull.Value));
                     cmd.Parameters.Add(DataFactory.CreateParameter("@IsActive", item.IsActive));
                     cmd.Parameters.Add(DataFactory.CreateParameter("@IsDeleted", item.IsDeleted));
                     cmd.Parameters.Add(DataFactory.CreateParameter("@CreatedBy", item.CreatedBy));
                     cmd.Parameters.Add(DataFactory.CreateParameter("@CreatedDate", DateTime.TryParse(item.CreatedDate, out var createdDate) ? createdDate : (object?)DBNull.Value));
-                    cmd.Parameters.Add(DataFactory.CreateParameter("@UpdatedBy", item.UpdatedBy));
-                    cmd.Parameters.Add(DataFactory.CreateParameter("@UpdatedDate", DateTime.TryParse(item.UpdatedDate, out var updatedDate) ? updatedDate : (object?)DBNull.Value));
 
                     var result = DataFactory.ExecuteScalar(cmd);
                     if (result != null)
@@ -114,13 +112,13 @@ public class UtensilsRepository : IUtensilsRepository
                 }
             }
         }
-        catch (SqlException)
+        catch (SqlException ex)
         {
-            throw new Exception("Database error");
+            throw new Exception("Database error: " + ex.Message, ex);
         }
         catch (Exception ex)
         {
-            throw new Exception(ex.StackTrace);
+            throw new Exception("Unable to create utensil: " + ex.Message, ex);
         }
         finally
         {
@@ -143,7 +141,7 @@ public class UtensilsRepository : IUtensilsRepository
                     ((SqlCommand)cmd).CommandType = CommandType.StoredProcedure;
                     cmd.Parameters.Add(DataFactory.CreateParameter("@Id", item.Id));
                     cmd.Parameters.Add(DataFactory.CreateParameter("@UtensilName", (object?)item.UtensilName ?? DBNull.Value));
-                    cmd.Parameters.Add(DataFactory.CreateParameter("@Rules", (object?)item.Rules ?? DBNull.Value));
+                    AddRuleParameters(cmd, item);
                     cmd.Parameters.Add(DataFactory.CreateParameter("@Price", (object?)item.Price ?? DBNull.Value));
                     cmd.Parameters.Add(DataFactory.CreateParameter("@DepositAmount", (object?)item.DepositAmount ?? DBNull.Value)); 
                     cmd.Parameters.Add(DataFactory.CreateParameter("@IsActive", item.IsActive));
@@ -258,8 +256,18 @@ public class UtensilsRepository : IUtensilsRepository
                     item.Id = Convert.ToInt32(reader["Id"])!;
                 if (reader["UtensilName"] != DBNull.Value)
                     item.UtensilName = Convert.ToString(reader["UtensilName"])!;
-                if (reader["Rules"] != DBNull.Value)
-                    item.Rules = Convert.ToDecimal(reader["Rules"]);
+                if (reader["RuleType"] != DBNull.Value)
+                    item.RuleType = Convert.ToString(reader["RuleType"]) ?? string.Empty;
+                if (reader["RuleOperator"] != DBNull.Value)
+                    item.RuleOperator = Convert.ToString(reader["RuleOperator"]) ?? string.Empty;
+                if (reader["RuleValue"] != DBNull.Value)
+                    item.RuleValue = Convert.ToDecimal(reader["RuleValue"]);
+                if (reader["RulePercentage"] != DBNull.Value)
+                    item.RulePercentage = Convert.ToDecimal(reader["RulePercentage"]);
+                if (reader["MinimumQty"] != DBNull.Value)
+                    item.MinimumQty = Convert.ToInt32(reader["MinimumQty"]);
+                if (reader["RuleDescription"] != DBNull.Value)
+                    item.RuleDescription = Convert.ToString(reader["RuleDescription"]);
                 if (reader["Price"] != DBNull.Value)
                     item.Price = Convert.ToDecimal(reader["Price"]);
                 if (reader["DepositAmount"] != DBNull.Value)
@@ -292,5 +300,15 @@ public class UtensilsRepository : IUtensilsRepository
         return list;
     }
     #endregion
+
+    private static void AddRuleParameters(IDbCommand cmd, UtensilMaster item)
+    {
+        cmd.Parameters.Add(DataFactory.CreateParameter("@RuleType", item.RuleType));
+        cmd.Parameters.Add(DataFactory.CreateParameter("@RuleOperator", item.RuleOperator));
+        cmd.Parameters.Add(DataFactory.CreateParameter("@RuleValue", item.RuleValue));
+        cmd.Parameters.Add(DataFactory.CreateParameter("@RulePercentage", item.RulePercentage));
+        cmd.Parameters.Add(DataFactory.CreateParameter("@MinimumQty", item.MinimumQty));
+        cmd.Parameters.Add(DataFactory.CreateParameter("@RuleDescription", (object?)item.RuleDescription ?? DBNull.Value));
+    }
 }
 

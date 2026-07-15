@@ -334,6 +334,7 @@ $(function () {
     }
 
     function loadAdditionalMenus() {
+        debugger
         additionalMenusLoading = true;
         $.ajax({
             url: '/Customer/Packages/additional-menus',
@@ -567,11 +568,31 @@ $(function () {
             (utensilsLoading
                 ? '<tr><td colspan="7" class="muted">Loading utensils...</td></tr>'
                 : utensilRows.map(function (row) {
-                row.suggested = row.rule > 0 ? Math.ceil(state.pax / row.rule) : 0;
+                row.suggested = calculateUtensilSuggestedQty(row);
                 var qty = state.utensils[row.name] || 0;
                 return '<tr class="' + (qty > 0 ? 'selected-row' : '') + '"><td><strong>' + row.name + '</strong><div class="muted">' + row.unit + '</div></td><td>' + row.ruleLabel + '</td><td>' + row.suggested + '</td><td><input class="qty-input utensil-qty" data-name="' + row.name + '" type="number" min="0" value="' + qty + '"></td><td class="price-cell">' + money(row.price) + '</td><td>' + money(row.deposit) + '</td><td class="amount-cell">' + money(qty * row.price) + '</td></tr>';
             }).join('') + (utensilRows.length ? '' : '<tr><td colspan="7" class="muted">No utensils available.</td></tr>')) + '</tbody></table></div></div>';
         $('#orderStepContent').html(html);
+    }
+
+    function calculateUtensilSuggestedQty(row) {
+        var baseQty = Number(state.pax || 0);
+
+        if (row.ruleType === 'CHAFING_DISH_QTY') {
+            var chafingDish = utensilRows.find(function (item) {
+                return item.ruleType === 'PAX' && item.name.toUpperCase().includes('CHAFING');
+            });
+            baseQty = chafingDish ? calculateUtensilSuggestedQty(chafingDish) : 0;
+        }
+
+        var suggested = 0;
+        if (row.ruleOperator === 'PERCENTAGE') {
+            suggested = Math.ceil((baseQty * row.ruleValue) + (baseQty * row.rulePercentage / 100));
+        } else if (row.ruleOperator === 'MULTIPLY') {
+            suggested = Math.ceil(baseQty * row.ruleValue);
+        }
+
+        return Math.max(suggested, row.minimumQty || 0);
     }
 
     function loadOrderUtensils() {
@@ -586,13 +607,21 @@ $(function () {
                     var isDeleted = item.isDeleted ?? item.IsDeleted ?? false;
                     return isActive && !isDeleted;
                 }).map(function (item) {
-                    var rule = Number(item.rules ?? item.Rules ?? 0);
+                    var ruleType = item.ruleType ?? item.RuleType ?? '';
+                    var ruleOperator = item.ruleOperator ?? item.RuleOperator ?? '';
+                    var ruleValue = Number(item.ruleValue ?? item.RuleValue ?? 0);
+                    var rulePercentage = Number(item.rulePercentage ?? item.RulePercentage ?? 0);
+                    var minimumQty = Number(item.minimumQty ?? item.MinimumQty ?? 0);
                     return {
                         id: String(item.id ?? item.Id ?? ''),
                         name: item.utensilName ?? item.UtensilName ?? '',
                         unit: 'per pc',
-                        rule: rule,
-                        ruleLabel: rule > 0 ? '1 per ' + rule + ' pax' : 'Manual',
+                        ruleType: ruleType,
+                        ruleOperator: ruleOperator,
+                        ruleValue: ruleValue,
+                        rulePercentage: rulePercentage,
+                        minimumQty: minimumQty,
+                        ruleLabel: item.ruleDescription ?? item.RuleDescription ?? 'Manual',
                         suggested: 0,
                         price: Number(item.price ?? item.Price ?? 0),
                         deposit: Number(item.depositAmount ?? item.DepositAmount ?? 0)
@@ -832,7 +861,7 @@ $(function () {
     $(document).on('click', '#suggestUtensilsBtn', function () {
         state.utensils = {};
         utensilRows.forEach(function (row) {
-            state.utensils[row.name] = row.suggested || 0;
+            state.utensils[row.name] = calculateUtensilSuggestedQty(row);
         });
         renderStep();
     });

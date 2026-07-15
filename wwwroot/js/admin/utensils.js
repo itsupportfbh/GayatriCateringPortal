@@ -1,6 +1,23 @@
 $(document).ready(function () {
+    $('#utRuleOperator').on('change', updateRuleOperatorDescription);
+    updateRuleOperatorDescription();
     loadUtensils();
 });
+
+var ruleOperatorDescriptions = {
+    SAME: 'Uses the source value directly.',
+    ADD: 'Source value + Rule Value.',
+    MULTIPLY: 'Source value × Rule Value.',
+    DIVIDE: 'Source value ÷ Rule Value.',
+    PERCENTAGE: 'Source value plus the Rule Percentage.',
+    FIXED: 'Always uses the Rule Value.'
+};
+
+function updateRuleOperatorDescription() {
+    var operator = ($('#utRuleOperator').val() || '').toUpperCase();
+    $('#utRuleOperatorDescription').text(ruleOperatorDescriptions[operator] || '');
+    $('#utRulePercentage').prop('disabled', operator !== 'PERCENTAGE');
+}
 
 function closeMenuModal() {
     $('#utensilsModal').addClass('hidden');
@@ -45,10 +62,11 @@ function renderUtensilList(rows) {
     rows = Array.isArray(rows) ? rows : [];
     var html = '';
     if (rows.length) {
-        html = rows.map(function (utensil) {
+        html = rows.map(function (utensil, index) {
+            var serial = index + 1;
             var id = utensil.id || utensil.Id || '';
             var utensilName = utensil.utensilName || utensil.UtensilName || '';
-            var rules = utensil.rules || utensil.Rules || '';
+            var ruleDescription = utensil.ruleDescription ?? utensil.RuleDescription ?? '';
             var price = utensil.price || utensil.Price || '';
             var depAmt = utensil.depositAmount || utensil.DepositAmount || '';
             var active = utensil.isActive;
@@ -70,9 +88,9 @@ function renderUtensilList(rows) {
 
             return `
                 <tr>
-                    <td>${id}</td>
+                    <td>${serial}</td>
                     <td>${utensilName}</td>
-                    <td>${rules}</td>
+                    <td>${ruleDescription}</td>
                     <td>${price || ''}</td>
                     <td>${depAmt || ''}</td>
                     <td>${statusBadge}</td>
@@ -98,12 +116,17 @@ function renderUtensilList(rows) {
 function clearUtensilForm() {
     $('#utensilId').val('');
     $('#utName').val('');
-    $('#utRules').val('0.00');
+    $('#utRuleType').val('');
+    $('#utRuleOperator').val('SAME');
+    updateRuleOperatorDescription();
+    $('#utRuleValue').val('1');
+    $('#utRulePercentage').val('0');
+    $('#utMinimumQty').val('0');
+    $('#utRuleDescription').val('');
     $('#utPrice').val('');
     $('#utDepAmt').val('0.00');
 
     clearUtensilError('#utName', '#utNameError');
-    clearUtensilError('#utRules', '#utRulesError');
     clearUtensilError('#utPrice', '#utPriceError');
     clearUtensilError('#utDepAmt', '#utDepAmtError');
 }
@@ -120,7 +143,6 @@ function clearUtensilError(inputSelector, errorSelector) {
 
 function validateForm() {
     clearUtensilError('#utName', '#utNameError');
-    clearUtensilError('#utRules', '#utRulesError');
     clearUtensilError('#utPrice', '#utPriceError');
     clearUtensilError('#utDepAmt', '#utDepAmtError');
 
@@ -131,25 +153,11 @@ function validateForm() {
         code = '';
     }
 
-    var rules = $('#utRules').val();
-    if (rules) {
-        rules = rules.toString().trim();
-    } else {
-        rules = '';
-    }
-
     var firstInvalid = null;
 
     if (!code) {
         setUtensilError('#utName', '#utNameError', 'Name is required');
         firstInvalid = '#utName';
-    }
-
-    if (!rules || isNaN(parseFloat(rules))) {
-        setUtensilError('#utRules', '#utRulesError', 'Rules is required');
-        if (!firstInvalid) {
-            firstInvalid = '#utRules';
-        }
     }
 
     if (firstInvalid) {
@@ -171,7 +179,12 @@ function saveutensil() {
     var utensil = {
         Id: utensilId ? parseInt(utensilId): 0,
         UtensilName: $('#utName').val() || '',
-        Rules: parseFloat($('#utRules').val()) || 0,
+        RuleType: $('#utRuleType').val() || '',
+        RuleOperator: $('#utRuleOperator').val() || '',
+        RuleValue: Number($('#utRuleValue').val()) || 0,
+        RulePercentage: Number($('#utRulePercentage').val()) || 0,
+        MinimumQty: parseInt($('#utMinimumQty').val(), 10) || 0,
+        RuleDescription: ($('#utRuleDescription').val() || '').trim(),
         Price: $('#utPrice').val() || '',
         DepositAmount: $('#utDepAmt').val() || '',
         IsActive: true,
@@ -197,7 +210,7 @@ function saveutensil() {
                 loadUtensils();
             } else {
                 setButtonBusy('#btnSaveUtensil', false);
-                showToast('Unable to save Utensils.', 3000, { type: 'error', title: 'Save failed' });
+                showToast(res?.message || 'Unable to save Utensils.', 3000, { type: 'error', title: 'Save failed' });
             }
         },
         error: function () {
@@ -219,7 +232,13 @@ function editUtensil(id) {
             }
             $('#utensilId').val(role.Id || role.id || '');
             $('#utName').val(role.UtensilName || role.utensilName || '');
-            $('#utRules').val(role.Rules || role.rules || '0.00');
+            $('#utRuleType').val(role.RuleType ?? role.ruleType ?? '');
+            $('#utRuleOperator').val(role.RuleOperator ?? role.ruleOperator ?? 'SAME');
+            updateRuleOperatorDescription();
+            $('#utRuleValue').val(role.RuleValue ?? role.ruleValue ?? 0);
+            $('#utRulePercentage').val(role.RulePercentage ?? role.rulePercentage ?? 0);
+            $('#utMinimumQty').val(role.MinimumQty ?? role.minimumQty ?? 0);
+            $('#utRuleDescription').val(role.RuleDescription ?? role.ruleDescription ?? '');
             $('#utPrice').val(role.Price || role.price || '');
             $('#utDepAmt').val(role.DepositAmount || role.depositAmount || '');
             setActionButtonLabel('#btnSaveUtensil', 'Update');
@@ -291,4 +310,4 @@ function setUtensilActive(id, isActive) {
             showToast('Action cancelled.', 3000, { type: 'info', title: 'Cancelled' });
         }
     });
-} 
+}
