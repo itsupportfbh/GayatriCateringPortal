@@ -44,6 +44,33 @@ namespace GayatriCateringPortal.Controllers.Customer
             }
         }
 
+        [HttpGet("categories/{categoryId:int}/menus")]
+        public IActionResult GetMenus(int categoryId)
+        {
+            if (categoryId <= 0) return BadRequest(new { message = "A valid category ID is required." });
+            try
+            {
+                return Ok(_packages.GetMenusByCategoryId(categoryId));
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Unable to load menus for the selected category.", detail = ex.Message });
+            }
+        }
+
+        [HttpGet("additional-menus")]
+        public IActionResult GetAdditionalMenus()
+        {
+            try
+            {
+                return Ok(_packages.GetAdditionalMenuCategories());
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Unable to load additional menu items.", detail = ex.Message });
+            }
+        }
+
         [HttpPost("delete/{id:int}")]
         public IActionResult Delete(int id) => Ok(new { success = _packages.Delete(id) });
     }

@@ -218,7 +218,7 @@ function loadUserRoleMappings(userId) {
     });
 }
 
-function saveUserRoleMappings(userId, roleIds, isUpdate) {
+function saveUserRoleMappings(userId, roleIds, isUpdate, emailStatus) {
     var ids = Array.isArray(roleIds) ? roleIds : [];
     if (!ids.length) {
         setButtonBusy('#saveUserBtn', false);
@@ -244,7 +244,11 @@ function saveUserRoleMappings(userId, roleIds, isUpdate) {
         data: JSON.stringify(payload),
         success: function (res) {
             if (res && res.success) {
-                showToast(isUpdate ? 'User updated successfully.' : 'User created successfully.', 3000, { type: 'success', title: isUpdate ? 'Updated' : 'Created' });
+                if (!isUpdate && emailStatus && emailStatus.sent === false) {
+                    showToast('User created successfully, but welcome email failed: ' + (emailStatus.error || 'Unknown mail error.'), 5000, { type: 'warning', title: 'Mail not sent' });
+                } else {
+                    showToast(isUpdate ? 'User updated successfully.' : 'User created successfully.', 3000, { type: 'success', title: isUpdate ? 'Updated' : 'Created' });
+                }
                 clearUsersForm();
                 $('#usersModal').addClass('hidden');
                 loadUsers();
@@ -265,18 +269,20 @@ function bindUserImageUpload() {
     $('#userImageFile').off('change').on('change', function () {
         var file = this.files && this.files[0] ? this.files[0] : null;
         if (!file) {
+            updateUserImageViewButton();
             return;
         }
 
         var reader = new FileReader();
         reader.onload = function (e) {
             var imageData = e && e.target ? e.target.result : '';
-            $('#userImage').val(imageData || '');
             if (imageData) {
                 $('#userImagePreview').attr('src', imageData).removeClass('hidden');
             } else {
                 $('#userImagePreview').attr('src', '').addClass('hidden');
             }
+
+            updateUserImageViewButton();
         };
         reader.readAsDataURL(file);
     });
@@ -287,6 +293,19 @@ function toDateInputValue(dateValue) {
     var date = new Date(dateValue);
     if (isNaN(date.getTime())) return '';
     return date.toISOString().split('T')[0];
+}
+
+function buildUserImageUrl(imageValue) {
+    if (!imageValue) return '';
+
+    var value = String(imageValue).trim();
+    if (!value) return '';
+
+    if (value.indexOf('data:') === 0 || value.indexOf('http://') === 0 || value.indexOf('https://') === 0 || value.indexOf('/FileUpload/') === 0) {
+        return value;
+    }
+
+    return '/FileUpload/User/' + value;
 }
 
 function calculateAgeFromDateValue(dateValue) {
@@ -305,6 +324,37 @@ function calculateAgeFromDateValue(dateValue) {
     }
 
     return age >= 0 ? age : '';
+}
+
+function getCurrentUserImageUrl() {
+    var previewSrc = $('#userImagePreview').attr('src') || '';
+    if (previewSrc) {
+        return previewSrc;
+    }
+
+    return buildUserImageUrl($('#userImage').val() || '');
+}
+
+function updateUserImageViewButton() {
+    var imageUrl = getCurrentUserImageUrl();
+    $('#btnViewUserImage').toggleClass('hidden', !imageUrl);
+}
+
+function openUserImageInNewTab(imageUrl) {
+    if (!imageUrl) {
+        showToast('No user image available.', 3000, { type: 'warning', title: 'Image not found' });
+        return;
+    }
+
+    window.open(imageUrl, '_blank', 'noopener,noreferrer');
+}
+
+function viewCurrentUserImage() {
+    openUserImageInNewTab(getCurrentUserImageUrl());
+}
+
+function viewUserImage(imageValue) {
+    openUserImageInNewTab(buildUserImageUrl(imageValue));
 }
 
 function syncUserAgeFromDob() {
@@ -396,6 +446,11 @@ function renderUsersList(rows) {
         var isAdmin = u.isAdmin;
         var isActive = u.isActive;
         var id = u.id || 0;
+        var imageValue = u.image || u.Image || '';
+        var imageUrl = buildUserImageUrl(imageValue);
+        var imageCell = imageUrl
+            ? '<div class="user-list-image-cell"><img src="' + imageUrl + '" alt="' + (name || 'User') + '" class="user-list-image" /><button type="button" class="user-image-view-btn" onclick="viewUserImage(\'' + imageValue + '\')" title="View Image" aria-label="View Image"><span class="user-image-view-icon" aria-hidden="true">&#128065;</span></button></div>'
+            : '<div class="user-list-image user-list-image-placeholder">' + ((name || '?').charAt(0).toUpperCase()) + '</div>';
 
         var adminBadge = isAdmin
             ? '<span class="badge badge-confirmed">Admin</span>'
@@ -413,6 +468,7 @@ function renderUsersList(rows) {
         html += `
             <tr data-id="${id}">
                 <td>${serial}</td>
+                <td><div class="user-list-image-wrap">${imageCell}</div></td>
                 <td><strong>${code || ''}</strong></td>
                 <td><strong>${name || ''}</strong></td>
                 <td>${email || ''}</td>
@@ -476,6 +532,7 @@ function clearUsersForm(keepId) {
     $('#userImageFile').val('');
     $('#userIsActive').val('true');
     $('#userImagePreview').attr('src', '').addClass('hidden');
+    updateUserImageViewButton();
     $('#userIsAdmin').prop('checked', false);
     loadUserRolesOptions([]);
     clearRolesError();
@@ -532,10 +589,12 @@ function editUser(id) {
             var imageValue = user.Image || user.image || '';
             $('#userImage').val(imageValue);
             if (imageValue) {
-                $('#userImagePreview').attr('src', imageValue).removeClass('hidden');
+                $('#userImagePreview').attr('src', buildUserImageUrl(imageValue)).removeClass('hidden');
             } else {
                 $('#userImagePreview').attr('src', '').addClass('hidden');
             }
+
+            updateUserImageViewButton();
 
             $('#userImageFile').val('');
             $('#userIsAdmin').prop('checked', user.isAdmin || false);
@@ -646,12 +705,29 @@ function saveUser() {
     };
 
     var endpoint = isUpdate ? '/Admin/Users/update' : '/Admin/Users/create';
+    var formData = new FormData();
+
+    Object.keys(user).forEach(function (key) {
+        var value = user[key];
+        if (value === null || typeof value === 'undefined') {
+            return;
+        }
+
+        formData.append(key, value);
+    });
+
+    var imageFileInput = document.getElementById('userImageFile');
+    var imageFile = imageFileInput && imageFileInput.files && imageFileInput.files.length ? imageFileInput.files[0] : null;
+    if (imageFile) {
+        formData.append('ImageFile', imageFile);
+    }
 
     $.ajax({
         url: endpoint,
         type: 'POST',
-        contentType: 'application/json',
-        data: JSON.stringify(user),
+        data: formData,
+        processData: false,
+        contentType: false,
         success: function (res) {
             if (res && res.success) {
                 var savedUserId = isUpdate ? parseInt(userId, 10) : parseInt(res.id, 10);
@@ -661,7 +737,10 @@ function saveUser() {
                     return;
                 }
 
-                saveUserRoleMappings(savedUserId, selectedRoles, isUpdate);
+                saveUserRoleMappings(savedUserId, selectedRoles, isUpdate, {
+                    sent: res.emailSent !== false,
+                    error: res.emailError || ''
+                });
             } else {
                 setButtonBusy('#saveUserBtn', false);
                 var errorMsg = res && res.message ? res.message : (isUpdate ? 'Unable to update user.' : 'Unable to create user.');

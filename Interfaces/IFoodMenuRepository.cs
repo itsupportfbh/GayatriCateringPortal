@@ -5,6 +5,7 @@ namespace GayatriCateringPortal.Interfaces
     public interface IFoodMenuRepository
     {
         List<FoodMenu> GetAll();
+        List<FoodMenu> GetByCategoryId(int categoryId);
         FoodMenu? GetById(int id);
         int Create(FoodMenu item);
         int Update(FoodMenu item);

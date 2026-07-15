@@ -390,6 +390,80 @@ function setButtonBusy(buttonRef, isBusy, busyLabel) {
     $button.find('.gc-btn-label').text(restoreLabel);
 }
 
+function resetBusyActionButtons(root) {
+    var $scope = root ? $(root) : $(document);
+    var $buttons = $scope.is('.gc-action-btn') ? $scope.add($scope.find('.gc-action-btn')) : $scope.find('.gc-action-btn');
+
+    $buttons.each(function () {
+        var $button = $(this);
+        if (!$button.hasClass('is-busy')) {
+            return;
+        }
+
+        var action = ($button.attr('data-gc-button-action') || '').toLowerCase();
+        var fallbackLabel = action === 'clear' ? 'Clear' : 'Save';
+        var label = $button.attr('data-gc-button-label') || fallbackLabel;
+
+        $button.removeClass('is-busy').prop('disabled', false);
+
+        if ($button.find('.gc-btn-label').length) {
+            $button.find('.gc-btn-label').text(label);
+        } else {
+            $button.text(label);
+            $button.data('gcButtonDecorated', false);
+            decorateActionButtons($button);
+        }
+    });
+}
+
+function getModalSaveLabel(root) {
+    var $root = $(root);
+    if (!$root.length) return null;
+
+    var titleText = $.trim(
+        $root.find('.modal-title:visible, [id$="-title"]:visible').first().text()
+    ).toLowerCase();
+
+    if (!titleText) {
+        return null;
+    }
+
+    var hasCreate = titleText.indexOf('create') > -1 || titleText.indexOf('add') > -1 || titleText.indexOf('new') > -1;
+    var hasEdit = titleText.indexOf('edit') > -1 || titleText.indexOf('update') > -1;
+
+    if (hasCreate && hasEdit) {
+        return null;
+    }
+
+    if (hasEdit) {
+        return 'Update';
+    }
+
+    if (hasCreate) {
+        return 'Save';
+    }
+
+    return null;
+}
+
+function syncModalSaveButtons(root) {
+    var label = getModalSaveLabel(root);
+    if (!label) return;
+
+    var $root = $(root);
+    var $saveButtons = $root.find('.gc-action-btn[data-gc-button-action="save"]');
+    if (!$saveButtons.length) return;
+
+    $saveButtons.each(function () {
+        setActionButtonLabel($(this), label);
+    });
+}
+
+function normalizeModalActionButtons(root) {
+    resetBusyActionButtons(root);
+    syncModalSaveButtons(root);
+}
+
 document.addEventListener('DOMContentLoaded', function () {
     var loginBtn = document.getElementById('loginBtn');
     var loginCloseBtn = document.getElementById('loginCloseBtn');
@@ -473,4 +547,31 @@ $(document).on('keyup', '.tbl-search', function () {
 
 $(document).on('click', '.js-print-page', function () {
     window.print();
+});
+
+$(document).on('shown.bs.modal', '.modal', function () {
+    normalizeModalActionButtons(this);
+});
+
+var gcModalBusyResetObserver = new MutationObserver(function (mutations) {
+    for (var i = 0; i < mutations.length; i++) {
+        var target = mutations[i].target;
+        if (!target || target.nodeType !== 1) {
+            continue;
+        }
+
+        var $target = $(target);
+        var isOverlayOpen = $target.hasClass('modal-overlay') && !$target.hasClass('hidden');
+        var isBootstrapOpen = $target.hasClass('modal') && $target.hasClass('show');
+
+        if (isOverlayOpen || isBootstrapOpen) {
+            normalizeModalActionButtons(target);
+        }
+    }
+});
+
+gcModalBusyResetObserver.observe(document.documentElement, {
+    subtree: true,
+    attributes: true,
+    attributeFilter: ['class']
 });

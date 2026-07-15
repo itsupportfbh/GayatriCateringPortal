@@ -1,4 +1,5 @@
 using System;
+using Microsoft.AspNetCore.Http;
 
 namespace GayatriCateringPortal.Models
 {
@@ -28,5 +29,10 @@ namespace GayatriCateringPortal.Models
         public int? State { get; set; }
         public int? City { get; set; }
         public int? PostalCode { get; set; }
+    }
+
+    public class SaveUserRequest : UserMaster
+    {
+        public IFormFile? ImageFile { get; set; }
     }
 }

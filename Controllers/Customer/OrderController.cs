@@ -7,10 +7,12 @@ namespace GayatriCateringPortal.Controllers.Customer
     public class OrderController : Controller
     {
         private readonly IOrdersRepository _orders;
+        private readonly IAddOnRepository _addOns;
 
-        public OrderController(IOrdersRepository orders)
+        public OrderController(IOrdersRepository orders, IAddOnRepository addOns)
         {
             _orders = orders;
+            _addOns = addOns;
         }
 
         [HttpGet("")]
@@ -28,6 +30,23 @@ namespace GayatriCateringPortal.Controllers.Customer
             var item = _orders.GetById(id);
             if (item == null) return NotFound();
             return Ok(item);
+        }
+
+        [HttpGet("addons")]
+        public IActionResult GetAddOns()
+        {
+            try
+            {
+                var items = _addOns.GetAll()
+                    .Where(item => item.IsActive && !item.IsDeleted)
+                    .OrderBy(item => item.AddOnName)
+                    .ToList();
+                return Ok(items);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Unable to load add-ons.", detail = ex.Message });
+            }
         }
 
         [HttpPost("save")]
