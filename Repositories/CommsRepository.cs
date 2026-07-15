@@ -1,10 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Data;
-using Microsoft.Data.SqlClient;
-using GayatriCateringPortal.Data;
+﻿using GayatriCateringPortal.Data;
 using GayatriCateringPortal.Interfaces;
 using GayatriCateringPortal.Models;
+using Microsoft.Data.SqlClient;
+using System;
+using System.Collections.Generic;
+using System.Data;
+using System.Net.NetworkInformation;
 
 namespace GayatriCateringPortal.Repositories;
 
@@ -21,14 +22,11 @@ public class CommsRepository : ICommsRepository
             using (conn = DataFactory.CreateConnection())
             {
                 conn.Open();
-                using (cmd = DataFactory.CreateCommand("SELECT * FROM CommunicationLog WHERE IsDeleted = 0", conn))
+                using (cmd = DataFactory.CreateCommand("GetCommunicationLog", conn))
                 {
+                    ((SqlCommand)cmd).CommandType = CommandType.StoredProcedure;
                     reader = DataFactory.ExecuteReader(cmd);
-                    list = new List<CommunicationLog>();
-                    while (reader.Read())
-                    {
-                        list.Add(new CommunicationLog());
-                    }
+                    list = this.List(reader);
                 }
             }
             return list ?? new List<CommunicationLog>();
@@ -52,19 +50,21 @@ public class CommsRepository : ICommsRepository
         IDbConnection? conn = null;
         IDbCommand? cmd = null;
         IDataReader? reader = null;
+        CommunicationLog item = null;
         try
         {
             using (conn = DataFactory.CreateConnection())
             {
-                using (cmd = DataFactory.CreateCommand("SELECT * FROM CommunicationLog WHERE Id = @Id", conn))
+                if (conn.State == ConnectionState.Closed) conn.Open();
+                using (cmd = DataFactory.CreateCommand("SP_GetCommunicationLogById", conn))
                 {
+                    ((SqlCommand)cmd).CommandType = CommandType.StoredProcedure;
                     cmd.Parameters.Add(DataFactory.CreateParameter("@Id", id));
-                    if (conn.State == ConnectionState.Closed) conn.Open();
                     reader = DataFactory.ExecuteReader(cmd);
-                    if (reader.Read()) return new CommunicationLog();
+                    var list = this.List(reader);
+                    if (list != null && list.Count > 0) item = list[0];
                 }
             }
-            return null;
         }
         catch (SqlException)
         {
@@ -78,6 +78,7 @@ public class CommsRepository : ICommsRepository
         {
             if (conn != null && conn.State != ConnectionState.Closed) conn.Close();
         }
+        return item;
     }
 
     public int Create(CommunicationLog item)
@@ -88,14 +89,25 @@ public class CommsRepository : ICommsRepository
         {
             using (conn = DataFactory.CreateConnection())
             {
+                conn.Open();
                 using (cmd = DataFactory.CreateCommand("SP_CreateCommunicationLog", conn))
                 {
                     ((SqlCommand)cmd).CommandType = CommandType.StoredProcedure;
-                    cmd.Parameters.Add(DataFactory.CreateParameter("@Id", item.Id));
-                    //cmd.Parameters.Add(DataFactory.CreateParameter("@Code", (object?)item.Code ?? DBNull.Value));
-                    conn.Open();
-                    var rows = DataFactory.ExecuteNonQuery(cmd);
-                    return rows > 0 ? 1 : 0;
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@Channel", (object?)item.Channel ?? DBNull.Value));
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@ToAddress", (object?)item.ToAddress ?? DBNull.Value));
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@Message", (object?)item.Message ?? DBNull.Value));                  
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@IsActive", item.IsActive));
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@IsDeleted", item.IsDeleted));
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@CreatedBy", item.CreatedBy));
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@CreatedDate", DateTime.TryParse(item.CreatedDate, out var createdDate) ? createdDate : (object?)DBNull.Value));
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@UpdatedBy", item.UpdatedBy));
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@UpdatedDate", DateTime.TryParse(item.UpdatedDate, out var updatedDate) ? updatedDate : (object?)DBNull.Value));
+
+                    var result = DataFactory.ExecuteScalar(cmd);
+                    if (result != null)
+                    {
+                        return Convert.ToInt32(result);
+                    }
                 }
             }
         }
@@ -111,9 +123,10 @@ public class CommsRepository : ICommsRepository
         {
             if (conn != null && conn.State != ConnectionState.Closed) conn.Close();
         }
+        return 0;
     }
 
-    public bool Update(CommunicationLog item)
+    public int Update(CommunicationLog item)
     {
         IDbConnection? conn = null;
         IDbCommand? cmd = null;
@@ -121,13 +134,26 @@ public class CommsRepository : ICommsRepository
         {
             using (conn = DataFactory.CreateConnection())
             {
-                using (cmd = DataFactory.CreateCommand("SP_CreateCommunicationLog", conn))
+                conn.Open();
+                using (cmd = DataFactory.CreateCommand("SP_UpdateCommunicationLog", conn))
                 {
                     ((SqlCommand)cmd).CommandType = CommandType.StoredProcedure;
-                    cmd.Parameters.Add(DataFactory.CreateParameter("@Id", item.Id));
-                    //cmd.Parameters.Add(DataFactory.CreateParameter("@Code", (object?)item.Code ?? DBNull.Value));
-                    conn.Open();
-                    return DataFactory.ExecuteNonQuery(cmd) > 0;
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@Channel", (object?)item.Channel ?? DBNull.Value));
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@ToAddress", (object?)item.ToAddress ?? DBNull.Value));
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@Message", (object?)item.Message ?? DBNull.Value));
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@IsActive", item.IsActive));
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@IsDeleted", item.IsDeleted));
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@CreatedBy", item.CreatedBy));
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@CreatedDate", DateTime.TryParse(item.CreatedDate, out var createdDate) ? createdDate : (object?)DBNull.Value));
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@UpdatedBy", item.UpdatedBy));
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@UpdatedDate", DateTime.TryParse(item.UpdatedDate, out var updatedDate) ? updatedDate : (object?)DBNull.Value));
+
+                    var result = DataFactory.ExecuteScalar(cmd);
+                    if (result != null)
+                    {
+                        int status = Convert.ToInt32(result);
+                        return status;
+                    }
                 }
             }
         }
@@ -143,21 +169,60 @@ public class CommsRepository : ICommsRepository
         {
             if (conn != null && conn.State != ConnectionState.Closed) conn.Close();
         }
+        return 0;
     }
 
     public bool Delete(int id)
     {
         IDbConnection? conn = null;
         IDbCommand? cmd = null;
+        bool taskStatus = false;
         try
         {
             using (conn = DataFactory.CreateConnection())
             {
-                using (cmd = DataFactory.CreateCommand("UPDATE CommunicationLog SET IsDeleted = 1 WHERE Id = @Id", conn))
+                if (conn.State == ConnectionState.Closed) conn.Open();
+                using (cmd = DataFactory.CreateCommand("DeleteCommunicationLogById", conn))
                 {
+                    ((SqlCommand)cmd).CommandType = CommandType.StoredProcedure;
                     cmd.Parameters.Add(DataFactory.CreateParameter("@Id", id));
-                    conn.Open();
-                    return cmd.ExecuteNonQuery() > 0;
+                    var r = DataFactory.ExecuteScalar(cmd);
+                    if (r != null && Convert.ToInt32(r) > 0)
+                        taskStatus = true;
+                }
+            }
+        }
+        catch (SqlException)
+        {
+            throw new Exception("Database error");
+        }
+        catch (Exception ex)
+        {
+            throw new Exception(ex.StackTrace);
+        }
+        finally
+        {
+            if (conn != null && conn.State != ConnectionState.Closed) conn.Close();
+        }
+        return taskStatus;
+    }
+
+    public bool ActiveInActive(int id, bool status)
+    {
+        IDbConnection? conn = null;
+        IDbCommand? cmd = null;
+        try
+        {
+            using (conn = DataFactory.CreateConnection())
+            {
+                if (conn.State == ConnectionState.Closed) conn.Open();
+                using (cmd = DataFactory.CreateCommand("ActiveInActiveCommunicationLogById", conn))
+                {
+                    ((SqlCommand)cmd).CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@Id", id));
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@IsActive", status));
+                    var r = DataFactory.ExecuteScalar(cmd);
+                    return r != null && Convert.ToInt32(r) > 0;
                 }
             }
         }
@@ -175,20 +240,37 @@ public class CommsRepository : ICommsRepository
         }
     }
 
-    public bool ActiveInActive(int id)
+    #region Private Methods
+    private List<CommunicationLog> List(IDataReader reader)
     {
-        IDbConnection? conn = null;
-        IDbCommand? cmd = null;
+        var list = new List<CommunicationLog>();
         try
         {
-            using (conn = DataFactory.CreateConnection())
+            while (reader.Read())
             {
-                using (cmd = DataFactory.CreateCommand("UPDATE CommunicationLog SET IsActive = CASE WHEN IsActive = 1 THEN 0 ELSE 1 END WHERE Id = @Id", conn))
-                {
-                    cmd.Parameters.Add(DataFactory.CreateParameter("@Id", id));
-                    conn.Open();
-                    return cmd.ExecuteNonQuery() > 0;
-                }
+                var item = new CommunicationLog();
+                if (reader["Id"] != DBNull.Value)
+                    item.Id = Convert.ToInt32(reader["Id"])!;
+                if (reader["Channel"] != DBNull.Value)
+                    item.Channel = Convert.ToString(reader["Channel"])!;
+                if (reader["ToAddress"] != DBNull.Value)
+                    item.ToAddress = Convert.ToString(reader["ToAddress"])!;
+                if (reader["Message"] != DBNull.Value)
+                    item.Message = Convert.ToString(reader["Message"]);                 
+                if (reader["IsActive"] != DBNull.Value)
+                    item.IsActive = Convert.ToBoolean(reader["IsActive"]);
+                if (reader["IsDeleted"] != DBNull.Value)
+                    item.IsDeleted = Convert.ToBoolean(reader["IsDeleted"]);
+                if (reader["CreatedBy"] != DBNull.Value)
+                    item.CreatedBy = Convert.ToInt32(reader["CreatedBy"]);
+                if (reader["CreatedDate"] != DBNull.Value)
+                    item.CreatedDate = Convert.ToString(reader["CreatedDate"]);
+                if (reader["UpdatedBy"] != DBNull.Value)
+                    item.UpdatedBy = Convert.ToInt32(reader["UpdatedBy"]);
+                if (reader["UpdatedDate"] != DBNull.Value)
+                    item.UpdatedDate = Convert.ToString(reader["UpdatedDate"]);
+
+                list.Add(item);
             }
         }
         catch (SqlException)
@@ -199,10 +281,9 @@ public class CommsRepository : ICommsRepository
         {
             throw new Exception(ex.StackTrace);
         }
-        finally
-        {
-            if (conn != null && conn.State != ConnectionState.Closed) conn.Close();
-        }
+
+        return list;
     }
+    #endregion
 }
 

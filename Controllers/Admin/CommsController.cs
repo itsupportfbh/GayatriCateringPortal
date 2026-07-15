@@ -1,5 +1,6 @@
 using GayatriCateringPortal.Interfaces;
 using GayatriCateringPortal.Models;
+using GayatriCateringPortal.Repositories;
 using Microsoft.AspNetCore.Mvc;
 namespace GayatriCateringPortal.Controllers.Admin
 {
@@ -39,22 +40,47 @@ namespace GayatriCateringPortal.Controllers.Admin
             return Ok(item);
         }
 
-        //[HttpPost("save")]
-        //public IActionResult Save([FromBody] CommunicationLog item)
-        //{
-        //    if (item == null) return BadRequest();
-        //    var idValue = 0;
-        //    if (!string.IsNullOrWhiteSpace(item.Id)) int.TryParse(item.Id, out idValue);
+        [HttpPost("create")]
+        public IActionResult Create([FromBody] CommunicationLog item)
+        {
+            if (!ModelState.IsValid)
+            {
+                var errors = string.Join("; ", ModelState.Values
+                .SelectMany(x => x.Errors)
+                .Select(x => x.ErrorMessage));
+            }
 
-        //    if (idValue == 0)
-        //    {
-        //        int newId = _commsRepository.Create(item);
-        //        return Ok(new { success = newId > 0, id = newId });
-        //    }
+            if (item == null) return BadRequest();
+            int newId = _commsRepository.Create(item);
 
-        //    bool result = _commsRepository.Update(item);
-        //    return Ok(new { success = result });
-        //}
+            if (newId == -1)
+            {
+                return Ok(new { success = false, message = "Communication Log already exists" });
+            }
+
+            return Ok(new { success = newId > 0, id = newId });
+        }
+
+        [HttpPost("update")]
+        public IActionResult Update([FromBody] CommunicationLog item)
+        {
+            if (!ModelState.IsValid)
+            {
+                var errors = string.Join("; ", ModelState.Values
+                .SelectMany(x => x.Errors)
+                .Select(x => x.ErrorMessage));
+            }
+
+            if (item == null) return BadRequest();
+            int result = _commsRepository.Update(item);
+
+            if (result == -1)
+            {
+                return Ok(new { success = false, message = "Communication Log already exists" });
+            }
+
+            return Ok(new { success = result > 0 });
+        }
 
         [HttpPost("delete/{id}")]
         public IActionResult Delete(int id)
@@ -64,9 +90,9 @@ namespace GayatriCateringPortal.Controllers.Admin
         }
 
         [HttpPost("activeinactive/{id}")]
-        public IActionResult ActiveInActive(int id)
+        public IActionResult ActiveInActive(int id, [FromQuery] bool status)
         {
-            bool result = _commsRepository.ActiveInActive(id);
+            bool result = _commsRepository.ActiveInActive(id, status);
             return Ok(new { success = result });
         }
     }

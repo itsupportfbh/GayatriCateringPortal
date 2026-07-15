@@ -8,11 +8,11 @@ namespace GayatriCateringPortal.Models
         public string? Channel { get; set; }
         public string? ToAddress { get; set; }
         public string? Message { get; set; }
-        public string? IsActive { get; set; }
-        public string? IsDeleted { get; set; }
+        public bool IsActive { get; set; }
+        public bool IsDeleted { get; set; }
         public string? CreatedDate { get; set; }
-        public string? CreatedBy { get; set; }
+        public int CreatedBy { get; set; }
         public string? UpdatedDate { get; set; }
-        public string? UpdatedBy { get; set; }
+        public int UpdatedBy { get; set; }
     }
 }

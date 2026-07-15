@@ -52,9 +52,10 @@ function validateForm() {
 }
 
 function savesettings() {
-    //if (!validateForm()) {
-    //    return;
-    //}
+    if (!validateForm()) {
+        return;
+    }
+
     setButtonBusy('#btnSaveSettings', true, 'Saving...');
 
     var settingId = $('#settingId').val();
