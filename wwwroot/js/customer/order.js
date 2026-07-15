@@ -1,6 +1,7 @@
 // ===== CUSTOMER ORDER WIZARD =====
 $(function () {
     var gstRate = 0;
+    var organizationInfo = {};
     var currentStep = 1;
     var state = {
         pax: 0,
@@ -40,6 +41,7 @@ $(function () {
             type: 'GET',
             dataType: 'json',
             success: function (organization) {
+                organizationInfo = organization || {};
                 var configuredRate = Number(organization?.gstRate ?? organization?.GSTRate);
 
                 gstRate = Number.isFinite(configuredRate) && configuredRate >= 0
@@ -359,7 +361,7 @@ $(function () {
     }
 
     function loadAdditionalMenus() {
-        debugger
+        
         additionalMenusLoading = true;
         $.ajax({
             url: '/Customer/Packages/additional-menus',
@@ -367,11 +369,13 @@ $(function () {
             success: function (rows) {
                 extraGroups = (Array.isArray(rows) ? rows : []).map(function (group) {
                     var items = group.items ?? group.Items ?? [];
+                    var categoryId = Number(group.categoryId ?? group.CategoryId ?? 0) || null;
                     return {
                         name: group.categoryName ?? group.CategoryName ?? 'Menu Items',
                         items: items.map(function (item) {
                             return {
                                 key: String(item.id ?? item.Id ?? ''),
+                                categoryId: categoryId,
                                 code: item.code ?? item.Code ?? '',
                                 dish: item.name ?? item.Name ?? '',
                                 type: item.foodType ?? item.FoodType ?? '',
@@ -707,10 +711,62 @@ $(function () {
     }
 
     function renderStep6() {
-        var html = '<div class="review-sheet"><div class="review-top"><div class="review-brand"><div class="review-title">Order Review</div></div><div class="review-line"><strong>Quotation Request</strong><br>Date: ' + new Date().toLocaleDateString() + '<br>Status: Draft</div></div><div class="review-split"><div><strong>Customer</strong><div>' + escapeHtml(state.details.company) + '</div><div>' + escapeHtml(state.details.email) + '</div><div>' + escapeHtml(state.details.mobile) + '</div></div><div><strong>Event</strong><div>' + escapeHtml(state.details.eventDate) + ' ' + escapeHtml(state.details.mealPeriod) + '</div><div>' + escapeHtml(buildDeliveryAddress()) + '</div><div>Pax: ' + state.pax + '</div></div></div><div class="review-table-title">Package: ' + escapeHtml(state.packageName) + ' (S$' + state.packagePrice.toFixed(2) + '/pax x ' + state.pax + ' pax = ' + money(packageBase()) + ')</div><div class="review-table-title">Included Package Dish Choices</div><table class="item-table"><thead><tr><th>Category</th><th>Dish</th><th>Included Qty</th><th>Unit</th><th>Status</th></tr></thead><tbody>' +
-            includedChoices.map(function (category) {
-                return '<tr><td>' + escapeHtml(category.categoryName) + '</td><td>-</td><td>' + (Number(category.requiredQuantity) || 1) + '</td><td>choice</td><td><span class="badge badge-paid">Included in Package</span></td></tr>';
-            }).join('') + '</tbody></table></div>';
+        var includedRows = [];
+        includedChoices.forEach(function (category) {
+            var selections = includedChoiceSelections[String(category.categoryId)] || [];
+            var requiredQuantity = Number(category.requiredQuantity) || 1;
+            for (var index = 0; index < requiredQuantity; index++) {
+                var selectedId = String(selections[index] || '');
+                var selectedMenu = (category.menus || []).find(function (menu) {
+                    return String(menu.id) === selectedId;
+                });
+                includedRows.push('<tr><td>' + escapeHtml(category.categoryName) + '</td><td>' +
+                    escapeHtml(selectedMenu ? selectedMenu.name : 'Not selected') + '</td><td>1</td><td>choice</td><td>' +
+                    (selectedMenu ? '<span class="badge badge-paid">Included</span>' : '<span class="badge badge-quotation">Pending</span>') +
+                    '</td></tr>');
+            }
+        });
+
+        var extraReviewRows = extraRows.filter(function (row) {
+            return (state.extraItems[row.key] || 0) > 0;
+        }).map(function (row) {
+            var qty = state.extraItems[row.key] || 0;
+            return '<tr><td>' + escapeHtml(row.dish) + '</td><td>' + escapeHtml(row.type) + '</td><td>' + qty +
+                '</td><td>' + escapeHtml(row.unit) + '</td><td>' + money(row.price) + '</td><td>' + money(qty * row.price) + '</td></tr>';
+        }).join('');
+
+        var addonReviewRows = addonRows.filter(function (row) {
+            return (state.addons[row.key] || 0) > 0;
+        }).map(function (row) {
+            var qty = state.addons[row.key] || 0;
+            return '<tr><td>' + escapeHtml(row.name) + '</td><td>' + escapeHtml(row.unit) + '</td><td>' + qty +
+                '</td><td>' + money(row.price) + '</td><td>' + money(qty * row.price) + '</td></tr>';
+        }).join('');
+
+        var utensilReviewRows = utensilRows.filter(function (row) {
+            return (state.utensils[row.name] || 0) > 0;
+        }).map(function (row) {
+            var qty = state.utensils[row.name] || 0;
+            return '<tr><td>' + escapeHtml(row.name) + '</td><td>' + escapeHtml(row.ruleLabel) + '</td><td>' + qty +
+                '</td><td>' + money(row.price) + '</td><td>' + money(row.deposit) + '</td><td>' + money(qty * row.price) + '</td></tr>';
+        }).join('');
+
+        var organizationName = organizationInfo.name ?? organizationInfo.Name ?? 'Gayatri Restaurant';
+        var organizationUen = organizationInfo.uen ?? organizationInfo.UEN ?? '-';
+        var organizationEmail = organizationInfo.email ?? organizationInfo.Email ?? '-';
+        var organizationHotline = organizationInfo.hotline ?? organizationInfo.Hotline ?? '-';
+        var organizationWhatsapp = organizationInfo.whatsapp ?? organizationInfo.Whatsapp ?? '-';
+
+        var html = '<div class="review-sheet report-review" id="orderReviewReport">' +
+            '<div class="review-top"><div class="review-brand"><img class="review-logo" src="/images/logo.jpg" alt="' + escapeHtml(organizationName) + ' logo"><div><div class="review-title">' + escapeHtml(organizationName) + '</div><div class="review-company-details">UEN: ' + escapeHtml(organizationUen) + '<br>Email: ' + escapeHtml(organizationEmail) + '<br>Hotline: ' + escapeHtml(organizationHotline) + ' &nbsp;|&nbsp; WhatsApp: ' + escapeHtml(organizationWhatsapp) + '</div></div></div><div class="review-line"><strong>Quotation Request</strong><br>Date: ' + new Date().toLocaleDateString('en-SG') + '<br>Status: Draft</div></div>' +
+            '<div class="review-split"><div><strong>Customer</strong><div>Name : ' + escapeHtml(state.details.company || '-') + '</div><div>Contact: ' + escapeHtml(state.details.contact || '-') + '</div><div>Email: ' + escapeHtml(state.details.email || '-') + '</div><div>Mobile: ' + escapeHtml(state.details.mobile || '-') + '</div></div>' +
+            '<div><strong>Event</strong><div>Date: ' + escapeHtml(state.details.eventDate || '-') + '</div><div>Meal Period: ' + escapeHtml(state.details.mealPeriod || '-') + '</div><div>Pax: ' + state.pax + '</div><div>Address: ' + escapeHtml(buildDeliveryAddress() || '-') + '</div><div>Notes: ' + escapeHtml(state.details.notes || '-') + '</div></div></div>' +
+            '<section class="review-section"><div class="review-table-title">Package Details</div><div class="review-table-wrap"><table class="item-table review-table"><thead><tr><th>Package</th><th>Rate</th><th>Pax</th><th>Amount</th></tr></thead><tbody><tr><td>' + escapeHtml(state.packageName) + '</td><td>' + money(state.packagePrice) + '/pax</td><td>' + state.pax + '</td><td>' + money(packageBase()) + '</td></tr></tbody></table></div></section>' +
+            '<section class="review-section"><div class="review-table-title">Included Package Dish Choices</div><div class="review-table-wrap"><table class="item-table review-table"><thead><tr><th>Category</th><th>Dish</th><th>Included Qty</th><th>Unit</th><th>Status</th></tr></thead><tbody>' + (includedRows.join('') || '<tr><td colspan="5" class="muted">No package dishes selected.</td></tr>') + '</tbody></table></div></section>' +
+            '<section class="review-section"><div class="review-table-title">Additional Chargeable Menu Items</div><div class="review-table-wrap"><table class="item-table review-table"><thead><tr><th>Item</th><th>Type</th><th>Qty</th><th>Unit</th><th>Unit Price</th><th>Amount</th></tr></thead><tbody>' + (extraReviewRows || '<tr><td colspan="6" class="muted">No additional menu items selected.</td></tr>') + '</tbody></table></div></section>' +
+            '<section class="review-section"><div class="review-table-title">Add-ons</div><div class="review-table-wrap"><table class="item-table review-table"><thead><tr><th>Add-on</th><th>Unit</th><th>Qty</th><th>Price</th><th>Amount</th></tr></thead><tbody>' + (addonReviewRows || '<tr><td colspan="5" class="muted">No add-ons selected.</td></tr>') + '</tbody></table></div></section>' +
+            '<section class="review-section"><div class="review-table-title">Utensils / Equipment</div><div class="review-table-wrap"><table class="item-table review-table"><thead><tr><th>Item</th><th>Rule</th><th>Qty</th><th>Rental</th><th>Deposit</th><th>Amount</th></tr></thead><tbody>' + (utensilReviewRows || '<tr><td colspan="6" class="muted">No utensils selected.</td></tr>') + '</tbody></table></div></section>' +
+            '<section class="review-section review-payment-section"><div class="review-table-title">Payment Summary</div><div class="review-table-wrap"><table class="item-table review-table review-payment-table"><tbody><tr><td>Package Base</td><td>' + money(packageBase()) + '</td></tr><tr><td>Additional Menu</td><td>' + money(extraTotal()) + '</td></tr><tr><td>Add-ons</td><td>' + money(addonTotal()) + '</td></tr><tr><td>Utensils / Setup</td><td>' + money(utensilTotal()) + '</td></tr><tr><td>GST (' + (gstRate * 100).toFixed(0) + '%)</td><td>' + money(gstTotal()) + '</td></tr><tr><td>Refundable Deposit</td><td>' + money(depositTotal()) + '</td></tr><tr class="review-grand-total"><td>Total</td><td>' + money(grandTotal()) + '</td></tr></tbody></table></div></section></div>';
         $('#orderStepContent').html(html);
     }
 
@@ -727,15 +783,16 @@ $(function () {
     }
 
     function buildOrderPayload() {
-        return {
+        var customerName = String(state.details.company || state.details.contact || '').trim();
+        var customerMobile = String(state.details.mobile || '').trim();
+        var order = {
             id: 0,
             orderNumber: generateOrderNumber(),
             customerId: 0,
             packageId: parseInt(state.selectedPackage, 10) || null,
             mealPeriodId: parseInt(state.details.mealPeriodId, 10) || null,
             locationId: null,
-            eventStartDateTime: state.details.eventDate || null,
-            eventEndDateTime: null,
+            eventDate: state.details.eventDate || null,
             deliveryAddress: buildDeliveryAddress(),
             notes: state.details.notes,
             pax: state.pax,
@@ -743,7 +800,7 @@ $(function () {
             additionalMenuAmount: extraTotal(),
             addOnsAmount: addonTotal(),
             utensilsAmount: utensilTotal(),
-            subTotal: grandTotal(),
+            subTotal: packageBase() + extraTotal() + addonTotal() + utensilTotal(),
             discount: 0,
             deliveryFee: 0,
             taxAmount: gstTotal(),
@@ -756,15 +813,131 @@ $(function () {
             updatedDate: null,
             updatedBy: null
         };
+
+        var packageDetails = [];
+        includedChoices.forEach(function (category) {
+            var selections = includedChoiceSelections[String(category.categoryId)] || [];
+            selections.forEach(function (menuId) {
+                var parsedMenuId = parseInt(menuId, 10) || 0;
+                if (parsedMenuId) {
+                    packageDetails.push({
+                        categoryId: parseInt(category.categoryId, 10) || null,
+                        menuId: parsedMenuId,
+                        isActive: true,
+                        isDeleted: false
+                    });
+                }
+            });
+        });
+
+        var extraItems = extraRows.filter(function (row) {
+            return (state.extraItems[row.key] || 0) > 0;
+        }).map(function (row) {
+            var qty = state.extraItems[row.key] || 0;
+            return {
+                categoryId: row.categoryId,
+                menuId: parseInt(row.key, 10) || null,
+                qty: qty,
+                unitPrice: row.price,
+                totalAmount: qty * row.price,
+                isActive: true,
+                isDeleted: false
+            };
+        });
+
+        var addOns = addonRows.filter(function (row) {
+            return (state.addons[row.key] || 0) > 0;
+        }).map(function (row) {
+            var qty = state.addons[row.key] || 0;
+            return {
+                addOnsId: parseInt(row.key, 10) || 0,
+                qty: qty,
+                unitPrice: row.price,
+                totalAmount: qty * row.price,
+                isActive: true,
+                isDeleted: false
+            };
+        });
+
+        var utensils = utensilRows.filter(function (row) {
+            return (state.utensils[row.name] || 0) > 0;
+        }).map(function (row) {
+            var qty = state.utensils[row.name] || 0;
+            return {
+                utensilsId: parseInt(row.id, 10) || 0,
+                qty: qty,
+                unitPrice: row.price,
+                totalAmount: qty * row.price,
+                refundableDeposit: qty * row.deposit,
+                isActive: true,
+                isDeleted: false
+            };
+        });
+
+        return {
+            customer: {
+                id: 0,
+                name: customerName,
+                mobileNo: customerMobile,
+                emailId: state.details.email || null,
+                addressLine1: state.details.addressLine1 || null,
+                addressLine2: state.details.addressLine2 || null,
+                cityId: parseInt(state.details.cityId, 10) || 0,
+                stateId: parseInt(state.details.stateId, 10) || 0,
+                countryId: parseInt(state.details.countryId, 10) || 0,
+                pincode: state.details.postal || null,
+                remarks: state.details.notes || null,
+                isActive: true,
+                isDeleted: false
+            },
+            order: order,
+            event: {
+                eventStartDate: state.details.eventDate || null,
+                eventEndDate: null,
+                addressLine1: state.details.addressLine1 || null,
+                addressLine2: state.details.addressLine2 || null,
+                city: parseInt(state.details.cityId, 10) || null,
+                state: parseInt(state.details.stateId, 10) || null,
+                country: parseInt(state.details.countryId, 10) || null,
+                notes: state.details.notes || null,
+                mealPeriodId: parseInt(state.details.mealPeriodId, 10) || null,
+                isActive: true,
+                isDeleted: false
+            },
+            packageDetails: packageDetails,
+            extraItems: extraItems,
+            addOns: addOns,
+            utensils: utensils
+        };
     }
 
     function submitOrder() {
-        var order = buildOrderPayload();
+        var request = buildOrderPayload();
+        if (!request.customer.name) {
+            showToast('Enter the Customer / Company Name or Contact Person in Event Details.', 4000, {
+                type: 'error',
+                title: 'Customer name required'
+            });
+            currentStep = 4;
+            renderStep();
+            return;
+        }
+
+        if (!request.customer.mobileNo) {
+            showToast('Enter the Mobile / WhatsApp number in Event Details.', 4000, {
+                type: 'error',
+                title: 'Mobile number required'
+            });
+            currentStep = 4;
+            renderStep();
+            return;
+        }
+
         $.ajax({
             url: '/Customer/Order/save',
             type: 'POST',
             contentType: 'application/json',
-            data: JSON.stringify(order),
+            data: JSON.stringify(request),
             success: function (response) {
                 if (response && response.success) {
                     showToast('Order submitted successfully');
@@ -775,8 +948,8 @@ $(function () {
                     alert('Failed to submit order');
                 }
             },
-            error: function () {
-                alert('Error submitting order');
+            error: function (xhr) {
+                showToast(xhr.responseJSON?.message || 'Error submitting order.', 4000, { type: 'error', title: 'Submit failed' });
             }
         });
     }

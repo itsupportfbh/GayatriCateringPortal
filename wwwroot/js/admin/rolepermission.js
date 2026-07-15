@@ -1,6 +1,17 @@
 $(document).ready(function () {
     loadRolePermissionFunctions();
+    bindRolePermissionAllHandlers();
 });
+
+var permissionColumnClasses = [
+    'perm-view',
+    'perm-create',
+    'perm-edit',
+    'perm-delete',
+    'perm-activeinactive',
+    'perm-download',
+    'perm-print'
+];
 
 function escapeHtml(value) {
     return String(value || '')
@@ -19,9 +30,14 @@ function boolPermissionCell(cssClass) {
     return '<td><input type="checkbox" class="' + cssClass + '"></td>';
 }
 
+function rowAllCell() {
+    return '<td><input type="checkbox" class="perm-all"></td>';
+}
+
 function buildRolePermissionRow(entityNo, functionName) {
     return '<tr data-entity-no="' + entityNo + '">' +
         '<td><strong>' + escapeHtml(functionName) + '</strong></td>' +
+        rowAllCell() +
         boolPermissionCell('perm-view') +
         boolPermissionCell('perm-create') +
         boolPermissionCell('perm-edit') +
@@ -30,6 +46,70 @@ function buildRolePermissionRow(entityNo, functionName) {
         boolPermissionCell('perm-download') +
         boolPermissionCell('perm-print') +
         '</tr>';
+}
+
+function setRowAllFromPermissions($row) {
+    if (!$row || !$row.length) return;
+
+    var allChecked = true;
+    for (var i = 0; i < permissionColumnClasses.length; i++) {
+        if (!$row.find('.' + permissionColumnClasses[i]).is(':checked')) {
+            allChecked = false;
+            break;
+        }
+    }
+
+    $row.find('.perm-all').prop('checked', allChecked);
+}
+
+function syncHeaderAllCheckbox() {
+    var $rows = $('#rolesMatrixBody tr[data-entity-no]');
+    if (!$rows.length) {
+        $('#permAllHeader').prop('checked', false);
+        return;
+    }
+
+    var allRowsChecked = true;
+    $rows.each(function () {
+        if (!$(this).find('.perm-all').is(':checked')) {
+            allRowsChecked = false;
+            return false;
+        }
+    });
+
+    $('#permAllHeader').prop('checked', allRowsChecked);
+}
+
+function bindRolePermissionAllHandlers() {
+    $(document).on('change', '#permAllHeader', function () {
+        var checked = $(this).is(':checked');
+        var $rows = $('#rolesMatrixBody tr[data-entity-no]');
+
+        $rows.each(function () {
+            var $row = $(this);
+            $row.find('.perm-all').prop('checked', checked);
+            for (var i = 0; i < permissionColumnClasses.length; i++) {
+                $row.find('.' + permissionColumnClasses[i]).prop('checked', checked);
+            }
+        });
+    });
+
+    $(document).on('change', '#rolesMatrixBody .perm-all', function () {
+        var checked = $(this).is(':checked');
+        var $row = $(this).closest('tr');
+
+        for (var i = 0; i < permissionColumnClasses.length; i++) {
+            $row.find('.' + permissionColumnClasses[i]).prop('checked', checked);
+        }
+
+        syncHeaderAllCheckbox();
+    });
+
+    $(document).on('change', '#rolesMatrixBody .perm-view, #rolesMatrixBody .perm-create, #rolesMatrixBody .perm-edit, #rolesMatrixBody .perm-delete, #rolesMatrixBody .perm-activeinactive, #rolesMatrixBody .perm-download, #rolesMatrixBody .perm-print', function () {
+        var $row = $(this).closest('tr');
+        setRowAllFromPermissions($row);
+        syncHeaderAllCheckbox();
+    });
 }
 
 function loadRolePermissionFunctions() {
@@ -44,7 +124,7 @@ function loadRolePermissionFunctions() {
             var html = '';
 
             if (!list.length) {
-                html = '<tr><td colspan="8" class="muted">No functions found.</td></tr>';
+                html = '<tr><td colspan="9" class="muted">No functions found.</td></tr>';
             } else {
                 for (var i = 0; i < list.length; i++) {
                     var row = list[i] || {};
@@ -57,6 +137,7 @@ function loadRolePermissionFunctions() {
             }
 
             $('#rolesMatrixBody').html(html);
+            $('#permAllHeader').prop('checked', false);
             if (typeof renderDataTable === 'function') {
                 renderDataTable('rolesMatrix');
             }
@@ -66,7 +147,8 @@ function loadRolePermissionFunctions() {
             }
         },
         error: function () {
-            $('#rolesMatrixBody').html('<tr><td colspan="8" class="muted">Unable to load functions.</td></tr>');
+            $('#rolesMatrixBody').html('<tr><td colspan="9" class="muted">Unable to load functions.</td></tr>');
+            $('#permAllHeader').prop('checked', false);
             if (typeof renderDataTable === 'function') {
                 renderDataTable('rolesMatrix');
             }
@@ -102,7 +184,10 @@ function loadAndBindRolePermissions(roleId) {
                 $row.find('.perm-activeinactive').prop('checked', !!(item.activeInActive || item.ActiveInActive));
                 $row.find('.perm-download').prop('checked', !!(item.download || item.Download));
                 $row.find('.perm-print').prop('checked', !!(item.print || item.Print));
+                setRowAllFromPermissions($row);
             }
+
+            syncHeaderAllCheckbox();
         })
         .fail(function () {
             showToast('Unable to load saved permissions for this role.', 2500, { type: 'error', title: 'Load failed' });
@@ -139,9 +224,9 @@ function saveRolePermissions() {
             download: $row.find('.perm-download').is(':checked'),
             print: $row.find('.perm-print').is(':checked'),
             createdDate: null,
-            createdBy: 1,
+            createdBy: window.getCurrentUserId ? window.getCurrentUserId() : 0,
             updatedDate: null,
-            updatedBy: 0,
+            updatedBy: window.getCurrentUserId ? window.getCurrentUserId() : 0,
             isActive: true,
             isDeleted: false
         };

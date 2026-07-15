@@ -166,6 +166,9 @@ function closeModal() {
 
 function openLogin() {
     document.getElementById('loginModal').classList.add('open');
+    if (window.LoginProcess && typeof window.LoginProcess.reset === 'function') {
+        window.LoginProcess.reset();
+    }
     setTimeout(function () {
         var el = document.getElementById('loginEmail');
         if (el) el.focus();
@@ -174,6 +177,128 @@ function openLogin() {
 
 function closeLogin() {
     document.getElementById('loginModal').classList.remove('open');
+    if (window.LoginProcess && typeof window.LoginProcess.reset === 'function') {
+        window.LoginProcess.reset();
+    }
+}
+
+function normalizeProfileImageUrl(url) {
+    var value = (url || '').trim();
+    if (!value) return '';
+    if (/^https?:\/\//i.test(value)) return value;
+    if (value.indexOf('/') === 0) return value;
+    return '/' + value.replace(/^\/+/, '');
+}
+
+var USER_DETAILS_KEY = 'UserDetails';
+
+function safeParseJson(raw, fallback) {
+    try {
+        if (!raw) return fallback;
+        return JSON.parse(raw);
+    } catch (e) {
+        return fallback;
+    }
+}
+
+function getUserDetails() {
+    var details = safeParseJson(localStorage.getItem(USER_DETAILS_KEY), null);
+    return details && typeof details === 'object' ? details : null;
+}
+
+function setUserDetails(details) {
+    var payload = details && typeof details === 'object' ? details : {};
+    localStorage.setItem(USER_DETAILS_KEY, JSON.stringify(payload));
+    return payload;
+}
+
+function updateUserDetails(patch) {
+    var current = getUserDetails() || {};
+    var next = Object.assign({}, current, patch || {});
+    return setUserDetails(next);
+}
+
+function getInitials(name, email) {
+    var source = (name || '').trim();
+    if (!source && email) {
+        source = String(email).split('@')[0];
+    }
+
+    if (!source) return 'G';
+
+    var parts = source.split(/\s+/).filter(Boolean);
+    if (parts.length === 1) {
+        return parts[0].substring(0, 2).toUpperCase();
+    }
+
+    return (parts[0].charAt(0) + parts[1].charAt(0)).toUpperCase();
+}
+
+function renderHeaderProfile() {
+    var details = getUserDetails() || {};
+    var isLoggedIn = details.isLoggedIn === true;
+
+    var loginBtn = document.getElementById('loginBtn');
+    var navProfile = document.getElementById('navProfile');
+    var profileName = document.getElementById('navProfileName');
+    var profileRole = document.getElementById('navProfileRole');
+    var profileEmail = document.getElementById('navProfileEmail');
+    var avatarInitials = document.getElementById('navAvatarInitials');
+    var avatarImage = document.getElementById('navAvatarImage');
+
+    if (!loginBtn || !navProfile || !profileName || !profileRole || !profileEmail || !avatarInitials || !avatarImage) {
+        return;
+    }
+
+    if (!isLoggedIn) {
+        loginBtn.classList.remove('hidden');
+        navProfile.classList.add('hidden');
+        avatarImage.classList.add('hidden');
+        avatarImage.removeAttribute('src');
+        avatarImage.removeAttribute('title');
+        avatarInitials.classList.remove('hidden');
+        avatarInitials.removeAttribute('title');
+        profileName.textContent = 'Guest User';
+        profileName.removeAttribute('title');
+        profileRole.textContent = 'Guest';
+        profileRole.removeAttribute('title');
+        profileEmail.textContent = '';
+        profileEmail.removeAttribute('title');
+        navProfile.removeAttribute('title');
+        avatarInitials.textContent = 'G';
+        return;
+    }
+
+    var userName = details.userName || 'User';
+    var userEmail = details.userEmail || '';
+    var userRole = details.userRole || 'User';
+    var userImage = normalizeProfileImageUrl(details.userImage || '');
+    var profileTooltip = userName + ' | ' + userRole + (userEmail ? ' | ' + userEmail : '');
+
+    profileName.textContent = userName;
+    profileName.title = userName;
+    profileRole.textContent = userRole;
+    profileRole.title = userRole;
+    profileEmail.textContent = userEmail;
+    profileEmail.title = userEmail;
+    avatarInitials.textContent = getInitials(userName, userEmail);
+    avatarInitials.title = profileTooltip;
+    navProfile.title = profileTooltip;
+
+    if (userImage) {
+        avatarImage.src = userImage;
+        avatarImage.title = profileTooltip;
+        avatarImage.classList.remove('hidden');
+        avatarInitials.classList.add('hidden');
+    } else {
+        avatarImage.classList.add('hidden');
+        avatarImage.removeAttribute('src');
+        avatarImage.removeAttribute('title');
+        avatarInitials.classList.remove('hidden');
+    }
+
+    loginBtn.classList.add('hidden');
+    navProfile.classList.remove('hidden');
 }
 
 function updateSidebarToggle() {
@@ -194,75 +319,64 @@ function updateSidebarToggle() {
 }
 
 function restoreAppState() {
-    if (localStorage.getItem('gcLoggedIn') === 'true') {
-        document.body.classList.add('logged-in');
-        document.getElementById('loginBtn').textContent = 'Logout';
-        var storedEmail = localStorage.getItem('gcUserEmail');
-        var storedRole = localStorage.getItem('gcUserRole');
-        if (storedEmail && storedRole) {
-            document.getElementById('nav-status').textContent = '\uD83D\uDFE2 ' + storedRole + ': ' + storedEmail;
-        }
-    }
-    if (localStorage.getItem('gcSidebarCollapsed') === 'true') {
+    var details = getUserDetails() || {};
+
+    if (details.sidebarCollapsed === true) {
         document.body.classList.add('sidebar-collapsed');
     }
+
+    renderHeaderProfile();
     updateSidebarToggle();
 }
 
 function sendCode() {
-    document.getElementById('loginCode').value = '123456';
-    showToast('Demo code sent: 123456');
+    if (window.LoginProcess && typeof window.LoginProcess.sendCode === 'function') {
+        window.LoginProcess.sendCode();
+        return;
+    }
+
+    showToast('Login module is not ready.', 2500, { type: 'warning', title: 'Please wait' });
 }
 
 function doSignIn() {
-    var email = document.getElementById('loginEmail').value.trim();
-    var password = document.getElementById('loginPassword').value.trim();
-    var code = document.getElementById('loginCode').value.trim();
-    var role = document.getElementById('loginRole').value;
-    var roleLabels = {
-        admin: 'Super Admin',
-        kitchen: 'Kitchen Admin',
-        driver: 'Driver',
-        customer: 'Customer'
-    };
-
-    if (!email) {
-        showToast('Please enter email');
+    if (window.LoginProcess && typeof window.LoginProcess.signIn === 'function') {
+        window.LoginProcess.signIn();
         return;
     }
 
-    if (password !== 'password123' && code !== '123456') {
-        showToast('Invalid password or code. Use password123 or 123456');
-        return;
-    }
+    showToast('Login module is not ready.', 2500, { type: 'warning', title: 'Please wait' });
+}
 
-    document.body.classList.add('logged-in');
-    localStorage.setItem('gcLoggedIn', 'true');
-    localStorage.setItem('gcUserEmail', email);
-    localStorage.setItem('gcUserRole', roleLabels[role] || 'User');
-    document.getElementById('nav-status').textContent = '\uD83D\uDFE2 ' + (roleLabels[role] || 'User') + ': ' + email;
-    document.getElementById('loginBtn').textContent = 'Logout';
+function performClientLogout() {
+    document.body.classList.remove('sidebar-collapsed');
+    localStorage.clear();
+    sessionStorage.clear();
+    renderHeaderProfile();
     updateSidebarToggle();
-    closeLogin();
-    showToast('Signed in as ' + roleLabels[role]);
+    showToast('Logged out', 2200, { type: 'success', title: 'Success' });
+    window.location.href = '/Customer/Home';
+}
 
-    if (role === 'admin' || role === 'kitchen' || role === 'driver') {
-        window.location.href = '/Admin/Dashboard';
-    }
+function performLogout() {
+    $.ajax({
+        url: '/Login/Logout',
+        type: 'POST'
+    }).always(function () {
+        performClientLogout();
+    });
 }
 
 function doLogout() {
-    document.body.classList.remove('logged-in');
-    document.body.classList.remove('sidebar-collapsed');
-    localStorage.removeItem('gcLoggedIn');
-    localStorage.removeItem('gcSidebarCollapsed');
-    localStorage.removeItem('gcUserEmail');
-    localStorage.removeItem('gcUserRole');
-    document.getElementById('nav-status').textContent = '\uD83D\uDFE2 Guest';
-    document.getElementById('loginBtn').textContent = 'Login';
-    updateSidebarToggle();
-    showToast('Logged out');
-    window.location.href = '/Customer/Home';
+    showToast('Are you sure you want to logout?', 0, {
+        confirm: true,
+        type: 'warning',
+        title: 'Confirm Logout',
+        yesText: 'Logout',
+        noText: 'Cancel',
+        onYes: function () {
+            performLogout();
+        }
+    });
 }
 
 function initRichDatePickers(root) {
@@ -466,6 +580,7 @@ function normalizeModalActionButtons(root) {
 
 document.addEventListener('DOMContentLoaded', function () {
     var loginBtn = document.getElementById('loginBtn');
+    var logoutBtn = document.getElementById('logoutBtn');
     var loginCloseBtn = document.getElementById('loginCloseBtn');
     var sendCodeBtn = document.getElementById('sendCodeBtn');
     var signInBtn = document.getElementById('signInBtn');
@@ -478,12 +593,12 @@ document.addEventListener('DOMContentLoaded', function () {
 
     if (loginBtn) {
         loginBtn.addEventListener('click', function () {
-            if (loginBtn.textContent.trim() === 'Logout') {
-                doLogout();
-                return;
-            }
             openLogin();
         });
+    }
+
+    if (logoutBtn) {
+        logoutBtn.addEventListener('click', doLogout);
     }
 
     if (loginCloseBtn) {
@@ -505,11 +620,16 @@ document.addEventListener('DOMContentLoaded', function () {
     if (sidebarToggle) {
         sidebarToggle.addEventListener('click', function () {
             document.body.classList.toggle('sidebar-collapsed');
-            localStorage.setItem('gcSidebarCollapsed', document.body.classList.contains('sidebar-collapsed') ? 'true' : 'false');
+            updateUserDetails({ sidebarCollapsed: document.body.classList.contains('sidebar-collapsed') });
             updateSidebarToggle();
         });
     }
 });
+
+window.renderHeaderProfile = renderHeaderProfile;
+window.getUserDetails = getUserDetails;
+window.setUserDetails = setUserDetails;
+window.updateUserDetails = updateUserDetails;
 
 var gcDateObserver = new MutationObserver(function (mutations) {
     for (var i = 0; i < mutations.length; i++) {

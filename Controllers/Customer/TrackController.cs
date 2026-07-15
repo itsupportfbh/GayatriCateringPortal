@@ -1,8 +1,10 @@
 ﻿using GayatriCateringPortal.Interfaces;
 using GayatriCateringPortal.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 namespace GayatriCateringPortal.Controllers.Customer
 {
+    [AllowAnonymous]
     [Route("Customer/Track")]
     public class TrackController : Controller
     {

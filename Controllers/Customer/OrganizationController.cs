@@ -25,6 +25,15 @@ public class OrganizationController : Controller
             return NotFound(new { message = "Organization GST rate is not configured." });
         }
 
-        return Ok(new { gstRate = organization.GSTRate });
+        return Ok(new
+        {
+            name = organization.Name,
+            uen = organization.UEN,
+            address = organization.Address,
+            email = organization.Email,
+            hotline = organization.Hotline,
+            whatsapp = organization.Whatsapp,
+            gstRate = organization.GSTRate
+        });
     }
 }

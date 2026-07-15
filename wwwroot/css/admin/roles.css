@@ -38,6 +38,21 @@
     padding: 10px 18px
 }
 
+#rolesMatrix .perm-all-head {
+    white-space: nowrap;
+}
+
+#rolesMatrix .perm-all-head-inner {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+#rolesMatrix #permAllHeader {
+    margin: 0;
+    vertical-align: middle;
+}
+
 /* panel-specific positioning is kept here */
 #rolesListPanel {
     position: relative;

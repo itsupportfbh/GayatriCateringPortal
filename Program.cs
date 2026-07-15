@@ -32,6 +32,7 @@ builder.Services.AddScoped<GayatriCateringPortal.Interfaces.IFoodMenuRepository,
 builder.Services.AddScoped<GayatriCateringPortal.Interfaces.ICommonRepository, GayatriCateringPortal.Repositories.CommonRepository>();
 builder.Services.AddScoped<GayatriCateringPortal.Interfaces.IFoodMenuCategoryRepository, GayatriCateringPortal.Repositories.FoodMenuCategoryRepository>();
 builder.Services.AddScoped<GayatriCateringPortal.Interfaces.IUsersRepository, GayatriCateringPortal.Repositories.UsersRepository>();
+builder.Services.AddScoped<GayatriCateringPortal.Interfaces.ILoginRepository, GayatriCateringPortal.Repositories.LoginRepository>();
 builder.Services.AddScoped<GayatriCateringPortal.Interfaces.IUserRoleMappingRepository, GayatriCateringPortal.Repositories.UserRoleMappingRepository>();
 builder.Services.AddScoped<GayatriCateringPortal.Interfaces.IAddOnRepository, GayatriCateringPortal.Repositories.AddOnRepository>();
 builder.Services.AddScoped<GayatriCateringPortal.Interfaces.Customer.IPackageRepository, GayatriCateringPortal.Repositories.Customer.PackageRepository>();
@@ -46,25 +47,10 @@ if (!app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseRouting();
-app.UseAuthorization();
 app.MapStaticAssets();
 
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Root}/{action=Index}/{id?}");
-
-// Temporary test endpoint to verify menu loading and DI (remove when verified)
-app.MapGet("/testmenus", (GayatriCateringPortal.Interfaces.ICommonRepository common) =>
-{
-    try
-    {
-        var items = common.GetMenuGroups();
-        return Results.Ok(items);
-    }
-    catch (System.Exception ex)
-    {
-        return Results.Problem(ex.Message);
-    }
-});
 
 app.Run();

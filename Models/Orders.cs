@@ -16,9 +16,7 @@ namespace GayatriCateringPortal.Models
 
             public int? LocationId { get; set; }
 
-            public DateTime? EventStartDateTime { get; set; }
-
-            public DateTime? EventEndDateTime { get; set; }
+            public DateTime? EventDate { get; set; }
 
             public string? DeliveryAddress { get; set; }
 

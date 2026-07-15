@@ -22,6 +22,7 @@ namespace GayatriCateringPortal.Controllers.Admin
             return View("~/Views/Admin/Roles.cshtml");
         }
 
+        [HttpGet("RolePermission")]
         [HttpGet("~/Admin/RolePermission")]
         public IActionResult RolePermission([FromQuery(Name = "RoleId")] int roleId = 0)
         {

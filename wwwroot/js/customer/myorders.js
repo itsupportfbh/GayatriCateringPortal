@@ -22,7 +22,7 @@ $(function () {
             orders.forEach(function (o) {
                 var orderNumber = o.orderNumber || o.id || 'Unknown';
                 var packageLabel = o.packageId || '-';
-                var eventDate = o.eventStartDateTime || '-';
+                var eventDate = o.eventDate || '-';
                 var total = parseFloat(o.totalAmount) || 0;
                 var paid = parseFloat(o.paidAmount) || 0;
                 var balance = total - paid;

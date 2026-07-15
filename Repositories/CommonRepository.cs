@@ -25,7 +25,7 @@ namespace GayatriCateringPortal.Repositories
             _configuration = configuration;
         }
 
-        public List<MenuGroup> GetMenuGroups()
+        public List<MenuGroup> GetMenuGroups(int roleId)
         {
             var list = new List<MenuGroup>();
             IDbConnection conn = null;
@@ -40,6 +40,7 @@ namespace GayatriCateringPortal.Repositories
                     using (cmd = DataFactory.CreateCommand("SP_GetMenus", conn))
                     {
                         ((SqlCommand)cmd).CommandType = CommandType.StoredProcedure;
+                        cmd.Parameters.Add(DataFactory.CreateParameter("@RoleId", roleId));
                         reader = DataFactory.ExecuteReader(cmd);
 
                         // single resultset with group + submenu rows
@@ -465,9 +466,6 @@ namespace GayatriCateringPortal.Repositories
 
         public async Task SendEmail(string toEmail, string? ccEmail, string subject, string body, byte[]? fileBytes = null, string? fileName = null, string? contentType = null)
         {
-            toEmail = toEmail?.Trim() ?? string.Empty;
-            ccEmail = ccEmail?.Trim();
-
             var smtpHost = _configuration["AppSettings:SmtpSettings:SmtpHost"];
             var smtpPort = Convert.ToInt32(_configuration["AppSettings:SmtpSettings:SmtpPort"]);
             var smtpUser = _configuration["AppSettings:SmtpSettings:SmtpUser"];
@@ -476,26 +474,21 @@ namespace GayatriCateringPortal.Repositories
             var configuredCc = _configuration["AppSettings:SmtpSettings:Cc"];
 
             if (string.IsNullOrWhiteSpace(toEmail))
-            {
                 throw new Exception("Recipient email address is missing.");
-            }
 
             if (string.IsNullOrWhiteSpace(fromEmail))
-            {
                 throw new Exception("AppSettings:SmtpSettings:From is missing in appsettings.json.");
-            }
 
             if (string.IsNullOrWhiteSpace(smtpHost))
-            {
                 throw new Exception("AppSettings:SmtpSettings:SmtpHost is missing in appsettings.json.");
-            }
 
             using var message = new MailMessage();
             message.From = new MailAddress(fromEmail);
             message.To.Add(toEmail);
 
-            var mergedCc = string.Join(";", new[] { configuredCc, ccEmail }
-                .Where(x => !string.IsNullOrWhiteSpace(x)));
+            var mergedCc = string.Join(";",
+                new[] { configuredCc, ccEmail }
+                    .Where(x => !string.IsNullOrWhiteSpace(x)));
 
             if (!string.IsNullOrWhiteSpace(mergedCc))
             {
@@ -512,8 +505,6 @@ namespace GayatriCateringPortal.Repositories
             message.Subject = subject;
             message.Body = body;
             message.IsBodyHtml = true;
-            message.SubjectEncoding = Encoding.UTF8;
-            message.BodyEncoding = Encoding.UTF8;
 
             if (fileBytes != null && fileBytes.Length > 0 && !string.IsNullOrWhiteSpace(fileName))
             {
@@ -521,7 +512,9 @@ namespace GayatriCateringPortal.Repositories
                 var attachment = new Attachment(
                     stream,
                     fileName,
-                    string.IsNullOrWhiteSpace(contentType) ? "application/octet-stream" : contentType
+                    string.IsNullOrWhiteSpace(contentType)
+                        ? "application/octet-stream"
+                        : contentType
                 );
 
                 message.Attachments.Add(attachment);
@@ -530,13 +523,12 @@ namespace GayatriCateringPortal.Repositories
             using var client = new SmtpClient(smtpHost, smtpPort)
             {
                 Credentials = new NetworkCredential(smtpUser, smtpPass),
-                EnableSsl = true,
-                UseDefaultCredentials = false,
-                DeliveryMethod = SmtpDeliveryMethod.Network,
-                Timeout = 30000
+                EnableSsl = true
             };
 
             await client.SendMailAsync(message);
         }
+
+       
     }
 }
