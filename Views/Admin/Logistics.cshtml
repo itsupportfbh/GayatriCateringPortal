@@ -13,7 +13,15 @@
         </div>
     </div>
 
+    <div class="d-flex gap-2 mb-3">
+        <button type="button" id="btnPending" class="btn btn-warning active">
+            🚚 Pending Delivery
+        </button>
 
+        <button type="button" id="btnDelivered" class="btn btn-success">
+            ✅ Delivered
+        </button>
+    </div>
 
     <div id="commsListPanel" class="card">
         <div class="panel-header">
@@ -23,7 +31,7 @@
         <div class="table-wrap" id="logisticsTable">
             <p class="muted">Loading...</p>
         </div>
-        <div class="table-wrap">
+        @* <div class="table-wrap">
             <table class="tbl" id="LogisticsList" data-page-size="10">
                 <thead>
                     <tr>
@@ -40,18 +48,57 @@
                     <!-- rows rendered by ~/js/admin/comms.js -->
                 </tbody>
             </table>
+        </div> *@
+        <div id="pendingSection">
+
+            <table class="tbl" id="PendingTable">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Order Date</th>
+                        <th>Order No</th>
+                        <th>Customer</th>
+                        <th>Location</th>
+                        <th>Driver</th>
+                        <th>Status</th>
+                        <th width="170">Action</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    <!-- Ajax -->
+                </tbody>
+
+            </table>
+
+        </div>
+
+        <div id="deliveredSection" style="display:none;">
+
+            <table class="tbl" id="DeliveredTable">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Order Date</th>
+                        <th>Order No</th>
+                        <th>Customer</th>
+                        <th>Location</th>
+                        <th>Driver</th>
+                        <th>Delivered On</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    <!-- Ajax -->
+                </tbody>
+
+            </table>
+
         </div>
     </div>
 
-    <div class="d-flex gap-2 mb-3">
-        <button type="button" id="btnPending" class="btn btn-warning active">
-            🚚 Pending Delivery
-        </button>
-
-        <button type="button" id="btnDelivered" class="btn btn-success">
-            ✅ Delivered
-        </button>
-    </div>
+   
 
     @section Scripts {
         <script src="~/js/admin/table-utils.js" asp-append-version="true"></script>
