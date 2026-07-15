@@ -1,6 +1,6 @@
 // ===== CUSTOMER ORDER WIZARD =====
 $(function () {
-    var gstRate = 0.09;
+    var gstRate = 0;
     var currentStep = 1;
     var state = {
         pax: 0,
@@ -33,6 +33,31 @@ $(function () {
     };
 
     var packages = [];
+
+    function loadOrganizationGst() {
+        return $.ajax({
+            url: '/Customer/Organization/gst',
+            type: 'GET',
+            dataType: 'json',
+            success: function (organization) {
+                var configuredRate = Number(organization?.gstRate ?? organization?.GSTRate);
+
+                gstRate = Number.isFinite(configuredRate) && configuredRate >= 0
+                    ? configuredRate / 100
+                    : 0;
+
+                renderStep();
+            },
+            error: function () {
+                gstRate = 0;
+                renderStep();
+                showToast('Unable to load GST from Organization.', 3000, {
+                    type: 'error',
+                    title: 'GST load failed'
+                });
+            }
+        });
+    }
 
     function loadOrderPackages() {
         $('#orderStepContent').html(
@@ -334,6 +359,7 @@ $(function () {
     }
 
     function loadAdditionalMenus() {
+        debugger
         additionalMenusLoading = true;
         $.ajax({
             url: '/Customer/Packages/additional-menus',
@@ -567,14 +593,73 @@ $(function () {
             (utensilsLoading
                 ? '<tr><td colspan="7" class="muted">Loading utensils...</td></tr>'
                 : utensilRows.map(function (row) {
-                row.suggested = row.rule > 0 ? Math.ceil(state.pax / row.rule) : 0;
+                row.suggested = calculateUtensilSuggestedQty(row);
                 var qty = state.utensils[row.name] || 0;
-                return '<tr class="' + (qty > 0 ? 'selected-row' : '') + '"><td><strong>' + row.name + '</strong><div class="muted">' + row.unit + '</div></td><td>' + row.ruleLabel + '</td><td>' + row.suggested + '</td><td><input class="qty-input utensil-qty" data-name="' + row.name + '" type="number" min="0" value="' + qty + '"></td><td class="price-cell">' + money(row.price) + '</td><td>' + money(row.deposit) + '</td><td class="amount-cell">' + money(qty * row.price) + '</td></tr>';
+                return '<tr class="' + (qty > 0 ? 'selected-row' : '') + '"><td><strong>' + row.name + '</strong><div class="muted">' + row.unit + '</div></td><td>' + row.ruleLabel + '</td><td>' + row.suggested + '</td><td><input class="qty-input utensil-qty" data-id="' + row.id + '" data-name="' + row.name + '" type="number" min="0" max="' + row.suggested + '" step="1" value="' + qty + '"></td><td class="price-cell">' + money(row.price) + '</td><td>' + money(row.deposit) + '</td><td class="amount-cell">' + money(qty * row.price) + '</td></tr>';
             }).join('') + (utensilRows.length ? '' : '<tr><td colspan="7" class="muted">No utensils available.</td></tr>')) + '</tbody></table></div></div>';
         $('#orderStepContent').html(html);
     }
 
+    function calculateUtensilSuggestedQty(row, calculatingIds) {
+
+       
+        calculatingIds = calculatingIds || {};
+
+        if (calculatingIds[row.id]) {
+            return Math.max(0, Number(row.minimumQty) || 0);
+        }
+
+        calculatingIds[row.id] = true;
+
+        var baseQty = Number(state.pax) || 0;
+        var ruleType = String(row.ruleType || 'PAX').trim().toUpperCase();
+        var operator = String(row.ruleOperator || 'SAME').trim().toUpperCase();
+        var ruleValue = Number(row.ruleValue) || 0;
+        var rulePercentage = Number(row.rulePercentage) || 0;
+
+        if (ruleType === 'CHAFING_DISH_QTY') {
+            var chafingDish = utensilRows.find(function (item) {
+                return item.id !== row.id &&
+                    String(item.ruleType || '').trim().toUpperCase() === 'PAX' &&
+                    String(item.name || '').trim().toUpperCase().includes('CHAFING');
+            });
+
+            baseQty = chafingDish
+                ? calculateUtensilSuggestedQty(chafingDish, calculatingIds)
+                : 0;
+        }
+
+        var suggested;
+        switch (operator) {
+            case 'ADD':
+                suggested = baseQty + ruleValue;
+                break;
+            case 'MULTIPLY':
+                suggested = baseQty * ruleValue;
+                break;
+            case 'DIVIDE':
+                suggested = ruleValue > 0 ? baseQty / ruleValue : 0;
+                break;
+            case 'PERCENTAGE':
+                suggested = baseQty + (baseQty * rulePercentage / 100);
+                break;
+            case 'FIXED':
+                suggested = ruleValue;
+                break;
+            case 'SAME':
+            default:
+                suggested = baseQty;
+                break;
+        }
+
+        delete calculatingIds[row.id];
+
+        suggested = Number.isFinite(suggested) ? Math.ceil(suggested) : 0;
+        return Math.max(suggested, Number(row.minimumQty) || 0, 0);
+    }
+
     function loadOrderUtensils() {
+      
         utensilsLoading = true;
         $.ajax({
             url: '/Admin/Utensils/get',
@@ -586,13 +671,21 @@ $(function () {
                     var isDeleted = item.isDeleted ?? item.IsDeleted ?? false;
                     return isActive && !isDeleted;
                 }).map(function (item) {
-                    var rule = Number(item.rules ?? item.Rules ?? 0);
+                    var ruleType = String(item.ruleType ?? item.RuleType ?? 'PAX').trim().toUpperCase();
+                    var ruleOperator = String(item.ruleOperator ?? item.RuleOperator ?? 'SAME').trim().toUpperCase();
+                    var ruleValue = Number(item.ruleValue ?? item.RuleValue ?? 0);
+                    var rulePercentage = Number(item.rulePercentage ?? item.RulePercentage ?? 0);
+                    var minimumQty = Number(item.minimumQty ?? item.MinimumQty ?? 0);
                     return {
                         id: String(item.id ?? item.Id ?? ''),
                         name: item.utensilName ?? item.UtensilName ?? '',
                         unit: 'per pc',
-                        rule: rule,
-                        ruleLabel: rule > 0 ? '1 per ' + rule + ' pax' : 'Manual',
+                        ruleType: ruleType,
+                        ruleOperator: ruleOperator,
+                        ruleValue: ruleValue,
+                        rulePercentage: rulePercentage,
+                        minimumQty: minimumQty,
+                        ruleLabel: item.ruleDescription ?? item.RuleDescription ?? 'Manual',
                         suggested: 0,
                         price: Number(item.price ?? item.Price ?? 0),
                         deposit: Number(item.depositAmount ?? item.DepositAmount ?? 0)
@@ -823,8 +916,23 @@ $(function () {
     });
 
     $(document).on('change', '.utensil-qty', function () {
+        var utensilId = String($(this).data('id'));
         var name = $(this).data('name');
         var qty = parseInt($(this).val(), 10) || 0;
+        var utensil = utensilRows.find(function (row) {
+            return String(row.id) === utensilId;
+        });
+        var suggestedQty = utensil ? calculateUtensilSuggestedQty(utensil) : 0;
+
+        if (qty > suggestedQty) {
+            qty = suggestedQty;
+            showToast('Quantity must be equal to or less than the suggested quantity (' + suggestedQty + ').', 3000, {
+                type: 'warning',
+                title: 'Invalid quantity'
+            });
+        }
+
+        qty = Math.max(qty, 0);
         if (qty > 0) state.utensils[name] = qty; else delete state.utensils[name];
         renderStep();
     });
@@ -832,7 +940,7 @@ $(function () {
     $(document).on('click', '#suggestUtensilsBtn', function () {
         state.utensils = {};
         utensilRows.forEach(function (row) {
-            state.utensils[row.name] = row.suggested || 0;
+            state.utensils[row.name] = calculateUtensilSuggestedQty(row);
         });
         renderStep();
     });
@@ -872,5 +980,6 @@ $(function () {
         updateEventDetails();
     });
 
+    loadOrganizationGst();
     loadOrderPackages();
 });

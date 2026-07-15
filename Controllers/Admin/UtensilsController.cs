@@ -53,9 +53,18 @@ namespace GayatriCateringPortal.Controllers.Admin
             if (item == null) return BadRequest();
             int newId = _repo.Create(item);
 
-            if (newId == -1)
+            if (newId <= 0)
             {
-                return Ok(new { success = false, message = "Utensil already exists" });
+                string message = newId switch
+                {
+                    -1 => "Utensil name is required.",
+                    -2 => "Utensil already exists.",
+                    -3 => "Price and deposit amount cannot be negative.",
+                    -4 => "Minimum quantity cannot be negative.",
+                    _ => "Utensil was not saved."
+                };
+
+                return Ok(new { success = false, message });
             }
 
             return Ok(new { success = newId > 0, id = newId });

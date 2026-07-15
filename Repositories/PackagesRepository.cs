@@ -23,6 +23,7 @@ public class PackagesRepository : IPackagesRepository
                 conn.Open();
                 using (cmd = DataFactory.CreateCommand("GetPackages", conn))
                 {
+                    ((SqlCommand)cmd).CommandType = CommandType.StoredProcedure;
                     reader = DataFactory.ExecuteReader(cmd);
                     while (reader.Read())
                     {
@@ -46,13 +47,13 @@ public class PackagesRepository : IPackagesRepository
             }
             return list;
         }
-        catch (SqlException)
+        catch (SqlException ex)
         {
-            throw new Exception("Database error");
+            throw new Exception("Database error: " + ex.Message, ex);
         }
         catch (Exception ex)
         {
-            throw new Exception(ex.StackTrace);
+            throw new Exception("Unable to load packages: " + ex.Message, ex);
         }
         finally
         {
