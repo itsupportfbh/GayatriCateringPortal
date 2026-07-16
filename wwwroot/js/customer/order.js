@@ -458,8 +458,8 @@ $(function () {
             '<div class="form-group"><label>Mobile / WhatsApp</label><input id="detailMobile" value="' + d.mobile + '"></div>' +
             '<div class="form-group"><label>Event Date</label><input id="detailDate" type="date" value="' + d.eventDate + '"></div>' +
             '<div class="form-group"><label>Meal Period</label><select id="detailPeriod"' + (mealPeriods.length ? '' : ' disabled') + '><option value="">' + mealPeriodPlaceholder + '</option>' + mealPeriodOptions + '</select></div>' +
-            '<div class="form-group"><label>Address Line 1</label><input id="detailAddressLine1" value="' + d.addressLine1 + '"></div>' +
-            '<div class="form-group"><label>Address Line 2</label><input id="detailAddressLine2" value="' + d.addressLine2 + '"></div>' +
+            '<div class="form-group event-address-field"><label for="detailAddressLine1">Address Line 1</label><input type="text" id="detailAddressLine1" name="AddressLine1" autocomplete="address-line1" placeholder="Enter address line 1" value="' + escapeHtml(d.addressLine1 || '') + '"></div>' +
+            '<div class="form-group event-address-field"><label for="detailAddressLine2">Address Line 2</label><input type="text" id="detailAddressLine2" name="AddressLine2" autocomplete="address-line2" placeholder="Enter address line 2 (optional)" value="' + escapeHtml(d.addressLine2 || '') + '"></div>' +
             '<div class="form-group"><label>Country</label><select id="detailCountry"><option value="">--Select Country--</option></select></div>' +
             '<div class="form-group"><label>State</label><select id="detailState" disabled><option value="">--Select State--</option></select></div>' +
             '<div class="form-group"><label>City</label><select id="detailCity" disabled><option value="">--Select City--</option></select></div>' +
