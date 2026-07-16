@@ -21,9 +21,18 @@
             <div class="panel-title">Communication Log</div>
         </div>
         <div class="muted" style="margin-bottom:16px">Track outbound communication across WhatsApp, email and SMS.</div>
-        <div class="table-wrap" id="commsTable">
-            <table class="tbl">
-                <thead><tr><th class="sortable">Date/Time</th><th class="sortable">Order</th><th class="sortable">Customer</th><th class="sortable">Channel</th><th class="sortable">Message</th><th class="sortable">Sent By</th></tr></thead>
+        <div class="table-wrap">
+            <table class="tbl" id="commsList" data-page-size="10">
+                <thead>
+                    <tr>
+                        <th class="sortable">#</th>
+                        <th class="sortable">Channel</th>
+                        <th class="sortable">ToAddress</th>
+                        <th class="sortable">Message</th>
+                        <th class="sortable">Status</th>
+                        <th class="sortable">Action</th>
+                    </tr>
+                </thead>
                 <tbody>
                     <!-- rows rendered by ~/js/admin/comms.js -->
                 </tbody>
