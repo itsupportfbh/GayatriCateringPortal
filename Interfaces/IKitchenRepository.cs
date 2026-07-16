@@ -5,6 +5,6 @@ namespace GayatriCateringPortal.Interfaces;
 
 public interface IKitchenRepository
 {
-    List<FoodMenu> GetAll();
+    List<KitchenQueueOrder> GetKitchenQueueOrders(int Status, string Fromdate, string ToDate);
   
 }

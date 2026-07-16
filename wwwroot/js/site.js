@@ -416,6 +416,10 @@ function initRichDatePickers(root) {
             nextArrow: '<span aria-hidden="true">&#8250;</span>',
             defaultDate: currentValue || null
         });
+
+        if (input._flatpickr && input._flatpickr.altInput) {
+            input._flatpickr.altInput.placeholder = input.getAttribute('placeholder') || 'dd-mm-yyyy';
+        }
     });
 }
 
