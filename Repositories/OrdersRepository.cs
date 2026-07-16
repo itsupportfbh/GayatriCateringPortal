@@ -44,18 +44,40 @@ public class OrdersRepository : IOrdersRepository
         return items;
     }
 
-    public int AdvanceOrderStatus(int orderId, int userId, bool isAdmin)
+    public int UpdateOrderStatus(int orderId, int status)
     {
-        using var conn = (SqlConnection)DataFactory.CreateConnection();
-        using var cmd = new SqlCommand("SP_AdvanceOrderStatus", conn) { CommandType = CommandType.StoredProcedure };
-        cmd.Parameters.Add("@OrderId", SqlDbType.Int).Value = orderId;
-        cmd.Parameters.Add("@UserId", SqlDbType.Int).Value = userId;
-        cmd.Parameters.Add("@IsAdmin", SqlDbType.Bit).Value = isAdmin;
-        conn.Open();
-        var result = cmd.ExecuteScalar();
-        return result == null || result == DBNull.Value ? -1 : Convert.ToInt32(result);
-    }
+        try
+        {
+            using (IDbConnection conn = DataFactory.CreateConnection())
+            {
+                conn.Open();
 
+                using (IDbCommand cmd = DataFactory.CreateCommand(
+                    "[dbo].[SP_UpdateOrderStatus]",
+                    conn))
+                {
+                    ((SqlCommand)cmd).CommandType = CommandType.StoredProcedure;
+
+                    cmd.Parameters.Add(  DataFactory.CreateParameter("@OrderId", orderId));
+
+                    cmd.Parameters.Add( DataFactory.CreateParameter("@Status", status));
+
+                    var rowsAffected = cmd.ExecuteNonQuery();
+                    return rowsAffected > 0 ? status : -1;
+                }
+            }
+        }
+        catch (SqlException ex)
+        {
+            throw new Exception("Database error: " + ex.Message, ex);
+        }
+        catch (Exception ex)
+        {
+            throw new Exception(
+                "Error while updating order status: " + ex.Message,
+                ex);
+        }
+    }
     public List<Orders> GetAll()
     {
         List<Orders> list = new List<Orders>();

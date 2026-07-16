@@ -7,7 +7,7 @@ public interface IOrdersRepository
 {
     List<Orders> GetAll();
     List<OrderListItem> GetOrderList(DateTime? fromDate = null, DateTime? toDate = null);
-    int AdvanceOrderStatus(int orderId, int userId, bool isAdmin);
+    int UpdateOrderStatus(int orderId, int status);
     Orders? GetById(int id);
     int Create(Orders order);
     int CreateCompleteOrder(CreateOrderRequest request);

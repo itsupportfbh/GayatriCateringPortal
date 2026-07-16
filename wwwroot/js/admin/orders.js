@@ -70,6 +70,18 @@ $(function () {
             '<th class="no-sort">Actions</th>' +
             '</tr></thead><tbody>';
         rows.forEach(function (o) {
+
+            var kitchenButton = '';
+            if (Number(o.orderStatus) === 0) {
+                kitchenButton = `
+        <button type="button"
+                class="btn btn-primary btn-xs btn-next-order"
+                data-id="${o.id}"
+                data-status="1">
+            Send to Kitchen
+        </button>`;
+            }
+
             html += '<tr>' +
                 '<td><strong style="color:#1d4ed8">' + escapeHtml(o.orderNumber || ('#' + o.id)) + '</strong></td>' +
                 '<td><strong>' + escapeHtml(o.customerName) + '</strong><div class="muted">' + escapeHtml(o.mobileNo) + ' &bull; ' + escapeHtml(o.emailId) + '</div></td>' +
@@ -81,7 +93,7 @@ $(function () {
                 '<td class="num"><strong>' + money(o.totalAmount) + '</strong></td>' +
                 '<td><div class="actions order-row-actions">' +
                 '<button type="button" class="btn btn-light btn-xs view-order" data-id="' + o.id + '">View</button>' +
-                '<button type="button" class="btn btn-primary btn-xs btn-next-order" data-id="' + o.id + '"' + (o.orderStatus >= 4 ? ' disabled title="Order delivered"' : '') + '>Next</button>' +
+                kitchenButton +
                 '<button type="button" class="btn btn-orange btn-xs btn-wa" data-id="' + o.id + '">WA</button>' +
                 '</div></td>' +
                 '</tr>';
@@ -133,6 +145,9 @@ $(function () {
         $.ajax({
             url: '/Admin/Orders/next/' + button.data('id'),
             type: 'POST',
+            data: {
+                status: Number(button.data('status'))
+            },
             success: function (response) {
                 if (response?.success) {
                     if (window.showToast) showToast(response.message || 'Order status updated.');
@@ -143,7 +158,7 @@ $(function () {
                 if (window.showToast) {
                     showToast(xhr.responseJSON?.message || 'Unable to update order status.', 3500, { type: 'error', title: 'Update failed' });
                 }
-                button.prop('disabled', false).text('Next');
+                button.prop('disabled', false).text('Send to Kitchen');
             }
         });
     });

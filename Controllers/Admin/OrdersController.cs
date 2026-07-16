@@ -35,18 +35,18 @@ namespace GayatriCateringPortal.Controllers.Admin
         }
 
         [HttpPost("next/{id:int}")]
-        public IActionResult NextStatus(int id)
+        public IActionResult NextStatus(int id, [FromForm] int status)
         {
             var userId = HttpContext.Session.GetInt32("UserId") ?? 0;
-            var roleName = HttpContext.Session.GetString("RoleName") ?? string.Empty;
             if (userId <= 0) return Unauthorized(new { success = false, message = "Please login again." });
+            if (status < 0 || status > 4)
+                return BadRequest(new { success = false, message = "Invalid order status." });
 
-            var isAdmin = roleName.Contains("admin", StringComparison.OrdinalIgnoreCase);
-            var status = _orders.AdvanceOrderStatus(id, userId, isAdmin);
-            if (status < 0)
-                return BadRequest(new { success = false, message = "Order was not found, is already delivered, or access was denied." });
+            var updatedStatus = _orders.UpdateOrderStatus(id, status);
+            if (updatedStatus < 0)
+                return BadRequest(new { success = false, message = "Order was not found or could not be updated." });
 
-            return Ok(new { success = true, orderStatus = status, message = "Order status updated successfully." });
+            return Ok(new { success = true, orderStatus = updatedStatus, message = "Order status updated successfully." });
         }
 
         [HttpGet("get/{id}")]
