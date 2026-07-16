@@ -34,8 +34,8 @@ namespace GayatriCateringPortal.Controllers.Admin
             return Ok(items);
         }
 
-        [HttpPost("next/{id:int}")]
-        public IActionResult NextStatus(int id, [FromForm] int status)
+        [HttpPost("UpdateOrderStatus")]
+        public IActionResult NextStatus(int id, int status)
         {
             var userId = HttpContext.Session.GetInt32("UserId") ?? 0;
             if (userId <= 0) return Unauthorized(new { success = false, message = "Please login again." });

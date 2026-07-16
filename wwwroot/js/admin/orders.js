@@ -64,12 +64,13 @@ $(function () {
             '<th class="sortable">Package</th>' +
             '<th class="sortable">Date</th>' +
             '<th class="sortable">Pax</th>' +
-            '<th class="sortable">Status</th>' +
-            '<th class="sortable">Payment</th>' +
+            '<th class="sortable">Order Status</th>' +
+            '<th class="sortable">Payment Status</th>' +
             '<th class="sortable num">Amount</th>' +
             '<th class="no-sort">Actions</th>' +
             '</tr></thead><tbody>';
         rows.forEach(function (o) {
+            var paymentStatus = paymentStatusName(o.paymentStatus);
 
             var kitchenButton = '';
             if (Number(o.orderStatus) === 0) {
@@ -89,7 +90,7 @@ $(function () {
                 '<td>' + displayDate(o.eventDate) + '<div class="muted">' + escapeHtml(o.mealPeriodName || '-') + '</div></td>' +
                 '<td>' + (Number(o.pax) || 0) + '</td>' +
                 '<td><span class="badge badge-' + cssName(o.orderStatusName) + '">' + escapeHtml(o.orderStatusName) + '</span></td>' +
-                '<td><span class="badge ' + paymentClass(o.paymentStatus) + '">' + escapeHtml(o.paymentStatus) + '</span><div class="muted">Paid ' + money(o.paidAmount) + '</div></td>' +
+                '<td><span class="badge ' + paymentClass(paymentStatus) + '">' + escapeHtml(paymentStatus) + '</span><div class="muted">Paid ' + money(o.paidAmount) + '</div></td>' +
                 '<td class="num"><strong>' + money(o.totalAmount) + '</strong></td>' +
                 '<td><div class="actions order-row-actions">' +
                 '<button type="button" class="btn btn-light btn-xs view-order" data-id="' + o.id + '">View</button>' +
@@ -107,7 +108,17 @@ $(function () {
     }
 
     function paymentClass(payment) {
-        return payment === 'Paid' ? 'badge-paid' : 'badge-unpaid';
+        if (payment === 'Paid') return 'badge-paid';
+        if (payment === 'Partially Paid') return 'badge-partially-paid';
+        return 'badge-unpaid';
+    }
+
+    function paymentStatusName(payment) {
+        var value = String(payment ?? '').trim();
+        if (value === '0') return 'Pending';
+        if (value === '1') return 'Partially Paid';
+        if (value === '2') return 'Paid';
+        return value || 'Pending';
     }
 
     function openModal(html) {
@@ -128,7 +139,7 @@ $(function () {
             '<p><strong>Customer:</strong> ' + escapeHtml(o.customerName) + ' <span class="muted">' + escapeHtml(o.mobileNo) + ' &bull; ' + escapeHtml(o.emailId) + '</span></p>' +
             '<p><strong>Package:</strong> ' + escapeHtml(o.packageName || '-') + ' <span class="muted">(' + escapeHtml(o.locationName || '-') + ')</span></p>' +
             '<p><strong>Date:</strong> ' + displayDate(o.eventDate) + ' &bull; ' + escapeHtml(o.mealPeriodName || '-') + ' &bull; <strong>Pax:</strong> ' + (Number(o.pax) || 0) + '</p><hr>' +
-            '<p><strong>Status:</strong> ' + escapeHtml(o.orderStatusName) + ' &nbsp; <strong>Payment:</strong> ' + escapeHtml(o.paymentStatus) + '</p>' +
+            '<p><strong>Status:</strong> ' + escapeHtml(o.orderStatusName) + ' &nbsp; <strong>Payment:</strong> ' + escapeHtml(paymentStatusName(o.paymentStatus)) + '</p>' +
             '<p><strong>Amount:</strong> ' + money(o.totalAmount) + ' <span class="muted">Paid ' + money(o.paidAmount) + '</span></p>' +
             '</div><div class="modal-footer"><button class="btn btn-light" id="closeOrderBtn">Close</button></div>';
         openModal(html);

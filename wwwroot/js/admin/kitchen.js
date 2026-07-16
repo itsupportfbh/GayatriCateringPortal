@@ -1,135 +1,141 @@
-var kitchenOrders = [];
 var kitchenActiveTab = 'queue';
 
-$(function () {
-    kitchenOrders = [
-        {
-            id: 'GC-2026-001',
-            customer: 'Ravi Kumar',
-            date: '2026-07-01',
-            period: 'LUNCH',
-            packageName: 'Non-Vegetarian Indian Buffet',
-            pax: 80,
-            location: 'Tanjong Pagar',
-            stage: 'queue'
-        },
-        {
-            id: 'GC-2026-002',
-            customer: 'Priya Events',
-            date: '2026-07-05',
-            period: 'DINNER',
-            packageName: 'Premium North Indian Feast',
-            pax: 120,
-            location: 'Orchard',
-            stage: 'queue'
-        }
-    ];
-
-    renderKitchenQueue(kitchenOrders);
-
-    $(document)
-        .off('click.kitchenStage')
-        .on('click.kitchenStage', '.kitchen-tab', function () {
-            var tab = ($(this).data('tab') || '').toString().toLowerCase();
-            if (!tab) return;
-            kitchenActiveTab = tab;
-            renderKitchenQueue(kitchenOrders);
-        })
-        .off('click.kitchenDispatch')
-        .on('click.kitchenDispatch', '.kitchen-ready-btn', function () {
-            var orderId = $(this).data('orderId');
-            setKitchenOrderStage(orderId, 'ready');
-            kitchenActiveTab = 'ready';
-            showToast('Order marked ready for delivery.', 2200, { type: 'success', title: 'Updated' });
-        })
-        .off('click.kitchenView')
-        .on('click.kitchenView', '.kitchen-view-btn', function () {
-            showToast('Order details page will be connected soon.', 2200, { type: 'info', title: 'View Order' });
-        });
+$(document).ready(function () {
+    loadKitchenOrders(1);
 });
 
-function setKitchenOrderStage(orderId, stage) {
-    var validStages = { queue: true, ready: true };
-    if (!orderId || !validStages[stage]) return;
-
-    for (var i = 0; i < kitchenOrders.length; i++) {
-        var item = kitchenOrders[i] || {};
-        if (String(item.id || '') === String(orderId)) {
-            item.stage = stage;
-            break;
-        }
-    }
-
-    renderKitchenQueue(kitchenOrders);
+function openKitchenTab(tab) {
+    kitchenActiveTab = tab === 'ready' ? 'ready' : 'queue';
+    loadKitchenOrders(kitchenActiveTab === 'ready' ? 2 : 1);
 }
 
-function renderKitchenQueue(orders) {
-    var list = Array.isArray(orders) ? orders : [];
+function applyKitchenFilter() {
+    loadKitchenOrders(kitchenActiveTab === 'ready' ? 2 : 1);
+}
+
+function resetKitchenFilter() {
+    clearKitchenDateInput('kitchenFromDate');
+    clearKitchenDateInput('kitchenToDate');
+    loadKitchenOrders(kitchenActiveTab === 'ready' ? 2 : 1);
+}
+
+function clearKitchenDateInput(inputId) {
+    var input = document.getElementById(inputId);
+    if (!input) return;
+
+    if (input._flatpickr) {
+        input._flatpickr.clear();
+        return;
+    }
+
+    input.value = '';
+}
+
+function markKitchenReady(orderId) {
+    kitchenActiveTab = 'ready';
+    loadKitchenOrders(2);
+    showToast('Order marked ready for delivery.', 2200, { type: 'success', title: 'Updated' });
+}
+
+function viewKitchenOrder(orderId) {
+    showToast('Order details page will be connected soon.', 2200, { type: 'info', title: 'View Order' });
+}
+
+function showKitchenLoader(show) {
+    var $panel = $('#kitchenQueueBoard .pageloaderpanel');
+    if ($panel.length) {
+        $('#kitchenContentWrap').toggleClass('hidden', show);
+        $panel.toggleClass('hidden', !show);
+    }
+}
+
+function loadKitchenOrders(status) {
+    var fromDate = $('#kitchenFromDate').val() || '';
+    var toDate = $('#kitchenToDate').val() || '';
     var $content = $('#kitchenContent');
-    if (!$content.length) return;
 
-    var queueCount = 0;
-    var readyCount = 0;
-    for (var c = 0; c < list.length; c++) {
-        var s = String((list[c] && list[c].stage) || '').toLowerCase();
-        if (s === 'ready') readyCount++;
-        else queueCount++;
-    }
+    showKitchenLoader(true);
 
-    var html = '' +
-        '<div class="kitchen-tabs">' +
-            '<button type="button" class="kitchen-tab' + (kitchenActiveTab === 'queue' ? ' active' : '') + '" data-tab="queue">Queue <span class="kitchen-tab-count">' + queueCount + '</span></button>' +
-            '<button type="button" class="kitchen-tab' + (kitchenActiveTab === 'ready' ? ' active' : '') + '" data-tab="ready">Ready for Delivery <span class="kitchen-tab-count">' + readyCount + '</span></button>' +
-        '</div>' +
-        '<div class="kitchen-grid">';
+    $.ajax({
+        url: '/Admin/Kitchen/GetKitchenQueueOrders?Status=' + status + '&Fromdate=' + encodeURIComponent(fromDate) + '&ToDate=' + encodeURIComponent(toDate),
+        type: 'GET',
+        dataType: 'json',
+        success: function (rows) {
+            var list = Array.isArray(rows) ? rows : [];
+            var html = '' +
+                '<div class="kitchen-tabs">' +
+                    '<button type="button" class="kitchen-tab' + (kitchenActiveTab === 'queue' ? ' active' : '') + '" onclick="openKitchenTab(\'queue\')">Queue <span class="kitchen-tab-count">' + (kitchenActiveTab === 'queue' ? list.length : 0) + '</span></button>' +
+                    '<button type="button" class="kitchen-tab' + (kitchenActiveTab === 'ready' ? ' active' : '') + '" onclick="openKitchenTab(\'ready\')">Ready for Delivery <span class="kitchen-tab-count">' + (kitchenActiveTab === 'ready' ? list.length : 0) + '</span></button>' +
+                '</div>' +
+                '<div class="kitchen-grid">';
 
-    var shown = 0;
-    var showReady = kitchenActiveTab === 'ready';
+            for (var i = 0; i < list.length; i++) {
+                var item = list[i] || {};
+                var isReady = parseInt(item.orderStatus, 10) === 2;
 
-    for (var i = 0; i < list.length; i++) {
-        var item = list[i] || {};
-        var itemStage = String(item.stage || '').toLowerCase();
-        var isReady = itemStage === 'ready';
-        if ((showReady && isReady) || (!showReady && !isReady)) {
-            html += buildKitchenCard(item);
-            shown++;
+                html += '' +
+                    '<article class="kitchen-order-card">' +
+                        '<div class="kitchen-order-top">' +
+                            '<div class="kitchen-order-date">' + escapeKitchenHtml(formatKitchenDate(item.orderDate)) + ' - ' + escapeKitchenHtml((item.mealPeriod || '').toString().toUpperCase()) + '</div>' +
+                            '<span class="kitchen-order-id">' + escapeKitchenHtml(item.orderNumber || '') + '</span>' +
+                        '</div>' +
+                        '<h3 class="kitchen-order-title">' + escapeKitchenHtml(item.customerName || '') + '</h3>' +
+                        '<p class="kitchen-order-meta">' + escapeKitchenHtml(item.packageName || '') + '</p>' +
+                        '<div class="kitchen-order-event">Event Date: ' + escapeKitchenHtml(formatKitchenDate(item.eventDate) || formatKitchenDate(item.orderDate)) + '</div>' +
+                        '<div class="kitchen-order-facts">' +
+                            '<span class="kitchen-fact-chip">' + escapeKitchenHtml(parseInt(item.pax, 10) || 0) + ' pax</span>' +
+                        '</div>' +
+                        '<div class="kitchen-card-footer">' +
+                            '<div class="kitchen-status-pill ' + (isReady ? 'is-ready' : 'is-queue') + '">' + (isReady ? 'Ready for Delivery' : 'In Queue') + '</div>' +
+                            '<div class="kitchen-card-actions">' +
+                                '<button type="button" class="btn btn-light" onclick="viewKitchenOrder(' + (parseInt(item.id, 10) || 0) + ')">View Order</button>' +
+                                (isReady ? '' : '<button type="button" class="btn btn-primary" onclick="markKitchenReady(' + (parseInt(item.id, 10) || 0) + ')">Ready for Delivery</button>') +
+                            '</div>' +
+                        '</div>' +
+                    '</article>';
+            }
+
+            if (!list.length) {
+                html += '<div class="kitchen-empty">' + (kitchenActiveTab === 'ready' ? 'No orders are ready for delivery yet.' : 'No active queue orders.') + '</div>';
+            }
+
+            html += '</div>';
+            if ($content.length) {
+                $content.html(html);
+            }
+        },
+        error: function () {
+            kitchenOrders = [];
+            if ($content.length) {
+                $content.html(
+                    '<div class="kitchen-tabs">' +
+                        '<button type="button" class="kitchen-tab' + (kitchenActiveTab === 'queue' ? ' active' : '') + '" onclick="openKitchenTab(\'queue\')">Queue <span class="kitchen-tab-count">0</span></button>' +
+                        '<button type="button" class="kitchen-tab' + (kitchenActiveTab === 'ready' ? ' active' : '') + '" onclick="openKitchenTab(\'ready\')">Ready for Delivery <span class="kitchen-tab-count">0</span></button>' +
+                    '</div>' +
+                    '<div class="kitchen-grid">' +
+                        '<div class="kitchen-empty">' + (kitchenActiveTab === 'ready' ? 'No orders are ready for delivery yet.' : 'No active queue orders.') + '</div>' +
+                    '</div>'
+                );
+            }
+            showToast('Unable to load kitchen queue orders.', 3000, { type: 'error', title: 'Load failed' });
+        },
+        complete: function () {
+            showKitchenLoader(false);
         }
-    }
-
-    if (!shown) {
-        html += '<div class="kitchen-empty">' + (showReady ? 'No orders are ready for delivery yet.' : 'No active queue orders.') + '</div>';
-    }
-
-    html += '</div>';
-    $content.html(html);
+    });
 }
 
-function buildKitchenCard(order) {
-    var stage = String(order.stage || '').toLowerCase();
-    var isReady = stage === 'ready';
+function formatKitchenDate(value) {
+    if (!value) return '';
+    var date = new Date(value);
+    if (isNaN(date.getTime())) {
+        return String(value);
+    }
 
-    return '' +
-        '<article class="kitchen-order-card' + (isReady ? ' is-ready' : '') + '">' +
-            '<div class="kitchen-order-main">' +
-                '<div class="kitchen-order-top">' +
-                    '<div class="kitchen-order-date">' + escapeKitchenHtml(order.date || '') + ' - ' + escapeKitchenHtml(order.period || '') + '</div>' +
-                    '<span class="kitchen-order-id">' + escapeKitchenHtml(order.id || '') + '</span>' +
-                '</div>' +
-                '<h3 class="kitchen-order-title">' + escapeKitchenHtml(order.customer || '') + '</h3>' +
-                '<p class="kitchen-order-meta">' + escapeKitchenHtml(order.packageName || '') + '</p>' +
-                '<div class="kitchen-order-facts">' +
-                    '<span class="kitchen-fact-chip">' + escapeKitchenHtml(order.pax || '') + ' pax</span>' +
-                    '<span class="kitchen-fact-chip">' + escapeKitchenHtml(order.location || '') + '</span>' +
-                '</div>' +
-                (isReady ? '<div class="kitchen-ready-pill">Ready for Delivery</div>' : '') +
-            '</div>' +
-            '<div class="kitchen-card-actions' + (isReady ? ' ready-actions' : '') + '">' +
-                '<button type="button" class="btn btn-light kitchen-view-btn" data-order-id="' + escapeKitchenHtml(order.id || '') + '">View Order</button>' +
-                (isReady
-                    ? ''
-                    : '<button type="button" class="btn btn-primary kitchen-ready-btn" data-order-id="' + escapeKitchenHtml(order.id || '') + '">Ready for Delivery</button>') +
-            '</div>' +
-        '</article>';
+    var year = date.getFullYear();
+    var month = String(date.getMonth() + 1).padStart(2, '0');
+    var day = String(date.getDate()).padStart(2, '0');
+    return year + '-' + month + '-' + day;
 }
 
 function escapeKitchenHtml(value) {
