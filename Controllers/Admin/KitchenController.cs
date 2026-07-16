@@ -16,18 +16,16 @@ namespace GayatriCateringPortal.Controllers.Admin
         [HttpGet("")]
         public IActionResult Index()
         {
-            var items = _kitchenRepository.GetAll();
-            ViewData["Items"] = items;
             ViewData["Mode"] = "admin";
             ViewData["Page"] = "kitchen";
             ViewData["Title"] = "Kitchen";
             return View("~/Views/Admin/Kitchen.cshtml");
         }
 
-        [HttpGet("get")]
-        public IActionResult GetAll()
+        [HttpGet("GetKitchenQueueOrders")]
+        public IActionResult GetKitchenQueueOrders(int Status, string Fromdate , string ToDate )
         {
-            var items = _kitchenRepository.GetAll();
+            var items = _kitchenRepository.GetKitchenQueueOrders(Status, Fromdate, ToDate);
             return Ok(items);
         }
 

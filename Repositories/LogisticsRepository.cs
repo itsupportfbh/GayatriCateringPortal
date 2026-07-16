@@ -44,6 +44,40 @@ public class LogisticsRepository : ILogisticsRepository
         }
     }
 
+    public List<LogisticsDetails> GetDelivered()
+    {
+        List<LogisticsDetails> list = new List<LogisticsDetails>();
+        IDbConnection? conn = null;
+        IDbCommand? cmd = null;
+        IDataReader? reader = null;
+        try
+        {
+            using (conn = DataFactory.CreateConnection())
+            {
+                conn.Open();
+                using (cmd = DataFactory.CreateCommand("GetLogisticsDetails", conn))
+                {
+                    ((SqlCommand)cmd).CommandType = CommandType.StoredProcedure;
+                    reader = DataFactory.ExecuteReader(cmd);
+                    list = this.ListDelivered(reader);
+                }
+            }
+            return list ?? new List<LogisticsDetails>();
+        }
+        catch (SqlException)
+        {
+            throw new Exception("Database error");
+        }
+        catch (Exception ex)
+        {
+            throw new Exception(ex.StackTrace);
+        }
+        finally
+        {
+            if (conn != null && conn.State != ConnectionState.Closed) conn.Close();
+        }
+    }
+
     public LogisticsDetails? GetById(int id)
     {
         IDbConnection? conn = null;
@@ -251,8 +285,9 @@ public class LogisticsRepository : ILogisticsRepository
                 if (reader["OrderNumber"] != DBNull.Value)
                     item.OrderNumber = Convert.ToString(reader["OrderNumber"])!;
                 if (reader["CustomerId"] != DBNull.Value)
-                    item.CustomerId = Convert.ToInt32(reader["CustomerId"])!;               
-               
+                    item.CustomerId = Convert.ToInt32(reader["CustomerId"])!;
+                if (reader["DeliveryAddress"] != DBNull.Value)
+                    item.DeliveryAddress = Convert.ToString(reader["DeliveryAddress"])!;
                 if (reader["CreatedBy"] != DBNull.Value)
                     item.CreatedBy = Convert.ToInt32(reader["CreatedBy"]);
                 if (reader["CreatedDate"] != DBNull.Value)
@@ -275,6 +310,44 @@ public class LogisticsRepository : ILogisticsRepository
         }
 
         return list;
+    }
+    #endregion
+
+    #region Private Methods
+    private List<LogisticsDetails> ListDelivered(IDataReader reader)
+    {
+        var listDeli = new List<LogisticsDetails>();
+        try
+        {
+            while (reader.Read())
+            {
+                var item = new LogisticsDetails();
+                if (reader["Id"] != DBNull.Value)
+                    item.Id = Convert.ToInt32(reader["Id"])!;
+                if (reader["CreatedDate"] != DBNull.Value)
+                    item.CreatedDate = Convert.ToDateTime(reader["CreatedDate"]);
+                if (reader["OrderNumber"] != DBNull.Value)
+                    item.OrderNumber = Convert.ToString(reader["OrderNumber"])!;
+                if (reader["Location"] != DBNull.Value)
+                    item.Location = Convert.ToString(reader["Location"])!;
+                if (reader["DriverName"] != DBNull.Value)
+                    item.DriverName = Convert.ToString(reader["DriverName"])!;
+                if (reader["Status"] != DBNull.Value)
+                    item.Status = Convert.ToString(reader["Status"]);               
+
+                listDeli.Add(item);
+            }
+        }
+        catch (SqlException)
+        {
+            throw new Exception("Database error");
+        }
+        catch (Exception ex)
+        {
+            throw new Exception(ex.StackTrace);
+        }
+
+        return listDeli;
     }
     #endregion
 }
