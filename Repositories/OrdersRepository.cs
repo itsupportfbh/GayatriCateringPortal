@@ -86,6 +86,144 @@ public class OrdersRepository : IOrdersRepository
         }
     }
 
+    public int UpdateOrderPaymentStatus(int OrderId, int Status)
+    {
+        IDbConnection conn = null;
+        IDbCommand cmd = null;
+
+        try
+        {
+            using (conn = DataFactory.CreateConnection())
+            {
+                conn.Open();
+
+                using (cmd = DataFactory.CreateCommand("SP_UpdateOrderPaymentStatus", conn))
+                {
+                    ((SqlCommand)cmd).CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@OrderId", OrderId));
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@Status", Status));
+
+                    var rowsAffected = DataFactory.ExecuteNonQuery(cmd);
+                    return rowsAffected > 0 ? Status : -1;
+                }
+            }
+        }
+        catch (SqlException)
+        {
+            throw new Exception("Database error");
+        }
+        catch (Exception ex)
+        {
+            throw new Exception(ex.StackTrace);
+        }
+        finally
+        {
+            if (conn != null && conn.State != ConnectionState.Closed) conn.Close();
+        }
+    }
+
+
+    public OrderPaymentStatus? GetOrderPaymentStatus(int orderId)
+    {
+        IDbConnection conn = null;
+        IDbCommand cmd = null;
+        IDataReader reader = null;
+
+        try
+        {
+            using (conn = DataFactory.CreateConnection())
+            {
+                conn.Open();
+                using (cmd = DataFactory.CreateCommand("SELECT Id, TotalAmount, PaidAmount, PaymentStatus FROM Orders WHERE Id = @OrderId AND IsDeleted = 0", conn))
+                {
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@OrderId", orderId));
+                    reader = DataFactory.ExecuteReader(cmd);
+
+                    if (!reader.Read())
+                        return null;
+
+                    return new OrderPaymentStatus
+                    {
+                        OrderId = reader["Id"] != DBNull.Value ? Convert.ToInt32(reader["Id"]) : orderId,
+                        TotalAmount = reader["TotalAmount"] != DBNull.Value ? Convert.ToDecimal(reader["TotalAmount"]) : 0,
+                        PaidAmount = reader["PaidAmount"] != DBNull.Value ? Convert.ToDecimal(reader["PaidAmount"]) : 0,
+                        PaymentStatus = reader["PaymentStatus"] != DBNull.Value ? Convert.ToInt32(reader["PaymentStatus"]) : 0
+                    };
+                }
+            }
+        }
+        catch (SqlException)
+        {
+            throw new Exception("Database error");
+        }
+        catch (Exception ex)
+        {
+            throw new Exception(ex.StackTrace);
+        }
+        finally
+        {
+            if (conn != null && conn.State != ConnectionState.Closed) conn.Close();
+        }
+    }
+
+    public bool UpdatePaymentFromWebhook(int orderId, decimal paidAmount)
+    {
+        IDbConnection conn = null;
+        IDbCommand getCmd = null;
+        IDbCommand updateCmd = null;
+        IDataReader reader = null;
+
+        try
+        {
+            using (conn = DataFactory.CreateConnection())
+            {
+                conn.Open();
+
+                decimal totalAmount = 0;
+                decimal currentPaid = 0;
+
+                using (getCmd = DataFactory.CreateCommand("SELECT TotalAmount, PaidAmount FROM Orders WHERE Id = @OrderId AND IsDeleted = 0", conn))
+                {
+                    getCmd.Parameters.Add(DataFactory.CreateParameter("@OrderId", orderId));
+                    reader = DataFactory.ExecuteReader(getCmd);
+
+                    if (!reader.Read())
+                        return false;
+
+                    totalAmount = reader["TotalAmount"] != DBNull.Value ? Convert.ToDecimal(reader["TotalAmount"]) : 0;
+                    currentPaid = reader["PaidAmount"] != DBNull.Value ? Convert.ToDecimal(reader["PaidAmount"]) : 0;
+                }
+
+                var normalizedPaidAmount = paidAmount > currentPaid ? paidAmount : currentPaid;
+                var paymentStatus = normalizedPaidAmount >= totalAmount && totalAmount > 0
+                    ? 2
+                    : normalizedPaidAmount > 0 ? 1 : 0;
+
+                using (updateCmd = DataFactory.CreateCommand("UPDATE Orders SET PaidAmount = @PaidAmount, PaymentStatus = @PaymentStatus, UpdatedDate = @UpdatedDate WHERE Id = @OrderId AND IsDeleted = 0", conn))
+                {
+                    updateCmd.Parameters.Add(DataFactory.CreateParameter("@PaidAmount", normalizedPaidAmount));
+                    updateCmd.Parameters.Add(DataFactory.CreateParameter("@PaymentStatus", paymentStatus));
+                    updateCmd.Parameters.Add(DataFactory.CreateParameter("@UpdatedDate", DateTime.Now));
+                    updateCmd.Parameters.Add(DataFactory.CreateParameter("@OrderId", orderId));
+
+                    return DataFactory.ExecuteNonQuery(updateCmd) > 0;
+                }
+            }
+        }
+        catch (SqlException)
+        {
+            throw new Exception("Database error");
+        }
+        catch (Exception ex)
+        {
+            throw new Exception(ex.StackTrace);
+        }
+        finally
+        {
+            if (conn != null && conn.State != ConnectionState.Closed) conn.Close();
+        }
+    }
+
     public int Create(Orders order)
     {
         IDbConnection conn = null;

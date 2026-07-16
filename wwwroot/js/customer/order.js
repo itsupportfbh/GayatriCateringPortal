@@ -62,10 +62,6 @@ $(function () {
     }
 
     function loadOrderPackages() {
-        $('#orderStepContent').html(
-            '<div class="card order-card"><div class="muted">Loading packages...</div></div>'
-        );
-
         $.ajax({
             url: '/Customer/Packages/get',
             type: 'GET',
@@ -79,11 +75,33 @@ $(function () {
         });
     }
 
+    function toBool(value, defaultValue) {
+        if (value === null || value === undefined) {
+            return !!defaultValue;
+        }
+        if (typeof value === 'boolean') {
+            return value;
+        }
+        if (typeof value === 'number') {
+            return value !== 0;
+        }
+        if (typeof value === 'string') {
+            var normalized = value.trim().toLowerCase();
+            if (normalized === '1' || normalized === 'true' || normalized === 'yes' || normalized === 'y') {
+                return true;
+            }
+            if (normalized === '0' || normalized === 'false' || normalized === 'no' || normalized === 'n' || normalized === '') {
+                return false;
+            }
+        }
+        return !!value;
+    }
+
     function renderOrderPackages(rows) {
         rows = Array.isArray(rows) ? rows : [];
         packages = rows.filter(function (item) {
-            var isActive = item.isActive ?? item.IsActive ?? false;
-            var isDeleted = item.isDeleted ?? item.IsDeleted ?? false;
+            var isActive = toBool(item.isActive ?? item.IsActive, true);
+            var isDeleted = toBool(item.isDeleted ?? item.IsDeleted, false);
             return isActive && !isDeleted;
         }).map(function (item) {
             return {
@@ -173,8 +191,9 @@ $(function () {
         $('#summaryGst').text(money(gstTotal()));
         $('#summaryDeposit').text(money(depositTotal()));
         $('#summaryTotal').text(money(grandTotal()));
-        $('#summaryBackBtn').prop('disabled', currentStep === 1);
+        $('#btnTopBack').toggleClass('hidden', currentStep === 1);
         $('#summaryNextBtn').toggleClass('hidden', currentStep === 6);
+        $('#summaryQuoteBtn').toggleClass('hidden', currentStep !== 6);
         $('#summarySubmitBtn').toggleClass('hidden', currentStep !== 6);
     }
 
@@ -193,15 +212,24 @@ $(function () {
         });
     }
 
+    function showOrderLoader(show) {
+        var $panel = $('#orderStepWrap .pageloaderpanel');
+        $('#orderStepContent').toggleClass('hidden', show);
+        $panel.toggleClass('hidden', !show);
+    }
+
     function renderStep() {
+        showOrderLoader(true);
         updateSteps();
-        if (currentStep === 1) renderStep1();
-        if (currentStep === 2) renderStep2();
-        if (currentStep === 3) renderStep3();
-        if (currentStep === 4) renderStep4();
-        if (currentStep === 5) renderStep5();
-        if (currentStep === 6) renderStep6();
-        updateSummary();
+        setTimeout(function () {
+            if (currentStep === 1) renderStep1();
+            if (currentStep === 2) renderStep2();
+            if (currentStep === 3) renderStep3();
+            if (currentStep === 4) renderStep4();
+            if (currentStep === 5) renderStep5();
+            if (currentStep === 6) renderStep6();
+            updateSummary();
+        }, 80);
     }
 
     function renderStep1() {
@@ -215,6 +243,7 @@ $(function () {
                     ? '<div class="pkg-grid">' + packages.map(renderPackageCard).join('') + '</div>'
                     : '<div class="muted">No active packages are available right now.</div>') +
                 '</div>';
+            showOrderLoader(false);
             $('#orderStepContent').html(html);
             return;
         }
@@ -237,6 +266,7 @@ $(function () {
                     : '<div class="muted">No categories are configured for this package.</div>') +
             '</div>' +
             '</div>';
+        showOrderLoader(false);
         $('#orderStepContent').html(html);
     }
 
@@ -335,6 +365,7 @@ $(function () {
             loadAdditionalMenus();
         }
         var html = '<div class="card order-card"><div class="section-label">Step 2 - Additional Menu Items + Qty</div><div class="muted" style="font-size:13px;margin-bottom:16px">This tab is only for extra items the customer wants in addition to the selected package. Only this tab shows item prices because these are additional chargeable items outside the package.</div>' + renderExtraTable() + '</div>';
+        showOrderLoader(false);
         $('#orderStepContent').html(html);
     }
 
@@ -409,6 +440,7 @@ $(function () {
                 var qty = state.addons[row.key] || 0;
                 return '<tr class="' + (qty > 0 ? 'selected-row' : '') + '"><td><input type="checkbox" class="addon-check" data-addon-id="' + row.key + '"' + (qty > 0 ? ' checked' : '') + '></td><td><strong>' + escapeHtml(row.name) + '</strong><div class="muted">' + escapeHtml(row.code) + '</div></td><td>' + escapeHtml(row.unit) + '</td><td class="price-cell">' + (row.unit.toLowerCase() === 'pax' ? money(row.price) + '/pax' : money(row.price)) + '</td><td><input class="qty-input addon-qty" data-addon-id="' + row.key + '" type="number" min="0" value="' + qty + '"></td><td class="amount-cell">' + money(qty * row.price) + '</td></tr>';
             }).join('') + (addonRows.length ? '' : '<tr><td colspan="6" class="muted">' + (addOnsLoading ? 'Loading add-ons...' : 'No add-ons available.') + '</td></tr>') + '</tbody></table></div></div>';
+        showOrderLoader(false);
         $('#orderStepContent').html(html);
     }
 
@@ -452,19 +484,20 @@ $(function () {
         }).join('');
         var mealPeriodPlaceholder = mealPeriodsLoading ? 'Loading meal periods...' : (mealPeriods.length ? 'Select meal period' : 'No meal periods available');
         var html = '<div class="card order-card"><div class="section-label">Step 4 - Event and Customer Details</div><div class="form-row col2">' +
-            '<div class="form-group"><label>Customer / Company Name</label><input id="detailCompany" value="' + d.company + '"></div>' +
-            '<div class="form-group"><label>Contact Person</label><input id="detailContact" value="' + d.contact + '"></div>' +
-            '<div class="form-group"><label>Email</label><input id="detailEmail" value="' + d.email + '"></div>' +
-            '<div class="form-group"><label>Mobile / WhatsApp</label><input id="detailMobile" value="' + d.mobile + '"></div>' +
-            '<div class="form-group"><label>Event Date</label><input id="detailDate" type="date" value="' + d.eventDate + '"></div>' +
-            '<div class="form-group"><label>Meal Period</label><select id="detailPeriod"' + (mealPeriods.length ? '' : ' disabled') + '><option value="">' + mealPeriodPlaceholder + '</option>' + mealPeriodOptions + '</select></div>' +
-            '<div class="form-group event-address-field"><label for="detailAddressLine1">Address Line 1</label><input type="text" id="detailAddressLine1" name="AddressLine1" autocomplete="address-line1" placeholder="Enter address line 1" value="' + escapeHtml(d.addressLine1 || '') + '"></div>' +
+            '<div class="form-group"><label>Customer / Company Name <span class="field-required">*</span></label><input id="detailCompany" class="form-control" value="' + d.company + '"><div class="field-error hidden" id="detailCompanyError"></div></div>' +
+            '<div class="form-group"><label>Contact Person <span class="field-required">*</span></label><input id="detailContact" class="form-control" value="' + d.contact + '"><div class="field-error hidden" id="detailContactError"></div></div>' +
+            '<div class="form-group"><label>Email</label><input id="detailEmail" class="form-control" value="' + d.email + '"><div class="field-error hidden" id="detailEmailError"></div></div>' +
+            '<div class="form-group"><label>Mobile / WhatsApp <span class="field-required">*</span></label><input id="detailMobile" class="form-control" value="' + d.mobile + '"><div class="field-error hidden" id="detailMobileError"></div></div>' +
+            '<div class="form-group"><label>Event Date <span class="field-required">*</span></label><input id="detailDate" class="form-control" type="date" value="' + d.eventDate + '"><div class="field-error hidden" id="detailDateError"></div></div>' +
+            '<div class="form-group"><label>Meal Period <span class="field-required">*</span></label><select id="detailPeriod" class="form-control"' + (mealPeriods.length ? '' : ' disabled') + '><option value="">' + mealPeriodPlaceholder + '</option>' + mealPeriodOptions + '</select><div class="field-error hidden" id="detailPeriodError"></div></div>' +
+            '<div class="form-group event-address-field"><label for="detailAddressLine1">Address Line 1 <span class="field-required">*</span></label><input type="text" class="form-control" id="detailAddressLine1" name="AddressLine1" autocomplete="address-line1" placeholder="Enter address line 1" value="' + escapeHtml(d.addressLine1 || '') + '"><div class="field-error hidden" id="detailAddressLine1Error"></div></div>' +
             '<div class="form-group event-address-field"><label for="detailAddressLine2">Address Line 2</label><input type="text" id="detailAddressLine2" name="AddressLine2" autocomplete="address-line2" placeholder="Enter address line 2 (optional)" value="' + escapeHtml(d.addressLine2 || '') + '"></div>' +
-            '<div class="form-group"><label>Country</label><select id="detailCountry"><option value="">--Select Country--</option></select></div>' +
-            '<div class="form-group"><label>State</label><select id="detailState" disabled><option value="">--Select State--</option></select></div>' +
-            '<div class="form-group"><label>City</label><select id="detailCity" disabled><option value="">--Select City--</option></select></div>' +
+            '<div class="form-group"><label>Country <span class="field-required">*</span></label><select id="detailCountry" class="form-control"><option value="">--Select Country--</option></select><div class="field-error hidden" id="detailCountryError"></div></div>' +
+            '<div class="form-group"><label>State <span class="field-required">*</span></label><select id="detailState" class="form-control" disabled><option value="">--Select State--</option></select><div class="field-error hidden" id="detailStateError"></div></div>' +
+            '<div class="form-group"><label>City <span class="field-required">*</span></label><select id="detailCity" class="form-control" disabled><option value="">--Select City--</option></select><div class="field-error hidden" id="detailCityError"></div></div>' +
             '<div class="form-group"><label>Postal Code </label><input id="detailPostal" value="' + d.postal + '"></div>' +
             '</div><div class="form-group"><label>Notes</label><textarea id="detailNotes" rows="3">' + d.notes + '</textarea></div></div>';
+        showOrderLoader(false);
         $('#orderStepContent').html(html);
         loadEventCountries(d.countryId, d.stateId, d.cityId);
     }
@@ -563,8 +596,8 @@ $(function () {
             type: 'GET',
             success: function (rows) {
                 mealPeriods = (Array.isArray(rows) ? rows : []).filter(function (item) {
-                    var isActive = item.isActive ?? item.IsActive ?? false;
-                    var isDeleted = item.isDeleted ?? item.IsDeleted ?? false;
+                    var isActive = toBool(item.isActive ?? item.IsActive, true);
+                    var isDeleted = toBool(item.isDeleted ?? item.IsDeleted, false);
                     return isActive && !isDeleted;
                 }).sort(function (left, right) {
                     return Number(left.displayOrder ?? left.DisplayOrder ?? 0) - Number(right.displayOrder ?? right.DisplayOrder ?? 0);
@@ -601,6 +634,7 @@ $(function () {
                 var qty = state.utensils[row.name] || 0;
                 return '<tr class="' + (qty > 0 ? 'selected-row' : '') + '"><td><strong>' + row.name + '</strong><div class="muted">' + row.unit + '</div></td><td>' + row.ruleLabel + '</td><td>' + row.suggested + '</td><td><input class="qty-input utensil-qty" data-id="' + row.id + '" data-name="' + row.name + '" type="number" min="0" max="' + row.suggested + '" step="1" value="' + qty + '"></td><td class="price-cell">' + money(row.price) + '</td><td>' + money(row.deposit) + '</td><td class="amount-cell">' + money(qty * row.price) + '</td></tr>';
             }).join('') + (utensilRows.length ? '' : '<tr><td colspan="7" class="muted">No utensils available.</td></tr>')) + '</tbody></table></div></div>';
+        showOrderLoader(false);
         $('#orderStepContent').html(html);
     }
 
@@ -671,8 +705,8 @@ $(function () {
             dataType: 'json',
             success: function (rows) {
                 utensilRows = (Array.isArray(rows) ? rows : []).filter(function (item) {
-                    var isActive = item.isActive ?? item.IsActive ?? false;
-                    var isDeleted = item.isDeleted ?? item.IsDeleted ?? false;
+                    var isActive = toBool(item.isActive ?? item.IsActive, true);
+                    var isDeleted = toBool(item.isDeleted ?? item.IsDeleted, false);
                     return isActive && !isDeleted;
                 }).map(function (item) {
                     var ruleType = String(item.ruleType ?? item.RuleType ?? 'PAX').trim().toUpperCase();
@@ -767,6 +801,7 @@ $(function () {
             '<section class="review-section"><div class="review-table-title">Add-ons</div><div class="review-table-wrap"><table class="item-table review-table"><thead><tr><th>Add-on</th><th>Unit</th><th>Qty</th><th>Price</th><th>Amount</th></tr></thead><tbody>' + (addonReviewRows || '<tr><td colspan="5" class="muted">No add-ons selected.</td></tr>') + '</tbody></table></div></section>' +
             '<section class="review-section"><div class="review-table-title">Utensils / Equipment</div><div class="review-table-wrap"><table class="item-table review-table"><thead><tr><th>Item</th><th>Rule</th><th>Qty</th><th>Rental</th><th>Deposit</th><th>Amount</th></tr></thead><tbody>' + (utensilReviewRows || '<tr><td colspan="6" class="muted">No utensils selected.</td></tr>') + '</tbody></table></div></section>' +
             '<section class="review-section review-payment-section"><div class="review-table-title">Payment Summary</div><div class="review-table-wrap"><table class="item-table review-table review-payment-table"><tbody><tr><td>Package Base</td><td>' + money(packageBase()) + '</td></tr><tr><td>Additional Menu</td><td>' + money(extraTotal()) + '</td></tr><tr><td>Add-ons</td><td>' + money(addonTotal()) + '</td></tr><tr><td>Utensils / Setup</td><td>' + money(utensilTotal()) + '</td></tr><tr><td>GST (' + (gstRate * 100).toFixed(0) + '%)</td><td>' + money(gstTotal()) + '</td></tr><tr><td>Refundable Deposit</td><td>' + money(depositTotal()) + '</td></tr><tr class="review-grand-total"><td>Total</td><td>' + money(grandTotal()) + '</td></tr></tbody></table></div></section></div>';
+        showOrderLoader(false);
         $('#orderStepContent').html(html);
     }
 
@@ -913,21 +948,7 @@ $(function () {
 
     function submitOrder() {
         var request = buildOrderPayload();
-        if (!request.customer.name) {
-            showToast('Enter the Customer / Company Name or Contact Person in Event Details.', 4000, {
-                type: 'error',
-                title: 'Customer name required'
-            });
-            currentStep = 4;
-            renderStep();
-            return;
-        }
-
-        if (!request.customer.mobileNo) {
-            showToast('Enter the Mobile / WhatsApp number in Event Details.', 4000, {
-                type: 'error',
-                title: 'Mobile number required'
-            });
+        if (!validateStep(4, true)) {
             currentStep = 4;
             renderStep();
             return;
@@ -940,12 +961,11 @@ $(function () {
             data: JSON.stringify(request),
             success: function (response) {
                 if (response && response.success) {
-                    showToast('Order submitted successfully');
-                    setTimeout(function () {
-                        window.location.href = '/Customer/MyOrders';
-                    }, 1200);
+                    var orderId = parseInt(response.id, 10) || 0;
+                    showToast('Order details saved successfully. Please complete payment.', 3000, { type: 'success', title: 'Saved' });
+                    loadUpiAndOpenPayment(orderId);
                 } else {
-                    alert('Failed to submit order');
+                    showToast('Failed to submit order details.', 4000, { type: 'error', title: 'Submit failed' });
                 }
             },
             error: function (xhr) {
@@ -954,14 +974,60 @@ $(function () {
         });
     }
 
+    function closePaymentModal() {
+        $('#paymentModal').addClass('hidden');
+        $('#paymentQrImage').attr('src', '');
+    }
+
+    function openPaymentModal(orderId, upiId) {
+        var amount = grandTotal();
+        var payeeName = String(organizationInfo.name ?? organizationInfo.Name ?? 'Gayatri Catering');
+        var upiUri = 'upi://pay?pa=' + encodeURIComponent(upiId) +
+            '&pn=' + encodeURIComponent(payeeName) +
+            '&tn=' + encodeURIComponent('Order ' + orderId) +
+            '&am=' + amount.toFixed(2) + '&cu=INR';
+        var qrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=' + encodeURIComponent(upiUri);
+        $('#paymentAmountText').text('Amount: ' + money(amount));
+        $('#paymentUpiText').text('UPI ID: ' + upiId);
+        $('#paymentQrImage').attr('src', qrUrl);
+        $('#paymentModal').removeClass('hidden');
+    }
+
+    function loadUpiAndOpenPayment(orderId) {
+        var upiId = String(organizationInfo.upiId ?? organizationInfo.UPIId ?? '').trim();
+        if (upiId) {
+            openPaymentModal(orderId, upiId);
+            return;
+        }
+        $.ajax({
+            url: '/Admin/Settings/get',
+            type: 'GET',
+            success: function (rows) {
+                var data = Array.isArray(rows) && rows.length ? rows[0] : {};
+                var settingsUpi = String(data.upiId ?? data.UPIId ?? '').trim();
+                if (!settingsUpi) {
+                    showToast('UPI Id is not configured. Please contact support.', 4000, { type: 'error', title: 'Payment unavailable' });
+                    return;
+                }
+                openPaymentModal(orderId, settingsUpi);
+            },
+            error: function () {
+                showToast('Unable to load UPI Id for payment.', 4000, { type: 'error', title: 'Payment unavailable' });
+            }
+        });
+    }
+
     $(document).on('click', '.wizard-step', function () {
-        currentStep = parseInt($(this).data('step'), 10);
+        var nextStep = parseInt($(this).data('step'), 10);
+        if (!canMoveToStep(nextStep, true)) {
+            return;
+        }
+        currentStep = nextStep;
         renderStep();
     });
 
     $('#summaryNextBtn').on('click', function () {
-        if (currentStep === 1 && state.step1View === 'packages') {
-            showToast('Select a package to continue.');
+        if (!canMoveToStep(currentStep + 1, true)) {
             return;
         }
         if (currentStep < 6) {
@@ -970,18 +1036,38 @@ $(function () {
         }
     });
 
-    $('#summaryBackBtn').on('click', function () {
+    $('#btnTopBack').on('click', function () {
         if (currentStep > 1) {
             currentStep -= 1;
             renderStep();
         }
     });
 
+    $('#summaryQuoteBtn').on('click', function () {
+        showToast('Quotation request sent successfully.', 2600, { type: 'success', title: 'Quotation sent' });
+    });
+
     $('#summarySubmitBtn').on('click', function () {
         submitOrder();
     });
 
+    $('#btnClosePayment, #btnPaymentCancel').on('click', function () {
+        closePaymentModal();
+    });
+
+    $('#btnPaymentDone').on('click', function () {
+        closePaymentModal();
+        showToast('Payment confirmed. Thank you!', 3000, { type: 'success', title: 'Payment confirmed' });
+    });
+
+    $('#paymentModal').on('click', function (e) {
+        if (e.target === this) {
+            closePaymentModal();
+        }
+    });
+
     $('#btnResetOrder').on('click', function () {
+        closePaymentModal();
         currentStep = 1;
         state.step1View = 'packages';
         state.selectedPackage = '';
@@ -1045,6 +1131,130 @@ $(function () {
         currentStep = 1;
         includedChoiceSelections = {};
         loadPackageCategories(pkg.id);
+    }
+
+    function setFieldError(inputSelector, errorSelector, message) {
+        var $input = $(inputSelector);
+        var $error = $(errorSelector);
+        $input.addClass('input-error');
+        $error.removeClass('hidden').text(message || 'Required');
+    }
+
+    function clearFieldError(inputSelector, errorSelector) {
+        $(inputSelector).removeClass('input-error');
+        $(errorSelector).addClass('hidden').text('');
+    }
+
+    function validateStep1(showFeedback) {
+        if (state.step1View === 'packages' || !state.selectedPackage) {
+            if (showFeedback) {
+                showToast('Select a package to continue.', 3000, { type: 'error', title: 'Validation' });
+            }
+            return false;
+        }
+
+        if ((parseInt(state.pax, 10) || 0) <= 0) {
+            if (showFeedback) {
+                showToast('Enter a valid pax count.', 3000, { type: 'error', title: 'Validation' });
+            }
+            return false;
+        }
+
+        for (var i = 0; i < includedChoices.length; i++) {
+            var category = includedChoices[i];
+            var requiredQuantity = Number(category.requiredQuantity) || 1;
+            var selections = includedChoiceSelections[String(category.categoryId)] || [];
+            for (var index = 0; index < requiredQuantity; index++) {
+                if (!String(selections[index] || '').trim()) {
+                    if (showFeedback) {
+                        showToast('Please complete all package dish choices before moving next.', 3500, { type: 'error', title: 'Validation' });
+                    }
+                    return false;
+                }
+            }
+        }
+
+        return true;
+    }
+
+    function validateStep4(showFeedback) {
+        var requiredFields = [
+            { key: 'company', input: '#detailCompany', error: '#detailCompanyError', message: 'Customer / Company Name is required' },
+            { key: 'contact', input: '#detailContact', error: '#detailContactError', message: 'Contact Person is required' },
+            { key: 'mobile', input: '#detailMobile', error: '#detailMobileError', message: 'Mobile / WhatsApp is required' },
+            { key: 'eventDate', input: '#detailDate', error: '#detailDateError', message: 'Event Date is required' },
+            { key: 'mealPeriodId', input: '#detailPeriod', error: '#detailPeriodError', message: 'Meal Period is required' },
+            { key: 'addressLine1', input: '#detailAddressLine1', error: '#detailAddressLine1Error', message: 'Address Line 1 is required' },
+            { key: 'countryId', input: '#detailCountry', error: '#detailCountryError', message: 'Country is required' },
+            { key: 'stateId', input: '#detailState', error: '#detailStateError', message: 'State is required' },
+            { key: 'cityId', input: '#detailCity', error: '#detailCityError', message: 'City is required' }
+        ];
+
+        if ($('#detailCompany').length) {
+            updateEventDetails();
+        }
+
+        var firstInvalid = null;
+        var hasErrors = false;
+        requiredFields.forEach(function (field) {
+            clearFieldError(field.input, field.error);
+            var value = $(field.input).length
+                ? String($(field.input).val() || '').trim()
+                : String(state.details[field.key] || '').trim();
+            if (!value || value === '0') {
+                hasErrors = true;
+                if (showFeedback) {
+                    if ($(field.input).length) {
+                        setFieldError(field.input, field.error, field.message);
+                    }
+                }
+                if (!firstInvalid && $(field.input).length) {
+                    firstInvalid = field.input;
+                }
+            }
+        });
+
+        var email = $('#detailEmail').length
+            ? String($('#detailEmail').val() || '').trim()
+            : String(state.details.email || '').trim();
+        clearFieldError('#detailEmail', '#detailEmailError');
+        if (email && !/^\S+@\S+\.\S+$/.test(email)) {
+            hasErrors = true;
+            if (showFeedback) {
+                if ($('#detailEmail').length) {
+                    setFieldError('#detailEmail', '#detailEmailError', 'Enter a valid email address');
+                }
+            }
+            if (!firstInvalid && $('#detailEmail').length) {
+                firstInvalid = '#detailEmail';
+            }
+        }
+
+        if (hasErrors && showFeedback) {
+            if (firstInvalid) {
+                $(firstInvalid).focus();
+            }
+            showToast('Please fill all required Event Details fields.', 3200, { type: 'error', title: 'Validation' });
+        }
+
+        return !hasErrors;
+    }
+
+    function validateStep(stepNumber, showFeedback) {
+        if (stepNumber === 1) {
+            return validateStep1(showFeedback);
+        }
+        if (stepNumber === 4) {
+            return validateStep4(showFeedback);
+        }
+        return true;
+    }
+
+    function canMoveToStep(targetStep, showFeedback) {
+        if (targetStep <= currentStep) {
+            return true;
+        }
+        return validateStep(currentStep, showFeedback);
     }
 
     $(document).on('change', '.included-menu-select', function () {
@@ -1150,9 +1360,14 @@ $(function () {
     }
 
     $(document).on('input change', '#detailCompany, #detailContact, #detailEmail, #detailMobile, #detailDate, #detailPeriod, #detailPostal, #detailAddressLine1, #detailAddressLine2, #detailCity, #detailState, #detailCountry, #detailNotes', function () {
+        var id = this.id;
+        if (id) {
+            clearFieldError('#' + id, '#' + id + 'Error');
+        }
         updateEventDetails();
     });
 
+    showOrderLoader(true);
     loadOrganizationGst();
     loadOrderPackages();
 });

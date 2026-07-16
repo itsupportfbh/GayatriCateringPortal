@@ -37,6 +37,14 @@ namespace GayatriCateringPortal.Controllers.Admin
             return Ok(new { success = true, orderStatus = updatedStatus, message = "Order status updated successfully." });
         }
 
+        [HttpPost("UpdateOrderPaymentStatus")]
+        public IActionResult UpdateOrderPaymentStatus(int OrderId, int Status)
+        {
+            var updatedStatus = _orders.UpdateOrderPaymentStatus(OrderId, Status);
+
+            return Ok(new { success = true, orderStatus = updatedStatus, message = "Order payment status updated successfully." });
+        }
+
 
         [HttpPost("save")]
         public IActionResult Save([FromBody] Orders item)

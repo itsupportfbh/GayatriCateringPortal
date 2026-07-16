@@ -45,6 +45,8 @@ builder.Services.AddScoped<GayatriCateringPortal.Interfaces.IUserRoleMappingRepo
 builder.Services.AddScoped<GayatriCateringPortal.Interfaces.IAddOnRepository, GayatriCateringPortal.Repositories.AddOnRepository>();
 builder.Services.AddScoped<GayatriCateringPortal.Interfaces.Customer.IPackageRepository, GayatriCateringPortal.Repositories.Customer.PackageRepository>();
 
+builder.Services.AddHttpClient();
+
 var app = builder.Build();
 
 app.UseExceptionHandler("/Home/Error");
