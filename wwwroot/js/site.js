@@ -329,6 +329,18 @@ function restoreAppState() {
     updateSidebarToggle();
 }
 
+function clearClientStorageOnEntry() {
+    var body = document.body;
+    var isCustomerMode = !!(body && body.classList.contains('customer-mode'));
+
+    if (!isCustomerMode) {
+        return;
+    }
+
+    localStorage.clear();
+    sessionStorage.clear();
+}
+
 function sendCode() {
     if (window.LoginProcess && typeof window.LoginProcess.sendCode === 'function') {
         window.LoginProcess.sendCode();
@@ -578,6 +590,116 @@ function normalizeModalActionButtons(root) {
     syncModalSaveButtons(root);
 }
 
+function ensureRowActionPrintButtons(root) {
+    var scope = root && root.nodeType === 1 ? root : document;
+    var menus = [];
+
+    if (scope.matches && scope.matches('.row-actions .actions-menu')) {
+        menus.push(scope);
+    }
+
+    if (scope.querySelectorAll) {
+        scope.querySelectorAll('.row-actions .actions-menu').forEach(function (menu) {
+            menus.push(menu);
+        });
+    }
+
+    menus.forEach(function (menu) {
+        if (!menu || menu.querySelector('.action-item.btn-print')) {
+            return;
+        }
+
+        var printBtn = document.createElement('button');
+        printBtn.type = 'button';
+        printBtn.className = 'action-item btn-print';
+        printBtn.setAttribute('data-permission', 'print');
+        printBtn.innerHTML = '<span class="action-icon" aria-hidden="true">🖨</span>Print';
+        menu.appendChild(printBtn);
+    });
+
+    if (typeof window.applyPermissionVisibility === 'function') {
+        window.applyPermissionVisibility(scope);
+    }
+}
+
+function escapePrintHtml(value) {
+    return String(value == null ? '' : value)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
+function printActionRow(button) {
+    var btn = button && button.closest ? button.closest('.btn-print') : null;
+    var row = btn ? btn.closest('tr') : null;
+    if (!row) {
+        window.print();
+        return;
+    }
+
+    var table = row.closest('table');
+    if (!table) {
+        window.print();
+        return;
+    }
+
+    var visibleCells = Array.prototype.filter.call(row.cells || [], function (cell) {
+        return !!cell && cell.offsetParent !== null;
+    });
+
+    if (!visibleCells.length) {
+        window.print();
+        return;
+    }
+
+    var headers = [];
+    var headerRow = table.tHead && table.tHead.rows && table.tHead.rows.length ? table.tHead.rows[0] : null;
+    if (!headerRow) {
+        headerRow = table.querySelector('tr');
+    }
+
+    if (headerRow && headerRow.cells) {
+        headers = Array.prototype.map.call(headerRow.cells, function (cell) {
+            return (cell.textContent || '').replace(/\s+/g, ' ').trim();
+        });
+    }
+
+    var rowsHtml = '';
+    visibleCells.forEach(function (cell, index) {
+        var text = (cell.textContent || '').replace(/\s+/g, ' ').trim();
+        var heading = headers[index] || ('Column ' + (index + 1));
+        if (!text || heading.toLowerCase() === 'actions') {
+            return;
+        }
+
+        rowsHtml += '<tr><th>' + escapePrintHtml(heading) + '</th><td>' + escapePrintHtml(text) + '</td></tr>';
+    });
+
+    if (!rowsHtml) {
+        window.print();
+        return;
+    }
+
+    var title = document.title || 'Row Print';
+    var printWindow = window.open('', '_blank', 'width=900,height=700');
+    if (!printWindow) {
+        showToast('Unable to open print window.', 2500, { type: 'error', title: 'Print failed' });
+        return;
+    }
+
+    printWindow.document.write('<!doctype html><html><head><meta charset="utf-8"><title>' + escapePrintHtml(title) + '</title>');
+    printWindow.document.write('<style>body{font-family:Segoe UI,Arial,sans-serif;padding:24px;color:#111;background:#fff}h2{margin:0 0 14px;font-size:20px}table{width:100%;border-collapse:collapse}th,td{border:1px solid #d1d5db;padding:10px;text-align:left;vertical-align:top}th{width:34%;background:#f3f4f6}</style>');
+    printWindow.document.write('</head><body>');
+    printWindow.document.write('<h2>' + escapePrintHtml(title) + '</h2>');
+    printWindow.document.write('<table><tbody>' + rowsHtml + '</tbody></table>');
+    printWindow.document.write('</body></html>');
+    printWindow.document.close();
+    printWindow.focus();
+    printWindow.print();
+}
+
 document.addEventListener('DOMContentLoaded', function () {
     var loginBtn = document.getElementById('loginBtn');
     var logoutBtn = document.getElementById('logoutBtn');
@@ -586,10 +708,13 @@ document.addEventListener('DOMContentLoaded', function () {
     var signInBtn = document.getElementById('signInBtn');
     var cancelLoginBtn = document.getElementById('cancelLoginBtn');
     var sidebarToggle = document.getElementById('sidebarToggle');
+    var brandLink = document.querySelector('.top-nav .brand');
 
+    clearClientStorageOnEntry();
     restoreAppState();
     initRichDatePickers(document);
     decorateActionButtons(document);
+    ensureRowActionPrintButtons(document);
 
     if (loginBtn) {
         loginBtn.addEventListener('click', function () {
@@ -624,6 +749,19 @@ document.addEventListener('DOMContentLoaded', function () {
             updateSidebarToggle();
         });
     }
+
+    if (brandLink) {
+        brandLink.addEventListener('click', function (e) {
+            var details = getUserDetails() || {};
+            var isLoggedIn = details.isLoggedIn === true;
+            var isAdminMode = document.body.classList.contains('admin-mode');
+
+            if (isLoggedIn && isAdminMode) {
+                e.preventDefault();
+                window.location.href = '/Admin/Dashboard';
+            }
+        });
+    }
 });
 
 window.renderHeaderProfile = renderHeaderProfile;
@@ -646,10 +784,19 @@ var gcDateObserver = new MutationObserver(function (mutations) {
 
 gcDateObserver.observe(document.documentElement, { childList: true, subtree: true });
 
-document.addEventListener('click', function (e) {
-    var overlay = document.getElementById('loginModal');
-    if (overlay && e.target === overlay) closeLogin();
+var gcRowActionObserver = new MutationObserver(function (mutations) {
+    for (var i = 0; i < mutations.length; i++) {
+        var added = mutations[i].addedNodes;
+        for (var j = 0; j < added.length; j++) {
+            var node = added[j];
+            if (node && node.nodeType === 1) {
+                ensureRowActionPrintButtons(node);
+            }
+        }
+    }
 });
+
+gcRowActionObserver.observe(document.documentElement, { childList: true, subtree: true });
 
 $(document).on('keyup', '.tbl-search', function () {
     var val = $(this).val();
@@ -667,6 +814,11 @@ $(document).on('keyup', '.tbl-search', function () {
 
 $(document).on('click', '.js-print-page', function () {
     window.print();
+});
+
+$(document).on('click', '.action-item.btn-print', function (e) {
+    e.preventDefault();
+    printActionRow(this);
 });
 
 $(document).on('shown.bs.modal', '.modal', function () {

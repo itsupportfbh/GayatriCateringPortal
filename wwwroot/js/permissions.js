@@ -57,23 +57,41 @@
     }
 
     function hideIfNeeded(root, permission, selectors) {
-        if (!permission) return;
         if (selectors && selectors.length) {
             $(root).find(selectors.join(', ')).toggle(!!permission);
         }
     }
 
+    function toggleByHeuristic(root, permission, matcher) {
+        var $root = root ? $(root) : $(document);
+        var $candidates = $root.find('button, a.btn, .action-item, .dropdown-item');
+
+        $candidates.each(function () {
+            var $el = $(this);
+            var text = ($el.text() || '').toLowerCase().replace(/\s+/g, ' ').trim();
+            var id = ($el.attr('id') || '').toLowerCase();
+            var cls = ($el.attr('class') || '').toLowerCase();
+            var onclick = ($el.attr('onclick') || '').toLowerCase();
+            var title = ($el.attr('title') || '').toLowerCase();
+            var aria = ($el.attr('aria-label') || '').toLowerCase();
+
+            if (typeof matcher === 'function' && matcher({ text: text, id: id, cls: cls, onclick: onclick, title: title, aria: aria })) {
+                $el.toggle(!!permission);
+            }
+        });
+    }
+
     function applyPermissionVisibility(root) {
         var $root = root ? $(root) : $(document);
         var permission = findPermissionsForCurrentEntity();
-        if (!permission) return;
 
-        var canCreate = !!(permission.create || permission.Create);
-        var canEdit = !!(permission.edit || permission.Edit);
-        var canDelete = !!(permission.delete || permission.Delete);
-        var canActiveInactive = !!(permission.activeInActive || permission.ActiveInActive);
-        var canDownload = !!(permission.download || permission.Download);
-        var canPrint = !!(permission.print || permission.Print);
+        // Secure default: when permission context is unavailable, keep protected actions hidden.
+        var canCreate = !!(permission && (permission.create || permission.Create));
+        var canEdit = !!(permission && (permission.edit || permission.Edit));
+        var canDelete = !!(permission && (permission.delete || permission.Delete));
+        var canActiveInactive = !!(permission && (permission.activeInActive || permission.ActiveInActive || permission.activeInactive || permission.ActiveInactive));
+        var canDownload = !!(permission && (permission.download || permission.Download));
+        var canPrint = !!(permission && (permission.print || permission.Print));
 
         hideIfNeeded($root, canCreate, [
             '.btn-add',
@@ -82,6 +100,10 @@
             '[id^="btnAdd"]',
             '[id*="Add"]'
         ]);
+
+        toggleByHeuristic($root, canCreate, function (v) {
+            return v.text === 'add' || v.text.indexOf('+ add') === 0 || v.text.indexOf('add ') === 0 || v.text.indexOf('new ') === 0 || v.text.indexOf('create') === 0 || v.id.indexOf('add') > -1 || v.id.indexOf('create') > -1 || v.cls.indexOf('btn-add') > -1 || v.cls.indexOf('btn-create') > -1;
+        });
 
         if (!canCreate) {
             $root.find('button, a.btn').each(function () {
@@ -102,15 +124,21 @@
             '[data-permission="edit"]'
         ]);
 
-        hideIfNeeded($root, canEdit, [
-            '.btn-role-permission',
-            '[data-permission="rolepermission"]'
-        ]);
+        toggleByHeuristic($root, canEdit, function (v) {
+            if (v.text.indexOf('role permission') > -1 || v.cls.indexOf('btn-role-permission') > -1) {
+                return false;
+            }
+            return v.text === 'edit' || v.text.indexOf('edit ') === 0 || v.id.indexOf('edit') > -1 || v.cls.indexOf('btn-edit') > -1 || v.onclick.indexOf('edit') > -1;
+        });
 
         hideIfNeeded($root, canDelete, [
             '.btn-delete',
             '[data-permission="delete"]'
         ]);
+
+        toggleByHeuristic($root, canDelete, function (v) {
+            return v.text === 'delete' || v.text.indexOf('delete ') === 0 || v.text === 'remove' || v.id.indexOf('delete') > -1 || v.cls.indexOf('btn-delete') > -1 || v.onclick.indexOf('delete') > -1 || v.onclick.indexOf('remove') > -1;
+        });
 
         hideIfNeeded($root, canActiveInactive, [
             '.btn-toggle',
@@ -118,6 +146,10 @@
             '.btn-set-inactive',
             '[data-permission="activeinactive"]'
         ]);
+
+        toggleByHeuristic($root, canActiveInactive, function (v) {
+            return v.text === 'active' || v.text === 'inactive' || v.text.indexOf('activate') === 0 || v.text.indexOf('deactivate') === 0 || v.cls.indexOf('btn-toggle') > -1 || v.cls.indexOf('btn-set-active') > -1 || v.cls.indexOf('btn-set-inactive') > -1 || v.onclick.indexOf('set') > -1 && v.onclick.indexOf('active') > -1;
+        });
 
         hideIfNeeded($root, canDownload, [
             '.btn-export',
@@ -128,6 +160,10 @@
             '[data-permission="download"]'
         ]);
 
+        toggleByHeuristic($root, canDownload, function (v) {
+            return v.text === 'export' || v.text.indexOf('export ') === 0 || v.text.indexOf('download') === 0 || v.text.indexOf('excel') > -1 || v.text.indexOf('pdf') > -1 || v.id.indexOf('export') > -1 || v.id.indexOf('download') > -1 || v.cls.indexOf('btn-export') > -1 || v.cls.indexOf('btn-download') > -1 || v.title.indexOf('export') > -1 || v.aria.indexOf('export') > -1;
+        });
+
         hideIfNeeded($root, canPrint, [
             '.btn-print',
             '.js-print-page',
@@ -135,23 +171,10 @@
             '[data-permission="print"]'
         ]);
 
-        var canSubmit = canCreate || canEdit;
-        hideIfNeeded($root, canSubmit, [
-            '[id^="btnSave"]',
-            '[id^="save"]',
-            '[data-permission="save"]'
-        ]);
+        toggleByHeuristic($root, canPrint, function (v) {
+            return v.text === 'print' || v.text.indexOf('print ') === 0 || v.id.indexOf('print') > -1 || v.cls.indexOf('btn-print') > -1 || v.title.indexOf('print') > -1 || v.aria.indexOf('print') > -1;
+        });
 
-        if (!canSubmit) {
-            $root.find('button, a.btn').each(function () {
-                var $el = $(this);
-                var text = ($el.text() || '').toLowerCase().replace(/\s+/g, ' ').trim();
-                var id = ($el.attr('id') || '').toLowerCase();
-                if (id.indexOf('save') === 0 || text === 'save' || text.indexOf('save ') === 0 || text === 'update' || text.indexOf('update ') === 0) {
-                    $el.hide();
-                }
-            });
-        }
     }
 
     function loadCurrentRolePermissions() {
@@ -161,10 +184,11 @@
         return $.ajax({
             url: '/Common/GetRolePermissionsByRoleId?roleId=' + encodeURIComponent(roleId),
             type: 'GET',
-            dataType: 'json'
-        }).done(function (rows) {
-            sessionStorage.setItem('gcRolePermissions', JSON.stringify(Array.isArray(rows) ? rows : []));
-            applyPermissionVisibility(document);
+            dataType: 'json',
+            success: function (rows) {
+                sessionStorage.setItem('gcRolePermissions', JSON.stringify(Array.isArray(rows) ? rows : []));
+                applyPermissionVisibility(document);
+            }
         });
     }
 
@@ -188,78 +212,84 @@
             return;
         }
 
-        $.when(
-            $.ajax({
-                url: '/Common/menus?roleId=' + encodeURIComponent(userRoleId),
-                type: 'GET',
-                dataType: 'json'
-            }),
-            $.ajax({
-                url: '/Common/GetRolePermissionsByRoleId?roleId=' + encodeURIComponent(userRoleId),
-                type: 'GET',
-                dataType: 'json'
-            })
-        ).done(function (menuResponse, permissionResponse) {
-            var groups = menuResponse && menuResponse[0] ? menuResponse[0] : [];
-            var permissions = permissionResponse && permissionResponse[0] ? permissionResponse[0] : [];
+        $.ajax({
+            url: '/Common/menus?roleId=' + encodeURIComponent(userRoleId),
+            type: 'GET',
+            dataType: 'json',
+            success: function (groups) {
+                var menuGroups = Array.isArray(groups) ? groups : [];
 
-            sessionStorage.setItem('gcRolePermissions', JSON.stringify(Array.isArray(permissions) ? permissions : []));
+                $.ajax({
+                    url: '/Common/GetRolePermissionsByRoleId?roleId=' + encodeURIComponent(userRoleId),
+                    type: 'GET',
+                    dataType: 'json',
+                    success: function (permissions) {
+                        var permissionRows = Array.isArray(permissions) ? permissions : [];
+                        sessionStorage.setItem('gcRolePermissions', JSON.stringify(permissionRows));
 
-            var route = '';
-            var entityNo = 0;
-            var menuName = '';
+                        var route = '';
+                        var entityNo = 0;
+                        var menuName = '';
 
-            if (Array.isArray(groups) && Array.isArray(permissions)) {
-                for (var gi = 0; gi < groups.length && !route; gi++) {
-                    var menus = groups[gi] && (groups[gi].menus || groups[gi].Menus) || [];
-                    for (var mi = 0; mi < menus.length; mi++) {
-                        var menu = menus[mi] || {};
-                        var menuEntityNo = toInt(menu.entityNo || menu.EntityNo || 0);
-                        var routeValue = (menu.route || menu.Route || '').trim();
-                        var menuPermission = null;
+                        if (Array.isArray(menuGroups) && Array.isArray(permissionRows)) {
+                            for (var gi = 0; gi < menuGroups.length && !route; gi++) {
+                                var menus = menuGroups[gi] && (menuGroups[gi].menus || menuGroups[gi].Menus) || [];
+                                for (var mi = 0; mi < menus.length; mi++) {
+                                    var menu = menus[mi] || {};
+                                    var menuEntityNo = toInt(menu.entityNo || menu.EntityNo || 0);
+                                    var routeValue = (menu.route || menu.Route || '').trim();
+                                    var menuPermission = null;
 
-                        for (var pi = 0; pi < permissions.length; pi++) {
-                            var permission = permissions[pi] || {};
-                            if (toInt(permission.entityNo || permission.EntityNo || 0) === menuEntityNo) {
-                                menuPermission = permission;
-                                break;
+                                    for (var pi = 0; pi < permissionRows.length; pi++) {
+                                        var permission = permissionRows[pi] || {};
+                                        if (toInt(permission.entityNo || permission.EntityNo || 0) === menuEntityNo) {
+                                            menuPermission = permission;
+                                            break;
+                                        }
+                                    }
+
+                                    var canView = !!(menuPermission && (menuPermission.view || menuPermission.View));
+                                    if (routeValue && canView) {
+                                        route = routeValue;
+                                        entityNo = menuEntityNo;
+                                        menuName = menu.name || menu.Name || '';
+                                        break;
+                                    }
+                                }
                             }
                         }
 
-                        var canView = !!(menuPermission && (menuPermission.view || menuPermission.View));
-                        if (routeValue && canView) {
-                            route = routeValue;
-                            entityNo = menuEntityNo;
-                            menuName = menu.name || menu.Name || '';
-                            break;
+                        if (!route && Array.isArray(menuGroups)) {
+                            for (var gi2 = 0; gi2 < menuGroups.length && !route; gi2++) {
+                                var menus2 = menuGroups[gi2] && (menuGroups[gi2].menus || menuGroups[gi2].Menus) || [];
+                                for (var mi2 = 0; mi2 < menus2.length; mi2++) {
+                                    var menu2 = menus2[mi2] || {};
+                                    route = (menu2.route || menu2.Route || '').trim();
+                                    entityNo = toInt(menu2.entityNo || menu2.EntityNo || 0);
+                                    menuName = menu2.name || menu2.Name || '';
+                                    if (route) break;
+                                }
+                            }
                         }
+
+                        if (!route) {
+                            route = '/Customer/Home';
+                        }
+
+                        if (route.indexOf('/Admin') === 0) {
+                            storeCurrentMenuContext(entityNo, route, menuName);
+                        }
+
+                        window.location.href = route;
+                    },
+                    error: function () {
+                        window.location.href = '/Customer/Home';
                     }
-                }
+                });
+            },
+            error: function () {
+                window.location.href = '/Customer/Home';
             }
-
-            if (!route && Array.isArray(groups)) {
-                for (var gi2 = 0; gi2 < groups.length && !route; gi2++) {
-                    var menus2 = groups[gi2] && (groups[gi2].menus || groups[gi2].Menus) || [];
-                    for (var mi2 = 0; mi2 < menus2.length; mi2++) {
-                        var menu2 = menus2[mi2] || {};
-                        route = (menu2.route || menu2.Route || '').trim();
-                        entityNo = toInt(menu2.entityNo || menu2.EntityNo || 0);
-                        menuName = menu2.name || menu2.Name || '';
-                        if (route) break;
-                    }
-                }
-            }
-
-            if (!route) {
-                route = '/Customer/Home';
-            }
-
-            if (route.indexOf('/Admin') === 0) {
-                storeCurrentMenuContext(entityNo, route, menuName);
-            }
-            window.location.href = route;
-        }).fail(function () {
-            window.location.href = '/Customer/Home';
         });
     }
 

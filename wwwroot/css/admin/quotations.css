@@ -1,4 +1,35 @@
 /* ===== ADMIN QUOTATIONS ===== */
+.quotations-shell {
+	display: grid;
+	gap: 18px;
+}
+
+.quotations-register-card,
+.quotations-actions-card {
+	border: 1px solid var(--gray-200);
+	box-shadow: 0 8px 22px rgba(15,23,42,.06);
+}
+
+.quotation-actions-bar {
+	display: flex;
+	gap: 10px;
+	align-items: center;
+	flex-wrap: wrap;
+	margin-bottom: 10px;
+}
+
+.quotation-actions-bar .btn {
+	min-width: 170px;
+}
+
+.quotation-actions-note {
+	font-size: 12px;
+}
+
+#quotationDoc {
+	margin-top: 2px;
+}
+
 .print-doc{background:var(--white);border:1px solid var(--gray-200);border-radius:var(--radius);padding:32px;max-width:800px;margin:0 auto}
 .print-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:24px;padding-bottom:16px;border-bottom:2px solid var(--green)}
 .print-logo{font-size:22px;font-weight:800;color:var(--green-dark)}
@@ -14,4 +45,54 @@
 .print-items .num{text-align:right}
 .print-total{text-align:right;font-size:15px;font-weight:700;color:var(--green-dark);padding:8px 0}
 .print-footer{margin-top:20px;padding-top:16px;border-top:1px solid var(--gray-200);font-size:12px;color:var(--gray-500)}
+
+.quotation-preview-card {
+	margin-top: 18px;
+	border: 1px solid var(--gray-200);
+	border-radius: 12px;
+	padding: 14px 14px 8px;
+	background: linear-gradient(180deg, #ffffff 0%, #fafcfb 100%);
+}
+
+.quotation-preview-title {
+	font-size: 12px;
+	font-weight: 800;
+	letter-spacing: .5px;
+	text-transform: uppercase;
+	color: var(--gray-500);
+	margin-bottom: 10px;
+}
+
+.quotation-preview-grid {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: 12px 24px;
+}
+
+.quotation-preview-item {
+	min-width: 0;
+}
+
+.quotation-preview-item strong {
+	display: block;
+	font-size: 15px;
+	color: var(--gray-900);
+}
+
+.quotation-preview-item div {
+	margin-top: 2px;
+	color: var(--gray-700);
+}
+
+@media (max-width: 760px) {
+	.quotation-actions-bar .btn {
+		min-width: 0;
+		flex: 1 1 160px;
+	}
+
+	.quotation-preview-grid {
+		grid-template-columns: 1fr;
+	}
+}
+
 @media print{.no-print{display:none!important}}

@@ -1157,6 +1157,22 @@ label {
         min-width: 120px
     }
 
+/* Compact table action buttons and keep them on one line */
+.tbl td .actions {
+    gap: 6px;
+    flex-wrap: nowrap;
+    white-space: nowrap;
+    justify-content: flex-start;
+}
+
+.tbl td .actions .btn {
+    min-width: 72px;
+    padding: 4px 10px;
+    font-size: 11px;
+    line-height: 1.15;
+    border-radius: 8px;
+}
+
 /* TABLE */
 .tbl {
     width: 100%;
