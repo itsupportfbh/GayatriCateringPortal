@@ -152,13 +152,20 @@ $(function () {
     $(document).on('click', '.btn-next-order', function () {
         var button = $(this);
         if (button.prop('disabled')) return;
+        var orderId = Number(button.data('id'));
+        var status = Number(button.data('status'));
+
+        if (!orderId || !Number.isInteger(status)) {
+            if (window.showToast) {
+                showToast('Invalid order status request.', 3000, { type: 'error', title: 'Update failed' });
+            }
+            return;
+        }
+
         button.prop('disabled', true).text('Updating...');
         $.ajax({
-            url: '/Admin/Orders/next/' + button.data('id'),
+            url: '/Admin/Orders/UpdateOrderStatus?OrderId=' + encodeURIComponent(orderId) + '&Status=' + encodeURIComponent(status),
             type: 'POST',
-            data: {
-                status: Number(button.data('status'))
-            },
             success: function (response) {
                 if (response?.success) {
                     if (window.showToast) showToast(response.message || 'Order status updated.');
