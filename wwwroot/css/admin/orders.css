@@ -9,5 +9,10 @@
 .orders-date-filter label{font-size:13px;font-weight:700;color:var(--gray-600);white-space:nowrap}
 .orders-date-filter .form-control{width:150px;min-width:150px}
 .badge-partially-paid{background:#fef3c7;color:#92400e}
+.badge-pending{background:#fef3c7;color:#92400e}
 .badge-in-kitchen{background:#dbeafe;color:#1e40af}
+.badge-ready-for-delivery{background:#ede9fe;color:#5b21b6}
+.badge-assigned-for-driver{background:#fce7f3;color:#9d174d}
+.badge-delivered{background:#d1fae5;color:#065f46}
+.badge-unknown{background:#f3f4f6;color:#374151}
 .filter-row select{width:auto;min-width:140px}

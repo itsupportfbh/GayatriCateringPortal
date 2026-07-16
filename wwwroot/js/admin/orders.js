@@ -59,18 +59,19 @@ $(function () {
 
     function renderOrders(rows) {
         var html = '<table class="tbl" id="ordersTable" data-page-size="10"><thead><tr>' +
+            '<th class="sortable">#</th>' +
             '<th class="sortable">Order</th>' +
             '<th class="sortable">Customer</th>' +
-            '<th class="sortable">Package</th>' +
+            '<th class="sortable">Package / Pax</th>' +
             '<th class="sortable">Date</th>' +
-            '<th class="sortable">Pax</th>' +
             '<th class="sortable">Order Status</th>' +
             '<th class="sortable">Payment Status</th>' +
             '<th class="sortable num">Amount</th>' +
             '<th class="no-sort">Actions</th>' +
             '</tr></thead><tbody>';
-        rows.forEach(function (o) {
+        rows.forEach(function (o, index) {
             var paymentStatus = paymentStatusName(o.paymentStatus);
+            var serial = index + 1;
 
             var kitchenButton = '';
             if (Number(o.orderStatus) === 0) {
@@ -84,11 +85,11 @@ $(function () {
             }
 
             html += '<tr>' +
+                '<td>' + serial + '</td>' +
                 '<td><strong style="color:#1d4ed8">' + escapeHtml(o.orderNumber || ('#' + o.id)) + '</strong></td>' +
                 '<td><strong>' + escapeHtml(o.customerName) + '</strong><div class="muted">' + escapeHtml(o.mobileNo) + ' &bull; ' + escapeHtml(o.emailId) + '</div></td>' +
-                '<td>' + escapeHtml(o.packageName || '-') + '<div class="muted">' + escapeHtml(o.locationName || '-') + '</div></td>' +
+                '<td>' + escapeHtml(o.packageName || '-') + '<div class="muted">Pax: ' + (Number(o.pax) || 0) + ' &bull; ' + escapeHtml(o.locationName || '-') + '</div></td>' +
                 '<td>' + displayDate(o.eventDate) + '<div class="muted">' + escapeHtml(o.mealPeriodName || '-') + '</div></td>' +
-                '<td>' + (Number(o.pax) || 0) + '</td>' +
                 '<td><span class="badge badge-' + cssName(o.orderStatusName) + '">' + escapeHtml(o.orderStatusName) + '</span></td>' +
                 '<td><span class="badge ' + paymentClass(paymentStatus) + '">' + escapeHtml(paymentStatus) + '</span><div class="muted">Paid ' + money(o.paidAmount) + '</div></td>' +
                 '<td class="num"><strong>' + money(o.totalAmount) + '</strong></td>' +

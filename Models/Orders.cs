@@ -47,7 +47,9 @@ namespace GayatriCateringPortal.Models
             public decimal PaidAmount { get; set; }
 
             public int OrderStatus { get; set; }
-             public int PaymentStatus { get; set; }
+
+            // 0 = Pending, 1 = Partially Paid, 2 = Paid
+            public int PaymentStatus { get; set; }
         public DateTime CreatedDate { get; set; }
 
             public int? CreatedBy { get; set; }
