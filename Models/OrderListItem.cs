@@ -10,6 +10,7 @@ public class OrderListItem
     public string PackageName { get; set; } = string.Empty;
     public string LocationName { get; set; } = string.Empty;
     public DateTime? EventDate { get; set; }
+    public DateTime? CreatedDate { get; set; }
     public string MealPeriodName { get; set; } = string.Empty;
     public int Pax { get; set; }
     public int OrderStatus { get; set; }
@@ -17,4 +18,5 @@ public class OrderListItem
     public decimal TotalAmount { get; set; }
     public decimal PaidAmount { get; set; }
     public string PaymentStatus { get; set; } = string.Empty;
+    public string DeliveryAddress { get; set; } = string.Empty;
 }

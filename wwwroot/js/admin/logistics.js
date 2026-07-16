@@ -1,5 +1,6 @@
 $(document).ready(function () {
     loadPendingOrder();
+    loadDelivered();
 });
 
 function loadPendingOrder() {
@@ -59,9 +60,9 @@ function renderLogisList(rows) {
         html += `
         <tr>
             <td>${index + 1}</td>
-            <td>${item.createdDate ?? ""}</td>
+            <td>${item.createdDate}</td>
             <td>${item.orderNumber ?? ""}</td>
-            <td>${item.customerId ?? ""}</td>
+            <td>${item.customerName ?? ""}</td>
            <td>${item.deliveryAddress ?? ""}</td>
 
             <td>
@@ -82,7 +83,12 @@ function renderLogisList(rows) {
 
             <td>
                 <button class="btn btn-success btn-sm"
-                        onclick="assignDelivery(${item.id})">
+                        onclick="assignDelivery(
+    ${item.id},
+    '${item.createdDate ?? ""}',
+    '${item.orderNumber ?? ""}',
+    '${item.deliveryAddress ?? ""}'
+)">
                     Assign
                 </button>
             </td>
@@ -103,39 +109,55 @@ function renderLogisDelList(rows) {
             <td>${index + 1}</td>
             <td>${item.createdDate ?? ""}</td>
             <td>${item.orderNumber ?? ""}</td>
-            <td>${item.customerId ?? ""}</td>
-            <td>${item.deliveryAddress ?? ""}</td> 
+            <td>${item.status ?? ""}</td>
+            <td>${item.location ?? ""}</td> 
+            <td>${item.driverName ?? ""}</td> 
         </tr>`;
     });
 
     $("#DeliveredTable tbody").html(html);
 }
-function assignDelivery(id) {
+function assignDelivery(id, OrderDate, OrderNumber, DeliveryAddress) {
 
-    var location = $("#location_" + id).val();
-    var driver = $("#driver_" + id).val();
-
-    if (location.trim() == "") {
-        showToast("Please enter delivery location.");
-        return;
-    }
+    var driver = $("#driver_" + id).val();  
 
     if (driver == "") {
         showToast("Please select a driver.");
         return;
     }
 
+    var Logistics = {
+        Id: id ? parseInt(id) : 0,
+        OrderDate: OrderDate,
+        OrderNumber: OrderNumber,
+        Location: DeliveryAddress,
+        DriverName: driver,
+        Status: '',        
+        IsActive: true,
+        IsDeleted: false,
+        CreatedBy: window.getCurrentUserId ? window.getCurrentUserId() : 0,        
+        UpdatedBy: window.getCurrentUserId ? window.getCurrentUserId() : 0        
+    };
+
     $.ajax({
-        url: "/Admin/Logistics/update",
-        type: "POST",
-        data: {
-            id: id,
-            location: location,
-            driverName: driver
-        },
-        success: function () {
-            showToast("Assigned successfully.");
-            loadPendingOrder();
+        url: "/Admin/Logistics/Create",
+        type: "POST",        
+        contentType: "application/json; charset=utf-8",
+        dataType: "json",
+        data: JSON.stringify(Logistics),
+        success: function (response) {           
+            if (response.success) {
+                showToast(response.message, 3000, {
+                    type: "success",
+                    title: "Success"
+                });
+                loadPendingOrder();
+            } else {
+                showToast(response.message, 3000, {
+                    type: "warning",
+                    title: "Warning"
+                });
+            }
         },
         error: function () {
             showToast("Assignment failed.");

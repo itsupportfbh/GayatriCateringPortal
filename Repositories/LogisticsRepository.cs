@@ -1,18 +1,19 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Data;
-using Microsoft.Data.SqlClient;
-using GayatriCateringPortal.Data;
+﻿using GayatriCateringPortal.Data;
 using GayatriCateringPortal.Interfaces;
 using GayatriCateringPortal.Models;
+using Microsoft.Data.SqlClient;
+using System;
+using System.Collections.Generic;
+using System.Data;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace GayatriCateringPortal.Repositories;
 
 public class LogisticsRepository : ILogisticsRepository
 {
-    public List<Orders> GetAll()
+    public List<OrderListItem> GetAll(DateTime? fromDate = null, DateTime? toDate = null)
     {
-        List<Orders> list = new List<Orders>();
+        List<OrderListItem> list = new List<OrderListItem>();
         IDbConnection? conn = null;
         IDbCommand? cmd = null;
         IDataReader? reader = null;
@@ -21,14 +22,18 @@ public class LogisticsRepository : ILogisticsRepository
             using (conn = DataFactory.CreateConnection())
             {
                 conn.Open();
-                using (cmd = DataFactory.CreateCommand("GetLogisticsDetails", conn))
+                using (cmd = DataFactory.CreateCommand("dbo.GetOrders", conn))
                 {
                     ((SqlCommand)cmd).CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@FromDate", fromDate.HasValue ? (object)fromDate.Value.Date : DBNull.Value));
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@ToDate", toDate.HasValue ? (object)toDate.Value.Date : DBNull.Value));
+
                     reader = DataFactory.ExecuteReader(cmd);
-                    list = this.List(reader);
+                    list = ListOrderItems(reader);
                 }
             }
-            return list ?? new List<Orders>();
+
+            return list ?? new List<OrderListItem>();
         }
         catch (SqlException)
         {
@@ -154,13 +159,25 @@ public class LogisticsRepository : ILogisticsRepository
         {
             using (conn = DataFactory.CreateConnection())
             {
+                conn.Open();
                 using (cmd = DataFactory.CreateCommand("SP_CreateLogisticsDetails", conn))
                 {
                     ((SqlCommand)cmd).CommandType = CommandType.StoredProcedure;
-                    cmd.Parameters.Add(DataFactory.CreateParameter("@Id", item.Id));
-                    conn.Open();
-                    var rows = DataFactory.ExecuteNonQuery(cmd);
-                    return rows > 0 ? 1 : 0;
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@OrderDate", item.OrderDate));
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@OrderNumber", (object?)item.OrderNumber ?? DBNull.Value));
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@Location", (object?)item.Location ?? DBNull.Value));
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@DriverName", (object?)item.DriverName ?? DBNull.Value));
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@Status", item.Status));
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@IsActive", item.IsActive));
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@IsDeleted", item.IsDeleted));
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@CreatedBy", item.CreatedBy));
+
+                    var result = DataFactory.ExecuteScalar(cmd);
+                    if (result != null)
+                    {
+                        int status = Convert.ToInt32(result);
+                        return status;
+                    }
                 }
             }
         }
@@ -176,6 +193,7 @@ public class LogisticsRepository : ILogisticsRepository
         {
             if (conn != null && conn.State != ConnectionState.Closed) conn.Close();
         }
+        return 0;
     }
 
     public int Update(LogisticsDetails item)
@@ -192,6 +210,7 @@ public class LogisticsRepository : ILogisticsRepository
                     ((SqlCommand)cmd).CommandType = CommandType.StoredProcedure;
                     cmd.Parameters.Add(DataFactory.CreateParameter("@Id", item.Id));
                     cmd.Parameters.Add(DataFactory.CreateParameter("@DriverName", (object?)item.DriverName ?? DBNull.Value));
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@UpdatedBy", item.UpdatedBy));
 
                     var result = DataFactory.ExecuteScalar(cmd);
                     if (result != null)
@@ -278,32 +297,45 @@ public class LogisticsRepository : ILogisticsRepository
     }
 
     #region Private Methods
-    private List<Orders> List(IDataReader reader)
+    private List<OrderListItem> ListOrderItems(IDataReader reader)
     {
-        var list = new List<Orders>();
+        var list = new List<OrderListItem>();
         try
         {
             while (reader.Read())
             {
-                var item = new Orders();
+                var item = new OrderListItem();
+
                 if (reader["Id"] != DBNull.Value)
-                    item.Id = Convert.ToInt32(reader["Id"])!;
-                if (reader["CreatedDate"] != DBNull.Value)
-                    item.CreatedDate = Convert.ToDateTime(reader["CreatedDate"]);
+                    item.Id = Convert.ToInt32(reader["Id"]);
                 if (reader["OrderNumber"] != DBNull.Value)
-                    item.OrderNumber = Convert.ToString(reader["OrderNumber"])!;
-                if (reader["CustomerId"] != DBNull.Value)
-                    item.CustomerId = Convert.ToInt32(reader["CustomerId"])!;
+                    item.OrderNumber = Convert.ToString(reader["OrderNumber"]) ?? string.Empty;
+                if (reader["CustomerName"] != DBNull.Value)
+                    item.CustomerName = Convert.ToString(reader["CustomerName"]) ?? string.Empty;
                 if (reader["DeliveryAddress"] != DBNull.Value)
-                    item.DeliveryAddress = Convert.ToString(reader["DeliveryAddress"])!;
-                if (reader["CreatedBy"] != DBNull.Value)
-                    item.CreatedBy = Convert.ToInt32(reader["CreatedBy"]);
+                    item.DeliveryAddress = Convert.ToString(reader["DeliveryAddress"]) ?? string.Empty;
                 if (reader["CreatedDate"] != DBNull.Value)
                     item.CreatedDate = Convert.ToDateTime(reader["CreatedDate"]);
-                if (reader["UpdatedBy"] != DBNull.Value)
-                    item.UpdatedBy = Convert.ToInt32(reader["UpdatedBy"]);
-                if (reader["UpdatedDate"] != DBNull.Value)
-                    item.UpdatedDate = Convert.ToDateTime(reader["UpdatedDate"]);
+                if (reader["PackageName"] != DBNull.Value)
+                    item.PackageName = Convert.ToString(reader["PackageName"]) ?? string.Empty;
+                if (reader["LocationName"] != DBNull.Value)
+                    item.LocationName = Convert.ToString(reader["LocationName"]) ?? string.Empty;
+                if (reader["EventDate"] != DBNull.Value)
+                    item.EventDate = Convert.ToDateTime(reader["EventDate"]);
+                if (reader["MealPeriodName"] != DBNull.Value)
+                    item.MealPeriodName = Convert.ToString(reader["MealPeriodName"]) ?? string.Empty;
+                if (reader["Pax"] != DBNull.Value)
+                    item.Pax = Convert.ToInt32(reader["Pax"]);
+                if (reader["OrderStatus"] != DBNull.Value)
+                    item.OrderStatus = Convert.ToInt32(reader["OrderStatus"]);
+                if (reader["OrderStatusName"] != DBNull.Value)
+                    item.OrderStatusName = Convert.ToString(reader["OrderStatusName"]) ?? string.Empty;
+                if (reader["TotalAmount"] != DBNull.Value)
+                    item.TotalAmount = Convert.ToDecimal(reader["TotalAmount"]);
+                if (reader["PaidAmount"] != DBNull.Value)
+                    item.PaidAmount = Convert.ToDecimal(reader["PaidAmount"]);
+                if (reader["PaymentStatus"] != DBNull.Value)
+                    item.PaymentStatus = Convert.ToString(reader["PaymentStatus"]) ?? string.Empty;
 
                 list.Add(item);
             }
@@ -332,16 +364,16 @@ public class LogisticsRepository : ILogisticsRepository
                 var item = new LogisticsDetails();
                 if (reader["Id"] != DBNull.Value)
                     item.Id = Convert.ToInt32(reader["Id"])!;
-                if (reader["CreatedDate"] != DBNull.Value)
-                    item.CreatedDate = Convert.ToDateTime(reader["CreatedDate"]);
+                if (reader["OrderDate"] != DBNull.Value)
+                    item.CreatedDate = Convert.ToDateTime(reader["OrderDate"]);
                 if (reader["OrderNumber"] != DBNull.Value)
                     item.OrderNumber = Convert.ToString(reader["OrderNumber"])!;
                 if (reader["Location"] != DBNull.Value)
                     item.Location = Convert.ToString(reader["Location"])!;
                 if (reader["DriverName"] != DBNull.Value)
                     item.DriverName = Convert.ToString(reader["DriverName"])!;
-                if (reader["Status"] != DBNull.Value)
-                    item.Status = Convert.ToString(reader["Status"]);               
+                if (reader["Name"] != DBNull.Value)
+                    item.Status = Convert.ToString(reader["Name"]);               
 
                 listDeli.Add(item);
             }
