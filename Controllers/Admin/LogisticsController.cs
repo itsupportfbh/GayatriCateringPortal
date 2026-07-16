@@ -18,8 +18,8 @@ namespace GayatriCateringPortal.Controllers.Admin
         [HttpGet("")]
         public IActionResult Index()
         {
-            var items = _logisticsRepository.GetAll();
-            ViewData["Items"] = items;
+            //var items = _logisticsRepository.GetAll();
+            //ViewData["Items"] = items;
             ViewData["Mode"] = "admin";
             ViewData["Page"] = "logistics";
             ViewData["Title"] = "Logistics";
@@ -27,9 +27,9 @@ namespace GayatriCateringPortal.Controllers.Admin
         }
 
         [HttpGet("get")]
-        public IActionResult GetAll()
+        public IActionResult GetAll([FromQuery] DateTime? fromDate, [FromQuery] DateTime? toDate)
         {
-            var items = _logisticsRepository.GetAll();
+            var items = _logisticsRepository.GetAll(fromDate, toDate);
             return Ok(items);
         }
 
@@ -48,8 +48,8 @@ namespace GayatriCateringPortal.Controllers.Admin
             return Ok(item);
         }
 
-        [HttpPost("update")]
-        public IActionResult update([FromBody] LogisticsDetails item)
+        [HttpPost("Create")]
+        public IActionResult create([FromBody] LogisticsDetails item)
         {
             if (!ModelState.IsValid)
             {
@@ -59,15 +59,15 @@ namespace GayatriCateringPortal.Controllers.Admin
             }
 
             if (item == null) return BadRequest();
-            int result = _logisticsRepository.Update(item);
+            int result = _logisticsRepository.Create(item);
 
             if (result == -1)
             {
-                return Ok(new { success = false, message = "Utensil already exists" });
+                return Ok(new { success = false, message = "Order already exists" });
             }
 
 
-            var updatedStatus = _OrderRepository.UpdateOrderStatus(item.Id, 2);
+            var updatedStatus = _OrderRepository.UpdateOrderStatus(item.Id, 3);
             if (updatedStatus < 0)
                 return BadRequest(new { success = false, message = "Order was not found or could not be updated." });
 
