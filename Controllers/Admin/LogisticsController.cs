@@ -7,10 +7,12 @@ namespace GayatriCateringPortal.Controllers.Admin
     public class LogisticsController : Controller
     {
         private readonly ILogisticsRepository _logisticsRepository;
+        private readonly IOrdersRepository _OrderRepository;
 
-        public LogisticsController(ILogisticsRepository logisticsRepository)
+        public LogisticsController(ILogisticsRepository logisticsRepository, IOrdersRepository OrderRepository)
         {
             _logisticsRepository = logisticsRepository;
+            _OrderRepository = OrderRepository;
         }
 
         [HttpGet("")]
@@ -46,21 +48,30 @@ namespace GayatriCateringPortal.Controllers.Admin
             return Ok(item);
         }
 
-        [HttpPost("save")]
-        public IActionResult Save([FromBody] LogisticsDetails item)
+        [HttpPost("update")]
+        public IActionResult update([FromBody] LogisticsDetails item)
         {
-            if (item == null) return BadRequest();
-            var idValue = 0;
-            if (!string.IsNullOrWhiteSpace(item.Id)) int.TryParse(item.Id, out idValue);
-
-            if (idValue == 0)
+            if (!ModelState.IsValid)
             {
-                int newId = _logisticsRepository.Create(item);
-                return Ok(new { success = newId > 0, id = newId });
+                var errors = string.Join("; ", ModelState.Values
+                .SelectMany(x => x.Errors)
+                .Select(x => x.ErrorMessage));
             }
 
-            bool result = _logisticsRepository.Update(item);
-            return Ok(new { success = result });
+            if (item == null) return BadRequest();
+            int result = _logisticsRepository.Update(item);
+
+            if (result == -1)
+            {
+                return Ok(new { success = false, message = "Utensil already exists" });
+            }
+
+
+            var updatedStatus = _OrderRepository.UpdateOrderStatus(item.Id, 2);
+            if (updatedStatus < 0)
+                return BadRequest(new { success = false, message = "Order was not found or could not be updated." });
+
+            return Ok(new { success = true, orderStatus = updatedStatus, message = "Order status updated successfully." });
         }
 
         [HttpPost("delete/{id}")]

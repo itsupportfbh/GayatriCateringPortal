@@ -126,7 +126,7 @@ function assignDelivery(id) {
     }
 
     $.ajax({
-        url: "/Admin/Logistics/Assign",
+        url: "/Admin/Logistics/update",
         type: "POST",
         data: {
             id: id,

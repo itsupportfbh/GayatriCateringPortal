@@ -178,7 +178,7 @@ public class LogisticsRepository : ILogisticsRepository
         }
     }
 
-    public bool Update(LogisticsDetails item)
+    public int Update(LogisticsDetails item)
     {
         IDbConnection? conn = null;
         IDbCommand? cmd = null;
@@ -186,12 +186,19 @@ public class LogisticsRepository : ILogisticsRepository
         {
             using (conn = DataFactory.CreateConnection())
             {
-                using (cmd = DataFactory.CreateCommand("SP_CreateLogisticsDetails", conn))
+                conn.Open();
+                using (cmd = DataFactory.CreateCommand("SP_UpdateLogisticsDetails", conn))
                 {
                     ((SqlCommand)cmd).CommandType = CommandType.StoredProcedure;
                     cmd.Parameters.Add(DataFactory.CreateParameter("@Id", item.Id));
-                    conn.Open();
-                    return DataFactory.ExecuteNonQuery(cmd) > 0;
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@DriverName", (object?)item.DriverName ?? DBNull.Value));
+
+                    var result = DataFactory.ExecuteScalar(cmd);
+                    if (result != null)
+                    {
+                        int status = Convert.ToInt32(result);
+                        return status;
+                    }
                 }
             }
         }
@@ -207,6 +214,7 @@ public class LogisticsRepository : ILogisticsRepository
         {
             if (conn != null && conn.State != ConnectionState.Closed) conn.Close();
         }
+        return 0;
     }
 
     public bool Delete(int id)
