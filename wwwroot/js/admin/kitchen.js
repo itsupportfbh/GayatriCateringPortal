@@ -32,9 +32,21 @@ function clearKitchenDateInput(inputId) {
 }
 
 function markKitchenReady(orderId) {
-    kitchenActiveTab = 'ready';
-    loadKitchenOrders(2);
-    showToast('Order marked ready for delivery.', 2200, { type: 'success', title: 'Updated' });
+    showKitchenLoader(true);
+
+    $.ajax({
+        url: '/Admin/Orders/UpdateOrderStatus?OrderId=' + orderId + '&Status=2',
+        type: 'POST',
+        success: function (response) {
+            kitchenActiveTab = 'ready';
+            loadKitchenOrders(2);
+            showToast('Order marked ready for delivery.', 2200, { type: 'success', title: 'Updated' });
+        },
+        error: function () {
+            showToast('Unable to update order status.', 3000, { type: 'error', title: 'Update failed' });
+            showKitchenLoader(false);
+        }
+    });
 }
 
 function viewKitchenOrder(orderId) {
@@ -64,8 +76,8 @@ function loadKitchenOrders(status) {
             var list = Array.isArray(rows) ? rows : [];
             var html = '' +
                 '<div class="kitchen-tabs">' +
-                    '<button type="button" class="kitchen-tab' + (kitchenActiveTab === 'queue' ? ' active' : '') + '" onclick="openKitchenTab(\'queue\')">Queue <span class="kitchen-tab-count">' + (kitchenActiveTab === 'queue' ? list.length : 0) + '</span></button>' +
-                    '<button type="button" class="kitchen-tab' + (kitchenActiveTab === 'ready' ? ' active' : '') + '" onclick="openKitchenTab(\'ready\')">Ready for Delivery <span class="kitchen-tab-count">' + (kitchenActiveTab === 'ready' ? list.length : 0) + '</span></button>' +
+                    '<button type="button" class="kitchen-tab' + (kitchenActiveTab === 'queue' ? ' active' : '') + '" onclick="openKitchenTab(\'queue\')">Queue <span class="kitchen-tab-count"></span></button>' +
+                    '<button type="button" class="kitchen-tab' + (kitchenActiveTab === 'ready' ? ' active' : '') + '" onclick="openKitchenTab(\'ready\')">Ready for Delivery <span class="kitchen-tab-count"></span></button>' +
                 '</div>' +
                 '<div class="kitchen-grid">';
 

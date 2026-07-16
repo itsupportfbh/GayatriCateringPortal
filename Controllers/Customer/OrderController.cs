@@ -26,13 +26,7 @@ namespace GayatriCateringPortal.Controllers.Customer
             return View("~/Views/Customer/Order.cshtml");
         }
 
-        [HttpGet("get/{id}")]
-        public IActionResult Get(int id)
-        {
-            var item = _orders.GetById(id);
-            if (item == null) return NotFound();
-            return Ok(item);
-        }
+      
 
         [HttpGet("addons")]
         public IActionResult GetAddOns()
@@ -89,18 +83,6 @@ namespace GayatriCateringPortal.Controllers.Customer
             }
         }
 
-        [HttpPost("delete/{id}")]
-        public IActionResult Delete(int id)
-        {
-            bool result = _orders.Delete(id);
-            return Ok(new { success = result });
-        }
-
-        [HttpPost("activeinactive/{id}")]
-        public IActionResult ActiveInActive(int id)
-        {
-            bool result = _orders.ActiveInActive(id);
-            return Ok(new { success = result });
-        }
+       
     }
 }
