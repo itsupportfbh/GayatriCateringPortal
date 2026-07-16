@@ -72,8 +72,10 @@ public class SettingsRepository : ISettingsRepository
                     cmd.Parameters.Add(DataFactory.CreateParameter("@IsDeleted", item.IsDeleted));
                     cmd.Parameters.Add(DataFactory.CreateParameter("@CreatedBy", item.CreatedBy));
                     cmd.Parameters.Add(DataFactory.CreateParameter("@CreatedDate", DateTime.TryParse(item.CreatedDate, out var createdDate) ? createdDate : (object?)DBNull.Value));
-                    cmd.Parameters.Add(DataFactory.CreateParameter("@UpdatedBy", item.UpdatedBy));
-                    cmd.Parameters.Add(DataFactory.CreateParameter("@UpdatedDate", DateTime.TryParse(item.UpdatedDate, out var updatedDate) ? updatedDate : (object?)DBNull.Value));
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@AccountHolderName", (object?)item.AccountHolderName ?? DBNull.Value));
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@IFSCCode", (object?)item.IFSCCode ?? DBNull.Value));
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@AccNo", (object?)item.AccNo ?? DBNull.Value));
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@UPIId", (object?)item.UPIId ?? DBNull.Value));
 
                     var result = DataFactory.ExecuteScalar(cmd);
                     if (result != null)
@@ -126,10 +128,12 @@ public class SettingsRepository : ISettingsRepository
                     cmd.Parameters.Add(DataFactory.CreateParameter("@GSTNO", (object?)item.GSTNO ?? DBNull.Value));
                     cmd.Parameters.Add(DataFactory.CreateParameter("@IsActive", item.IsActive));
                     cmd.Parameters.Add(DataFactory.CreateParameter("@IsDeleted", item.IsDeleted));
-                    cmd.Parameters.Add(DataFactory.CreateParameter("@CreatedBy", item.CreatedBy));
-                    cmd.Parameters.Add(DataFactory.CreateParameter("@CreatedDate", DateTime.TryParse(item.CreatedDate, out var createdDate) ? createdDate : (object?)DBNull.Value));
                     cmd.Parameters.Add(DataFactory.CreateParameter("@UpdatedBy", item.UpdatedBy));
                     cmd.Parameters.Add(DataFactory.CreateParameter("@UpdatedDate", DateTime.TryParse(item.UpdatedDate, out var updatedDate) ? updatedDate : (object?)DBNull.Value));
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@AccountHolderName", (object?)item.AccountHolderName ?? DBNull.Value));
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@IFSCCode", (object?)item.IFSCCode ?? DBNull.Value));
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@AccNo", (object?)item.AccNo ?? DBNull.Value));
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@UPIId", (object?)item.UPIId ?? DBNull.Value));
 
                     var result = DataFactory.ExecuteScalar(cmd);
                     if (result != null)
@@ -202,6 +206,15 @@ public class SettingsRepository : ISettingsRepository
                     item.UpdatedBy = Convert.ToInt32(reader["UpdatedBy"]);
                 if (reader["UpdatedDate"] != DBNull.Value)
                     item.UpdatedDate = Convert.ToString(reader["UpdatedDate"]);
+
+                if (reader["AccountHolderName"] != DBNull.Value)
+                    item.AccountHolderName = Convert.ToString(reader["AccountHolderName"]);
+                if (reader["IFSCCode"] != DBNull.Value)
+                    item.IFSCCode = Convert.ToString(reader["IFSCCode"]);
+                if (reader["AccNo"] != DBNull.Value)
+                    item.AccNo = Convert.ToString(reader["AccNo"]);
+                if (reader["UPIId"] != DBNull.Value)
+                    item.UPIId = Convert.ToString(reader["UPIId"]);
 
                 list.Add(item);
             }
