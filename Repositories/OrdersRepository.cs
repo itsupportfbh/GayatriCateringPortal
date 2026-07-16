@@ -487,6 +487,7 @@ public class OrdersRepository : IOrdersRepository
             TaxPercentage = reader["TaxPercentage"] == DBNull.Value ? null : Convert.ToDecimal(reader["TaxPercentage"]),
             PaidAmount = Convert.ToDecimal(reader["PaidAmount"]),
             OrderStatus = Convert.ToInt32(reader["OrderStatus"]),
+            PaymentStatus = Convert.ToInt32(reader["PaymentStatus"]),
             CreatedDate = Convert.ToDateTime(reader["CreatedDate"]),
             CreatedBy = reader["CreatedBy"] == DBNull.Value ? null : Convert.ToInt32(reader["CreatedBy"]),
             UpdatedDate = reader["UpdatedDate"] == DBNull.Value ? null : Convert.ToDateTime(reader["UpdatedDate"]),
