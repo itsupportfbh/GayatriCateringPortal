@@ -1,47 +1,35 @@
-﻿using GayatriCateringPortal.Interfaces;
-using GayatriCateringPortal.Models;
+using GayatriCateringPortal.Interfaces.Customer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-namespace GayatriCateringPortal.Controllers.Customer
+
+namespace GayatriCateringPortal.Controllers.Customer;
+
+[AllowAnonymous]
+[Route("Customer/MyOrders")]
+public class MyOrdersController : Controller
 {
-    [AllowAnonymous]
-    [Route("Customer/MyOrders")]
-    public class MyOrdersController : Controller
+    private readonly IMYOrderRepository _myOrders;
+
+    public MyOrdersController(IMYOrderRepository myOrders)
     {
-        private readonly IOrdersRepository _orders;
+        _myOrders = myOrders;
+    }
 
-        public MyOrdersController(IOrdersRepository orders)
-        {
-            _orders = orders;
-        }
+    [HttpGet("")]
+    public IActionResult Index()
+    {
+        ViewData["Mode"] = "customer";
+        ViewData["Page"] = "myorders";
+        ViewData["Title"] = "My Orders";
+        return View("~/Views/Customer/MyOrders.cshtml");
+    }
 
-        [HttpGet("")]
-        public IActionResult Index()
-        {
-            ViewData["Mode"] = "customer";
-            ViewData["Page"] = "myorders";
-            ViewData["Title"] = "My Orders";
-            return View("~/Views/Customer/MyOrders.cshtml");
-        }
+    [HttpGet("get")]
+    public IActionResult GetMyOrders([FromQuery] string phoneNo)
+    {
+        if (string.IsNullOrWhiteSpace(phoneNo))
+            return BadRequest(new { message = "Please enter your phone number." });
 
-   
-
-        [HttpPost("save")]
-        public IActionResult Save([FromBody] Orders item)
-        {
-            if (item == null) return BadRequest();
-            var idValue = item.Id;
-
-            if (idValue == 0)
-            {
-                int newId = _orders.Create(item);
-                return Ok(new { success = newId > 0, id = newId });
-            }
-
-            bool result = _orders.Update(item);
-            return Ok(new { success = result });
-        }
-
-       
+        return Ok(_myOrders.GetMyOrders(phoneNo.Trim()));
     }
 }

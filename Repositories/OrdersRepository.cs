@@ -86,6 +86,11 @@ public class OrdersRepository : IOrdersRepository
         }
     }
 
+
+   
+
+
+
     public int Create(Orders order)
     {
         IDbConnection conn = null;
@@ -94,7 +99,7 @@ public class OrdersRepository : IOrdersRepository
         {
             using (conn = DataFactory.CreateConnection())
             {
-                using (cmd = DataFactory.CreateCommand("SP_CreateOrder", conn))
+                using (cmd = DataFactory.CreateCommand("[GetMYOrders]", conn))
                 {
                     ((SqlCommand)cmd).CommandType = CommandType.StoredProcedure;
                     conn.Open();

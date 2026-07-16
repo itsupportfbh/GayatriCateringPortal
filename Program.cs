@@ -44,6 +44,7 @@ builder.Services.AddScoped<GayatriCateringPortal.Interfaces.ILoginRepository, Ga
 builder.Services.AddScoped<GayatriCateringPortal.Interfaces.IUserRoleMappingRepository, GayatriCateringPortal.Repositories.UserRoleMappingRepository>();
 builder.Services.AddScoped<GayatriCateringPortal.Interfaces.IAddOnRepository, GayatriCateringPortal.Repositories.AddOnRepository>();
 builder.Services.AddScoped<GayatriCateringPortal.Interfaces.Customer.IPackageRepository, GayatriCateringPortal.Repositories.Customer.PackageRepository>();
+builder.Services.AddScoped<GayatriCateringPortal.Interfaces.Customer.IMYOrderRepository, GayatriCateringPortal.Repositories.Customer.MYOrderRepository>();
 
 var app = builder.Build();
 
