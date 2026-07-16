@@ -10,9 +10,9 @@ namespace GayatriCateringPortal.Repositories;
 
 public class LogisticsRepository : ILogisticsRepository
 {
-    public List<LogisticsDetails> GetAll()
+    public List<Orders> GetAll()
     {
-        List<LogisticsDetails> list = new List<LogisticsDetails>();
+        List<Orders> list = new List<Orders>();
         IDbConnection? conn = null;
         IDbCommand? cmd = null;
         IDataReader? reader = null;
@@ -21,14 +21,14 @@ public class LogisticsRepository : ILogisticsRepository
             using (conn = DataFactory.CreateConnection())
             {
                 conn.Open();
-                using (cmd = DataFactory.CreateCommand("SELECT * FROM LogisticsDetails WHERE IsDeleted = 0", conn))
+                using (cmd = DataFactory.CreateCommand("GetLogisticsDetails", conn))
                 {
+                    ((SqlCommand)cmd).CommandType = CommandType.StoredProcedure;
                     reader = DataFactory.ExecuteReader(cmd);
-                    list = new List<LogisticsDetails>();
-                    while (reader.Read()) list.Add(new LogisticsDetails());
+                    list = this.List(reader);
                 }
             }
-            return list ?? new List<LogisticsDetails>();
+            return list ?? new List<Orders>();
         }
         catch (SqlException)
         {
@@ -234,5 +234,48 @@ public class LogisticsRepository : ILogisticsRepository
             if (conn != null && conn.State != ConnectionState.Closed) conn.Close();
         }
     }
+
+    #region Private Methods
+    private List<Orders> List(IDataReader reader)
+    {
+        var list = new List<Orders>();
+        try
+        {
+            while (reader.Read())
+            {
+                var item = new Orders();
+                if (reader["Id"] != DBNull.Value)
+                    item.Id = Convert.ToInt32(reader["Id"])!;
+                if (reader["CreatedDate"] != DBNull.Value)
+                    item.CreatedDate = Convert.ToDateTime(reader["CreatedDate"]);
+                if (reader["OrderNumber"] != DBNull.Value)
+                    item.OrderNumber = Convert.ToString(reader["OrderNumber"])!;
+                if (reader["CustomerId"] != DBNull.Value)
+                    item.CustomerId = Convert.ToInt32(reader["CustomerId"])!;               
+               
+                if (reader["CreatedBy"] != DBNull.Value)
+                    item.CreatedBy = Convert.ToInt32(reader["CreatedBy"]);
+                if (reader["CreatedDate"] != DBNull.Value)
+                    item.CreatedDate = Convert.ToDateTime(reader["CreatedDate"]);
+                if (reader["UpdatedBy"] != DBNull.Value)
+                    item.UpdatedBy = Convert.ToInt32(reader["UpdatedBy"]);
+                if (reader["UpdatedDate"] != DBNull.Value)
+                    item.UpdatedDate = Convert.ToDateTime(reader["UpdatedDate"]);
+
+                list.Add(item);
+            }
+        }
+        catch (SqlException)
+        {
+            throw new Exception("Database error");
+        }
+        catch (Exception ex)
+        {
+            throw new Exception(ex.StackTrace);
+        }
+
+        return list;
+    }
+    #endregion
 }
 

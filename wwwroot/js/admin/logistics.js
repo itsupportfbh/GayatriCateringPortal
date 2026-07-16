@@ -1,27 +1,168 @@
-$(function () {
-    var fallbackData = [
-        { id: 'ORD-001', customer: 'Priya S', event: 'Wedding', date: '2025-08-15', driver: 'Kumar', vehicle: 'SBA1234A' },
-        { id: 'ORD-002', customer: 'Ravi M', event: 'Corporate', date: '2025-07-20', driver: 'Selvam', vehicle: 'SBB5678B' }
-    ];
-
-    loadDispatch();
-
-    function loadDispatch() {
-        $.get('/Admin/Logistics/get').done(render).fail(function () {
-            render(fallbackData);
-        });
-    }
-
-    function render(data) {
-        var t = $('#logisticsTable tbody');
-        t.empty();
-        (data || []).forEach(function (r) {
-            var id = r.id || r.Id || '';
-            t.append('<tr><td>' + id + '</td><td>' + (r.customer || r.Customer || '') + '</td><td>' + (r.event || r.Event || '') + '</td><td>' + (r.date || r.Date || '') + '</td><td>' + (r.driver || r.Driver || '') + '</td><td>' + (r.vehicle || r.Vehicle || '') + '</td><td><span class="badge badge-dispatch">Dispatch</span></td><td><button class="btn btn-primary btn-xs" onclick="markDelivered(\'' + id + '\')">Mark Delivered</button></td></tr>');
-        });
-    }
-    window.markDelivered = function (id) { showToast('Order ' + id + ' delivered'); };
+$(document).ready(function () {
+    loadPendingOrder();
 });
+
+function loadPendingOrder() {
+    //showlogiLoader(true);
+
+    $.ajax({
+        url: '/Admin/Logistics/get',
+        type: 'GET',
+        dataType: 'json',
+        success: function (rows) {
+            renderLogisList(Array.isArray(rows) ? rows : []);
+        },
+        error: function () {
+            renderLogisList([]);
+            showToast('Unable to load Logistics.', 3000, { type: 'error', title: 'Load failed' });
+        },
+        complete: function () {
+            showlogiLoader(false);
+        }
+    });
+}
+
+function showlogiLoader(show) {
+    var $panel = $('.pageloaderpanel');
+    if ($panel.length) {
+        $('#commsListPanel .table-wrap').toggleClass('hidden', show);
+        $panel.toggleClass('hidden', !show);
+        return;
+    }
+}
+
+//function renderLogisList(rows) {
+//    rows = Array.isArray(rows) ? rows : [];
+//    var html = '';
+//    if (rows.length) {
+//        html = rows.map(function (logis) {0
+//            var id = logis.id || logis.Id || '';
+//            var Channel = logis.orderNumber || logis.OrderNumber || '';
+//            var ToAddress = logis.customerId || logis.CustomerId || '';
+//            var Message = logis.message || logis.Message || '';
+//            var active = logis.isActive;
+
+//            var actions;
+//            if (active) {
+//                actions = `<button type="button" class="action-item btn-edit" data-id="${id}" onclick="editComms(this.dataset.id)"><span class="action-icon p-p-pencil"></span>Edit</button>
+//                           <button type="button" class="action-item btn-set-inactive" data-id="${id}" onclick="setCommsActive(this.dataset.id, false)"><span class="action-icon p-p-lock"></span>Inactive</button>`;
+//            } else {
+//                actions = `<button type="button" class="action-item btn-set-active" data-id="${id}" onclick="setCommsActive(this.dataset.id, true)"><span class="action-icon p-p-unlock"></span>Active</button>`;
+//            }
+
+//            var statusBadge;
+//            if (active) {
+//                statusBadge = '<span class="badge-pill badge-pill--success">Active</span>';
+//            } else {
+//                statusBadge = '<span class="badge-pill badge-pill--warning">Inactive</span>';
+//            }
+
+//            return `
+//                <tr>
+//                    <td>${id}</td>
+//                    <td>${Channel}</td>
+//                    <td>${ToAddress}</td>
+//                    <td>${Message || ''}</td>
+//                    <td>${statusBadge}</td>
+//                    <td>
+//                        <div class="row-actions">
+//                            <button class="dots-btn" title="Actions">⋯</button>
+//                            <div class="actions-menu hidden">
+//                                ${actions}
+//                                <button type="button" class="action-item btn-delete" data-id="${id}" onclick="deleteComms(this.dataset.id)"><span class="action-icon p-p-trash"></span>Delete</button>
+//                            </div>
+//                        </div>
+//                    </td>
+//                </tr>`;
+//        }).join('');
+//    }
+
+//    $('#commsList tbody').html(html);
+//    if (typeof renderDataTable === 'function') {
+//        renderDataTable('commsList');
+//    }
+//}
+
+function renderLogisList(rows) {
+
+    let html = "";
+
+    rows.forEach(function (item, index) {
+
+        html += `
+        <tr>
+            <td>${index + 1}</td>
+            <td>${item.orderDate ?? ""}</td>
+            <td>${item.orderNumber ?? ""}</td>
+            <td>${item.customerName ?? ""}</td>
+
+            <td>
+                <input type="text"
+                       class="form-control location"
+                       id="location_${item.id}"
+                       placeholder="Delivery Location">
+            </td>
+
+            <td>
+                <select class="form-select driver"
+                        id="driver_${item.id}">
+                    <option value="">Select Driver</option>
+                    <option value="David">David</option>
+                    <option value="Kevin">Kevin</option>
+                    <option value="Alex">Alex</option>
+                </select>
+            </td>
+
+            <td>
+                <span class="badge bg-warning">
+                    Pending
+                </span>
+            </td>
+
+            <td>
+                <button class="btn btn-success btn-sm"
+                        onclick="assignDelivery(${item.id})">
+                    Assign
+                </button>
+            </td>
+        </tr>`;
+    });
+
+    $("#PendingTable tbody").html(html);
+}
+
+function assignDelivery(id) {
+
+    var location = $("#location_" + id).val();
+    var driver = $("#driver_" + id).val();
+
+    if (location.trim() == "") {
+        showToast("Please enter delivery location.");
+        return;
+    }
+
+    if (driver == "") {
+        showToast("Please select a driver.");
+        return;
+    }
+
+    $.ajax({
+        url: "/Admin/Logistics/Assign",
+        type: "POST",
+        data: {
+            id: id,
+            location: location,
+            driverName: driver
+        },
+        success: function () {
+            showToast("Assigned successfully.");
+            loadPendingOrder();
+        },
+        error: function () {
+            showToast("Assignment failed.");
+        }
+    });
+}
 
 $(function () {
 
