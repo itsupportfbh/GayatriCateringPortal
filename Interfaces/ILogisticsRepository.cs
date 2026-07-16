@@ -5,7 +5,7 @@ namespace GayatriCateringPortal.Interfaces;
 
 public interface ILogisticsRepository
 {
-    List<Orders> GetAll();
+    List<OrderListItem> GetAll(DateTime? fromDate = null, DateTime? toDate = null);
     List<LogisticsDetails> GetDelivered();
     LogisticsDetails? GetById(int id);
     LogisticsDetails? GetByOrderNumber(string orderNumber);
