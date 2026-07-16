@@ -10,6 +10,7 @@
 .wizard-step-label{display:block;line-height:1.2}
 .order-card{padding:22px}
 .order-card .section-label{font-size:14px;letter-spacing:.9px}
+.event-address-field input{display:block!important;visibility:visible!important;opacity:1!important;width:100%!important;height:56px!important;min-height:56px!important;padding:10px 14px!important;border:1px solid var(--gray-300)!important;border-radius:10px!important;background:#fff!important;color:var(--gray-900)!important}
 .order-summary-box{position:sticky;top:76px;background:var(--green-light);border:1px solid var(--green);border-radius:16px;padding:20px;box-shadow:var(--shadow)}
 .summary-row{display:flex;justify-content:space-between;gap:14px;border-bottom:1px dashed rgba(26,110,60,.24);padding:8px 0;font-size:13.5px}
 .summary-row.total{border-bottom:none;font-size:18px;color:var(--green-dark);font-weight:900;padding-top:12px}

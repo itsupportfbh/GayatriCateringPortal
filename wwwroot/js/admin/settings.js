@@ -2,6 +2,14 @@ $(document).ready(function () {
     editsetting();
 });
 
+function showSettingsLoader(show) {
+    var $panel = $('#settingsPanel .pageloaderpanel');
+    if ($panel.length) {
+        $('#settingsContentWrap').toggleClass('hidden', show);
+        $panel.toggleClass('hidden', !show);
+    }
+}
+
 function validateForm() {
     clearsettingError('#Compname', '#CompnameError');
     clearsettingError('#uen', '#uenError');
@@ -57,6 +65,7 @@ function savesettings() {
     }
 
     setButtonBusy('#btnSaveSettings', true, 'Saving...');
+    showSettingsLoader(true);
 
     var settingId = $('#settingId').val();
     var setting = {
@@ -67,6 +76,10 @@ function savesettings() {
         Email: $('#email').val() || '',
         Hotline: $('#hotline').val() || '',
         Whatsapp: $('#whatsapp').val() || '',
+        AccountHolderName: $('#accountHolderName').val() || '',
+        IFSCCode: $('#ifscCode').val() || '',
+        AccNo: $('#accNo').val() || '',
+        UPIId: $('#upiId').val() || '',
         DefaultDeposit: $('#defaultdep').val() || '',
         QuotationValidity: $('#Quotaval').val() || '',
         MinOrderPax: $('#Minorder').val() || '',
@@ -83,6 +96,7 @@ function savesettings() {
     };
 
     var endpoint = setting.Id ? '/Admin/settings/update' : '/Admin/settings/create';
+    var shouldReload = false;
 
     $.ajax({
         url: endpoint,
@@ -91,26 +105,30 @@ function savesettings() {
         data: JSON.stringify(setting),
         success: function (res) {
             if (res && res.success) {
+                shouldReload = true;
                 showToast('settings saved successfully.', 3000, { type: 'success', title: 'Saved' });
-                clearsettingForm();
             } else {
-                setButtonBusy('#saveCategoryBtn', false);
                 showToast('Unable to save settings.', 3000, { type: 'error', title: 'Save failed' });
             }
         },
         error: function () {
-            setButtonBusy('#saveCategoryBtn', false);
             showToast('Save failed.', 3000, { type: 'error', title: 'Save failed' });
+        },
+        complete: function () {
+            setButtonBusy('#btnSaveSettings', false);
+            if (shouldReload) {
+                editsetting();
+            } else {
+                showSettingsLoader(false);
+            }
         }
-//$(function () {
-//    $('#btnSaveSettings').on('click', function () {
-//        setButtonBusy('#btnSaveSettings', true, 'Saving...');
-//        showToast('Settings saved successfully');
-//        setTimeout(function () { setButtonBusy('#btnSaveSettings', false); }, 300);
+
     });
 }
 
 function editsetting() {
+    showSettingsLoader(true);
+
     $.ajax({
         url: '/Admin/settings/get',
         type: 'GET',
@@ -130,6 +148,10 @@ function editsetting() {
             $('#email').val(data.email);
             $('#hotline').val(data.hotline);
             $('#whatsapp').val(data.whatsapp);
+            $('#accountHolderName').val(data.accountHolderName);
+            $('#ifscCode').val(data.ifscCode);
+            $('#accNo').val(data.accNo);
+            $('#upiId').val(data.upiId);
             $('#defaultdep').val(data.defaultDeposit);
             $('#Quotaval').val(data.quotationValidity);
             $('#Minorder').val(data.minOrderPax);
@@ -137,7 +159,8 @@ function editsetting() {
             $('#Servicechar').val(data.servicecharge);
             $('#portalmode').val(data.portalMode);
         },
-        error: function () { showToast('Unable to load settings.', 3000, { type: 'error', title: 'Load failed' }); }
+        error: function () { showToast('Unable to load settings.', 3000, { type: 'error', title: 'Load failed' }); },
+        complete: function () { showSettingsLoader(false); }
     });
 }
 
@@ -149,6 +172,10 @@ function clearsettingForm() {
     $('#email').val('');
     $('#hotline').val('');
     $('#whatsapp').val('');
+    $('#accountHolderName').val('');
+    $('#ifscCode').val('');
+    $('#accNo').val('');
+    $('#upiId').val('');
     $('#defaultdep').val('');
     $('#Quotaval').val('');
     $('#Minorder').val('');

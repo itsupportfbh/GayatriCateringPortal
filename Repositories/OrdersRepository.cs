@@ -187,6 +187,7 @@ public class OrdersRepository : IOrdersRepository
                 AddParameter(cmd, "@TotalAmount", order.TotalAmount);
                 AddParameter(cmd, "@TaxPercentage", order.TaxPercentage);
                 AddParameter(cmd, "@PaidAmount", order.PaidAmount);
+                AddParameter(cmd, "@PaymentStatus", order.PaymentStatus);
                 AddParameter(cmd, "@OrderStatus", order.OrderStatus);
                 AddParameter(cmd, "@CreatedDate", now);
                 AddParameter(cmd, "@CreatedBy", createdBy);
