@@ -10,7 +10,7 @@ public interface ILogisticsRepository
     LogisticsDetails? GetById(int id);
     LogisticsDetails? GetByOrderNumber(string orderNumber);
     int Create(LogisticsDetails item);
-    bool Update(LogisticsDetails item);
+    int Update(LogisticsDetails item);
     bool Delete(int id);
     bool ActiveInActive(int id);
 }
