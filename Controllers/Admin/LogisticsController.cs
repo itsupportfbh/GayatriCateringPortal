@@ -31,6 +31,13 @@ namespace GayatriCateringPortal.Controllers.Admin
             return Ok(items);
         }
 
+        [HttpGet("getDelivered")]
+        public IActionResult GetDelivered()
+        {
+            var items = _logisticsRepository.GetDelivered();
+            return Ok(items);
+        }
+
         [HttpGet("get/{id}")]
         public IActionResult Get(int id)
         {
