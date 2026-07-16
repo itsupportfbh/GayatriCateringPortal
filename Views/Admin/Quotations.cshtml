@@ -13,27 +13,29 @@
     </div>
 </div>
 
-<div class="card" style="margin-bottom:18px">
+<div class="quotations-shell">
+<div class="card quotations-register-card">
     <div class="panel-header">
         <div class="panel-title">Quotation Register</div>
     </div>
     <div class="table-wrap" id="quotationsTable"></div>
 </div>
 
-<div class="card">
+<div class="card quotations-actions-card">
     <div class="panel-header">
         <div class="panel-title">Quotation Actions</div>
     </div>
-    <div class="actions" style="margin-bottom:10px">
-        <button class="btn btn-primary" id="previewQuotationBtn">Preview Quotation PDF</button>
-        <button class="btn btn-orange" id="emailQuotationBtn">Send Outlook Email</button>
+    <div class="quotation-actions-bar">
+        <button class="btn btn-primary" id="previewQuotationBtn">Preview Quatation</button>
+        <button class="btn btn-orange" id="emailQuotationBtn">Send Email</button>
         <button class="btn btn-primary" id="waQuotationBtn">Send WhatsApp</button>
     </div>
-    <div class="muted">Every send attempt is recorded in Communication Log.</div>
+    <div class="muted quotation-actions-note">Every send attempt is recorded in Communication Log.</div>
 </div>
 
 <div id="quotationDoc" class="hidden">
     <div class="print-doc" id="quotationDocContent"></div>
+</div>
 </div>
 
 @section Scripts {

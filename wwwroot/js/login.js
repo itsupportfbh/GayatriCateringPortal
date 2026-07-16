@@ -92,7 +92,7 @@
         otpExpiresAt = null;
         otpVerified = false;
         $('#loginRoleWrap').addClass('hidden');
-        $('#loginRole').prop('disabled', true).html('<option value="">Select role</option>');
+        $('#loginRole').prop('disabled', true).html('<option value="">--Select role--</option>');
         setSignInIdleState();
         $('#loginEmail').prop('readonly', false);
         $('#loginCode').prop('readonly', false);
@@ -114,7 +114,7 @@
 
     function bindRoles(roles) {
         var list = Array.isArray(roles) ? roles : [];
-        var options = '<option value="">Select role</option>';
+        var options = '<option value="">--Select role--</option>';
 
         for (var i = 0; i < list.length; i++) {
             var roleId = parseInt(list[i].roleId || list[i].RoleId || 0, 10);

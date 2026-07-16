@@ -16,7 +16,7 @@ $(function () {
         rows.forEach(function (o) {
             html += '<tr>' +
                 '<td><strong style="color:#1d4ed8">' + o.id + '</strong><div class="muted">' + o.quote + '</div></td>' +
-                '<td><strong>' + o.customer + '</strong><div class="muted">' + o.phone + ' · ' + o.email + '</div></td>' +
+                '<td><strong>' + o.customer + '</strong><div class="muted">' + o.phone + ' | ' + o.email + '</div></td>' +
                 '<td>' + o.pkg + '<div class="muted">' + o.location + '</div></td>' +
                 '<td>' + o.date + '<div class="muted">' + o.period + '</div></td>' +
                 '<td>' + o.pax + '</td>' +
@@ -31,15 +31,15 @@ $(function () {
     }
 
     function renderQuotation(order) {
-        var html = '<div class="card" style="margin-top:18px">' +
-            '<div class="section-label">Quotation Preview</div>' +
-            '<div class="form-row col2">' +
-            '<div><strong>Order</strong><div>' + order.id + '</div></div>' +
-            '<div><strong>Quotation</strong><div>' + order.quote + '</div></div>' +
-            '<div><strong>Customer</strong><div>' + order.customer + '</div></div>' +
-            '<div><strong>Date</strong><div>' + order.date + ' ' + order.period + '</div></div>' +
-            '<div><strong>Package</strong><div>' + order.pkg + '</div></div>' +
-            '<div><strong>Total</strong><div>' + money(order.amount) + '</div></div>' +
+        var html = '<div class="quotation-preview-card">' +
+            '<div class="quotation-preview-title">Quotation Preview</div>' +
+            '<div class="quotation-preview-grid">' +
+            '<div class="quotation-preview-item"><strong>Order</strong><div>' + order.id + '</div></div>' +
+            '<div class="quotation-preview-item"><strong>Quotation</strong><div>' + order.quote + '</div></div>' +
+            '<div class="quotation-preview-item"><strong>Customer</strong><div>' + order.customer + '</div></div>' +
+            '<div class="quotation-preview-item"><strong>Date</strong><div>' + order.date + ' ' + order.period + '</div></div>' +
+            '<div class="quotation-preview-item"><strong>Package</strong><div>' + order.pkg + '</div></div>' +
+            '<div class="quotation-preview-item"><strong>Total</strong><div>' + money(order.amount) + '</div></div>' +
             '</div>' +
             '</div>';
         $('#quotationDoc').removeClass('hidden');

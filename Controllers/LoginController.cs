@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using GayatriCateringPortal.Interfaces;
 using GayatriCateringPortal.Models;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
 namespace GayatriCateringPortal.Controllers
@@ -15,12 +16,14 @@ namespace GayatriCateringPortal.Controllers
         private readonly ILoginRepository _loginRepository;
         private readonly ICommonRepository _commonRepository;
         private readonly ILogger<LoginController> _logger;
+        private readonly IConfiguration _configuration;
 
-        public LoginController(ILoginRepository loginRepository, ICommonRepository commonRepository, ILogger<LoginController> logger)
+        public LoginController(ILoginRepository loginRepository, ICommonRepository commonRepository, ILogger<LoginController> logger, IConfiguration configuration)
         {
             _loginRepository = loginRepository;
             _commonRepository = commonRepository;
             _logger = logger;
+            _configuration = configuration;
         }
 
         [HttpPost("SendCode")]
@@ -96,7 +99,19 @@ namespace GayatriCateringPortal.Controllers
                 return Ok(new { success = false, message = "User is inactive. Please contact administrator." });
             }
 
-            var verifyResult = _loginRepository.VerifyOtp(email, code);
+            var allowTempOtp = _configuration.GetValue<bool>("Login:TempOtp:Enabled");
+            var tempOtpCode = (_configuration["Login:TempOtp:Code"] ?? string.Empty).Trim();
+
+            OtpVerifyResult verifyResult;
+            if (allowTempOtp && !string.IsNullOrWhiteSpace(tempOtpCode) && string.Equals(code, tempOtpCode, StringComparison.Ordinal))
+            {
+                verifyResult = new OtpVerifyResult { IsValid = true, Message = "Temporary OTP accepted." };
+            }
+            else
+            {
+                verifyResult = _loginRepository.VerifyOtp(email, code);
+            }
+
             if (!verifyResult.IsValid)
             {
                 return Ok(new { success = false, message = verifyResult.Message });
