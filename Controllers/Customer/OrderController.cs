@@ -71,8 +71,17 @@ namespace GayatriCateringPortal.Controllers.Customer
 
             try
             {
-                int newId = _orders.CreateCompleteOrder(request);
-                return Ok(new { success = newId > 0, id = newId, message = "Order submitted successfully." });
+                var currentUserId = HttpContext.Session.GetInt32("UserId") ?? 0;
+                if (currentUserId > 0)
+                {
+                    request.Customer.CreatedBy = currentUserId;
+                    request.Order.CreatedBy = currentUserId;
+                }
+                int orderId = request.Order.Id > 0
+                    ? _orders.UpdateCompleteOrder(request)
+                    : _orders.CreateCompleteOrder(request);
+                var message = request.Order.Id > 0 ? "Order updated successfully." : "Order submitted successfully.";
+                return Ok(new { success = orderId > 0, id = orderId, message });
             }
             catch (Exception ex)
             {

@@ -4,6 +4,14 @@ builder.Services.AddControllersWithViews(options =>
 {
     options.Filters.AddService<GayatriCateringPortal.Common.GlobalExceptionFilter>();
 });
+builder.Services.AddDistributedMemoryCache();
+builder.Services.AddSession(options =>
+{
+    options.Cookie.HttpOnly = true;
+    options.Cookie.IsEssential = true;
+    options.Cookie.SameSite = SameSiteMode.Lax;
+    options.IdleTimeout = TimeSpan.FromHours(8);
+});
 
 // Initialize DataFactory (centralized ADO.NET helpers)
 GayatriCateringPortal.Data.DataFactory.Init(builder.Configuration);
@@ -47,6 +55,7 @@ if (!app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseRouting();
+app.UseSession();
 app.MapStaticAssets();
 
 app.MapControllerRoute(

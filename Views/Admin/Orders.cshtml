@@ -11,6 +11,23 @@
         <div class="page-title">All Orders</div>
         <div class="page-subtitle">Order management with quotation, kitchen and delivery actions</div>
     </div>
+    <div class="page-header-actions">
+        <div class="app-header-filter orders-date-filter">
+            <label for="ordersFromDate">From</label>
+            <input type="date" id="ordersFromDate" class="form-control">
+        </div>
+        <div class="app-header-filter orders-date-filter">
+            <label for="ordersToDate">To</label>
+            <input type="date" id="ordersToDate" class="form-control">
+        </div>
+        <div class="app-header-filter">
+            <input type="text"
+                   id="ordersSearch"
+                   class="tbl-search"
+                   data-table="ordersTable"
+                   placeholder="Search orders...">
+        </div>
+    </div>
 </div>
 
 <div class="card">
