@@ -158,6 +158,11 @@ namespace GayatriCateringPortal.Controllers
             var roleLabel = selectedRole.RoleName;
             var redirectUrl = GetRedirectUrlFromMenus(roleId);
 
+            HttpContext.Session.SetInt32("UserId", user.Id);
+            HttpContext.Session.SetInt32("RoleId", roleId);
+            HttpContext.Session.SetString("RoleName", roleLabel ?? string.Empty);
+            HttpContext.Session.SetString("UserEmail", email);
+
             return Ok(new
             {
                 success = true,
@@ -175,6 +180,7 @@ namespace GayatriCateringPortal.Controllers
         [HttpPost("Logout")]
         public IActionResult Logout()
         {
+            HttpContext.Session.Clear();
             return Ok(new { success = true });
         }
 

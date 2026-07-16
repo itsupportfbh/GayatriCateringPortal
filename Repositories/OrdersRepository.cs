@@ -5,11 +5,57 @@ using Microsoft.Data.SqlClient;
 using GayatriCateringPortal.Data;
 using GayatriCateringPortal.Interfaces;
 using GayatriCateringPortal.Models;
+using System.Text.Json;
 
 namespace GayatriCateringPortal.Repositories;
 
 public class OrdersRepository : IOrdersRepository
 {
+    public List<OrderListItem> GetOrderList(DateTime? fromDate = null, DateTime? toDate = null)
+    {
+        var items = new List<OrderListItem>();
+        using var conn = (SqlConnection)DataFactory.CreateConnection();
+        using var cmd = new SqlCommand("dbo.GetOrders", conn) { CommandType = CommandType.StoredProcedure };
+        cmd.Parameters.Add("@FromDate", SqlDbType.Date).Value = (object?)fromDate?.Date ?? DBNull.Value;
+        cmd.Parameters.Add("@ToDate", SqlDbType.Date).Value = (object?)toDate?.Date ?? DBNull.Value;
+        conn.Open();
+        using var reader = cmd.ExecuteReader();
+        while (reader.Read())
+        {
+            items.Add(new OrderListItem
+            {
+                Id = Convert.ToInt32(reader["Id"]),
+                OrderNumber = Convert.ToString(reader["OrderNumber"]) ?? string.Empty,
+                CustomerName = Convert.ToString(reader["CustomerName"]) ?? string.Empty,
+                MobileNo = Convert.ToString(reader["MobileNo"]) ?? string.Empty,
+                EmailId = Convert.ToString(reader["EmailId"]) ?? string.Empty,
+                PackageName = Convert.ToString(reader["PackageName"]) ?? string.Empty,
+                LocationName = Convert.ToString(reader["LocationName"]) ?? string.Empty,
+                EventDate = reader["EventDate"] == DBNull.Value ? null : Convert.ToDateTime(reader["EventDate"]),
+                MealPeriodName = Convert.ToString(reader["MealPeriodName"]) ?? string.Empty,
+                Pax = Convert.ToInt32(reader["Pax"]),
+                OrderStatus = Convert.ToInt32(reader["OrderStatus"]),
+                OrderStatusName = Convert.ToString(reader["OrderStatusName"]) ?? string.Empty,
+                TotalAmount = Convert.ToDecimal(reader["TotalAmount"]),
+                PaidAmount = Convert.ToDecimal(reader["PaidAmount"]),
+                PaymentStatus = Convert.ToString(reader["PaymentStatus"]) ?? string.Empty
+            });
+        }
+        return items;
+    }
+
+    public int AdvanceOrderStatus(int orderId, int userId, bool isAdmin)
+    {
+        using var conn = (SqlConnection)DataFactory.CreateConnection();
+        using var cmd = new SqlCommand("SP_AdvanceOrderStatus", conn) { CommandType = CommandType.StoredProcedure };
+        cmd.Parameters.Add("@OrderId", SqlDbType.Int).Value = orderId;
+        cmd.Parameters.Add("@UserId", SqlDbType.Int).Value = userId;
+        cmd.Parameters.Add("@IsAdmin", SqlDbType.Bit).Value = isAdmin;
+        conn.Open();
+        var result = cmd.ExecuteScalar();
+        return result == null || result == DBNull.Value ? -1 : Convert.ToInt32(result);
+    }
+
     public List<Orders> GetAll()
     {
         List<Orders> list = new List<Orders>();
@@ -129,13 +175,25 @@ public class OrdersRepository : IOrdersRepository
             using (var cmd = CreateCommand("SP_CreateCustomerMaster"))
             {
                 Add(cmd, "@Code", string.IsNullOrWhiteSpace(customer.Code) ? $"CUST-{now:yyyyMMddHHmmssfff}" : customer.Code);
-                Add(cmd, "@Name", customer.Name.Trim()); Add(cmd, "@MobileNo", customer.MobileNo?.Trim()); Add(cmd, "@EmailId", customer.EmailId?.Trim() ?? string.Empty);
-                Add(cmd, "@Age", customer.Age); Add(cmd, "@AddressLine1", customer.AddressLine1?.Trim() ?? string.Empty); Add(cmd, "@AddressLine2", customer.AddressLine2?.Trim() ?? string.Empty);
-                Add(cmd, "@CityId", customer.CityId > 0 ? customer.CityId : null); Add(cmd, "@StateId", customer.StateId > 0 ? customer.StateId : null);
-                Add(cmd, "@CountryId", customer.CountryId > 0 ? customer.CountryId : null); Add(cmd, "@Pincode", customer.Pincode);
-                Add(cmd, "@DateOfBirth", customer.DateOfBirth); Add(cmd, "@Gender", customer.Gender); Add(cmd, "@Remarks", customer.Remarks);
-                Add(cmd, "@IsActive", true); Add(cmd, "@CreatedBy", createdBy); Add(cmd, "@CreatedDate", now);
-                Add(cmd, "@UpdatedBy", null); Add(cmd, "@UpdatedDate", null); Add(cmd, "@IsDeleted", false);
+                Add(cmd, "@Name", customer.Name.Trim());
+                Add(cmd, "@MobileNo", customer.MobileNo?.Trim());
+                Add(cmd, "@EmailId", customer.EmailId?.Trim() ?? string.Empty);
+                Add(cmd, "@Age", customer.Age);
+                Add(cmd, "@AddressLine1", customer.AddressLine1?.Trim() ?? string.Empty);
+                Add(cmd, "@AddressLine2", customer.AddressLine2?.Trim() ?? string.Empty);
+                Add(cmd, "@CityId", customer.CityId > 0 ? customer.CityId : null);
+                Add(cmd, "@StateId", customer.StateId > 0 ? customer.StateId : null);
+                Add(cmd, "@CountryId", customer.CountryId > 0 ? customer.CountryId : null);
+                Add(cmd, "@Pincode", customer.Pincode);
+                Add(cmd, "@DateOfBirth", customer.DateOfBirth);
+                Add(cmd, "@Gender", customer.Gender);
+                Add(cmd, "@Remarks", customer.Remarks);
+                Add(cmd, "@IsActive", true); 
+                Add(cmd, "@CreatedBy", createdBy);
+                Add(cmd, "@CreatedDate", now);
+                Add(cmd, "@UpdatedBy", null);
+                Add(cmd, "@UpdatedDate", null);
+                Add(cmd, "@IsDeleted", false);
                 customer.Id = ExecuteId(cmd, "customer");
             }
 
@@ -143,57 +201,94 @@ public class OrdersRepository : IOrdersRepository
             order.CustomerId = customer.Id;
             using (var cmd = CreateCommand("SP_CreateOrders"))
             {
-                Add(cmd, "@OrderNumber", order.OrderNumber); Add(cmd, "@CustomerId", order.CustomerId); Add(cmd, "@PackageId", order.PackageId);
-                Add(cmd, "@MealPeriodId", order.MealPeriodId); Add(cmd, "@LocationId", order.LocationId);
+                Add(cmd, "@OrderNumber", order.OrderNumber); 
+                Add(cmd, "@CustomerId", order.CustomerId);
+                Add(cmd, "@PackageId", order.PackageId);
+                Add(cmd, "@MealPeriodId", order.MealPeriodId); 
+                Add(cmd, "@LocationId", order.LocationId);
                 Add(cmd, "@EventDate", order.EventDate);
-                Add(cmd, "@DeliveryAddress", order.DeliveryAddress); Add(cmd, "@Notes", order.Notes); Add(cmd, "@Pax", order.Pax);
-                Add(cmd, "@PackageBaseAmount", order.PackageBaseAmount); Add(cmd, "@AdditionalMenuAmount", order.AdditionalMenuAmount);
-                Add(cmd, "@AddOnsAmount", order.AddOnsAmount); Add(cmd, "@UtensilsAmount", order.UtensilsAmount); Add(cmd, "@SubTotal", order.SubTotal);
-                Add(cmd, "@Discount", order.Discount); Add(cmd, "@DeliveryFee", order.DeliveryFee); Add(cmd, "@TaxAmount", order.TaxAmount);
-                Add(cmd, "@TotalAmount", order.TotalAmount); Add(cmd, "@TaxPercentage", order.TaxPercentage); Add(cmd, "@PaidAmount", order.PaidAmount);
-                Add(cmd, "@OrderStatus", order.OrderStatus); Add(cmd, "@CreatedDate", now); Add(cmd, "@CreatedBy", createdBy);
-                Add(cmd, "@UpdatedDate", null); Add(cmd, "@UpdatedBy", null);
+                Add(cmd, "@DeliveryAddress", order.DeliveryAddress);
+                Add(cmd, "@Notes", order.Notes); 
+                Add(cmd, "@Pax", order.Pax);
+                Add(cmd, "@PackageBaseAmount", order.PackageBaseAmount); 
+                Add(cmd, "@AdditionalMenuAmount", order.AdditionalMenuAmount);
+                Add(cmd, "@AddOnsAmount", order.AddOnsAmount);
+                Add(cmd, "@UtensilsAmount", order.UtensilsAmount);
+                Add(cmd, "@SubTotal", order.SubTotal);
+                Add(cmd, "@Discount", order.Discount);
+                Add(cmd, "@DeliveryFee", order.DeliveryFee);
+                Add(cmd, "@TaxAmount", order.TaxAmount);
+                Add(cmd, "@TotalAmount", order.TotalAmount);
+                Add(cmd, "@TaxPercentage", order.TaxPercentage);
+                Add(cmd, "@PaidAmount", order.PaidAmount);
+                Add(cmd, "@OrderStatus", order.OrderStatus);
+                Add(cmd, "@CreatedDate", now);
+                Add(cmd, "@CreatedBy", createdBy);
+                Add(cmd, "@UpdatedDate", null);
+                Add(cmd, "@UpdatedBy", null);
                 order.Id = ExecuteId(cmd, "order");
             }
 
             foreach (var item in request.PackageDetails)
             {
                 using var cmd = CreateCommand("SP_CreateOrderPackageDetails");
-                Add(cmd, "@OrderId", order.Id); Add(cmd, "@CategoryId", item.CategoryId); Add(cmd, "@MenuId", item.MenuId);
-                AddAudit(cmd, item.CreatedBy ?? createdBy, now); ExecuteRequired(cmd, "package detail");
+                Add(cmd, "@OrderId", order.Id);
+                Add(cmd, "@CategoryId", item.CategoryId);
+                Add(cmd, "@MenuId", item.MenuId);
+                AddAudit(cmd, item.CreatedBy ?? createdBy, now);
+                ExecuteRequired(cmd, "package detail");
             }
             foreach (var item in request.ExtraItems)
             {
                 using var cmd = CreateCommand("SP_CreateOrderExtraItems");
-                Add(cmd, "@OrderId", order.Id); Add(cmd, "@CategoryId", item.CategoryId); Add(cmd, "@MenuId", item.MenuId);
-                Add(cmd, "@Qty", item.Qty); Add(cmd, "@UnitPrice", item.UnitPrice); Add(cmd, "@TotalAmount", item.TotalAmount);
-                AddAudit(cmd, item.CreatedBy ?? createdBy, now); ExecuteRequired(cmd, "extra item");
+                Add(cmd, "@OrderId", order.Id); 
+                Add(cmd, "@CategoryId", item.CategoryId);
+                Add(cmd, "@MenuId", item.MenuId);
+                Add(cmd, "@Qty", item.Qty); 
+                Add(cmd, "@UnitPrice", item.UnitPrice); 
+                Add(cmd, "@TotalAmount", item.TotalAmount);
+                AddAudit(cmd, item.CreatedBy ?? createdBy, now);
+                ExecuteRequired(cmd, "extra item");
             }
             foreach (var item in request.AddOns)
             {
                 using var cmd = CreateCommand("SP_CreateOrderAddOnsDetails");
-                Add(cmd, "@OrderId", order.Id); Add(cmd, "@AddOnsId", item.AddOnsId); Add(cmd, "@Qty", item.Qty);
-                Add(cmd, "@UnitPrice", item.UnitPrice); Add(cmd, "@TotalAmount", item.TotalAmount);
-                AddAudit(cmd, item.CreatedBy ?? createdBy, now); ExecuteRequired(cmd, "add-on");
+                Add(cmd, "@OrderId", order.Id);
+                Add(cmd, "@AddOnsId", item.AddOnsId); 
+                Add(cmd, "@Qty", item.Qty);
+                Add(cmd, "@UnitPrice", item.UnitPrice);
+                Add(cmd, "@TotalAmount", item.TotalAmount);
+                AddAudit(cmd, item.CreatedBy ?? createdBy, now); 
+                ExecuteRequired(cmd, "add-on");
             }
             foreach (var item in request.Utensils)
             {
                 using var cmd = CreateCommand("SP_CreateOrderUtensilsDetails");
-                Add(cmd, "@OrderId", order.Id); Add(cmd, "@UtensilsId", item.UtensilsId); Add(cmd, "@Qty", item.Qty);
-                Add(cmd, "@UnitPrice", item.UnitPrice); Add(cmd, "@TotalAmount", item.TotalAmount);
+                Add(cmd, "@OrderId", order.Id);
+                Add(cmd, "@UtensilsId", item.UtensilsId);
+                Add(cmd, "@Qty", item.Qty);
+                Add(cmd, "@UnitPrice", item.UnitPrice);
+                Add(cmd, "@TotalAmount", item.TotalAmount);
                 Add(cmd, "@RefundableDeposit", item.RefundableDeposit);
-                AddAudit(cmd, item.CreatedBy ?? createdBy, now); ExecuteRequired(cmd, "utensil");
+                AddAudit(cmd, item.CreatedBy ?? createdBy, now);
+                ExecuteRequired(cmd, "utensil");
             }
 
             var details = request.Event;
             using (var cmd = CreateCommand("SP_CreateOrderEventDetails"))
             {
-                Add(cmd, "@CustomerId", customer.Id); Add(cmd, "@OrderId", order.Id);
+                Add(cmd, "@CustomerId", customer.Id);
+                Add(cmd, "@OrderId", order.Id);
                 Add(cmd, "@EventDate", details.EventStartDate ?? details.EventDate);
-                Add(cmd, "@AddressLine1", details.AddressLine1); Add(cmd, "@AddressLine2", details.AddressLine2);
-                Add(cmd, "@City", details.City); Add(cmd, "@State", details.State); Add(cmd, "@Country", details.Country);
-                Add(cmd, "@Notes", details.Notes); Add(cmd, "@MealPeriodId", details.MealPeriodId);
-                AddAudit(cmd, details.CreatedBy > 0 ? details.CreatedBy : createdBy, now); ExecuteRequired(cmd, "event detail");
+                Add(cmd, "@AddressLine1", details.AddressLine1);
+                Add(cmd, "@AddressLine2", details.AddressLine2);
+                Add(cmd, "@City", details.City); 
+                Add(cmd, "@State", details.State);
+                Add(cmd, "@Country", details.Country);
+                Add(cmd, "@Notes", details.Notes); 
+                Add(cmd, "@MealPeriodId", details.MealPeriodId);
+                AddAudit(cmd, details.CreatedBy > 0 ? details.CreatedBy : createdBy, now);
+                ExecuteRequired(cmd, "event detail");
             }
 
             transaction.Commit();
@@ -316,6 +411,31 @@ public class OrdersRepository : IOrdersRepository
         finally
         {
             if (conn != null && conn.State != ConnectionState.Closed) conn.Close();
+        }
+    }
+
+    public int UpdateCompleteOrder(CreateOrderRequest request)
+    {
+        if (request.Order.Id <= 0 || request.Customer.Id <= 0)
+            throw new ArgumentException("Order Id and Customer Id are required for a complete update.");
+
+        try
+        {
+            using var conn = (SqlConnection)DataFactory.CreateConnection();
+            using var cmd = new SqlCommand("SP_UpdateCompleteOrder", conn)
+            {
+                CommandType = CommandType.StoredProcedure
+            };
+            cmd.Parameters.Add("@RequestJson", SqlDbType.NVarChar, -1).Value = JsonSerializer.Serialize(request);
+            conn.Open();
+            var result = cmd.ExecuteScalar();
+            var orderId = result == null || result == DBNull.Value ? 0 : Convert.ToInt32(result);
+            if (orderId <= 0) throw new InvalidOperationException("The complete order was not updated.");
+            return orderId;
+        }
+        catch (Exception ex)
+        {
+            throw new Exception("Unable to update the complete order: " + ex.Message, ex);
         }
     }
 
