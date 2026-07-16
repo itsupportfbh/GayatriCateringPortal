@@ -25,11 +25,6 @@ namespace GayatriCateringPortal.Controllers.Admin
         [HttpGet("get")]
         public IActionResult GetAll([FromQuery] DateTime? fromDate, [FromQuery] DateTime? toDate)
         {
-            var userId = HttpContext.Session.GetInt32("UserId") ?? 0;
-            if (userId <= 0) return Unauthorized(new { message = "Please login again." });
-            if (fromDate.HasValue && toDate.HasValue && fromDate.Value.Date > toDate.Value.Date)
-                return BadRequest(new { message = "From date cannot be later than To date." });
-
             var items = _orders.GetOrderList(fromDate, toDate);
             return Ok(items);
         }
@@ -37,25 +32,12 @@ namespace GayatriCateringPortal.Controllers.Admin
         [HttpPost("UpdateOrderStatus")]
         public IActionResult NextStatus(int id, int status)
         {
-            var userId = HttpContext.Session.GetInt32("UserId") ?? 0;
-            if (userId <= 0) return Unauthorized(new { success = false, message = "Please login again." });
-            if (status < 0 || status > 4)
-                return BadRequest(new { success = false, message = "Invalid order status." });
-
             var updatedStatus = _orders.UpdateOrderStatus(id, status);
-            if (updatedStatus < 0)
-                return BadRequest(new { success = false, message = "Order was not found or could not be updated." });
 
             return Ok(new { success = true, orderStatus = updatedStatus, message = "Order status updated successfully." });
         }
 
-        [HttpGet("get/{id}")]
-        public IActionResult Get(int id)
-        {
-            var item = _orders.GetById(id);
-            if (item == null) return NotFound();
-            return Ok(item);
-        }
+
 
         [HttpPost("save")]
         public IActionResult Save([FromBody] Orders item)
@@ -73,18 +55,6 @@ namespace GayatriCateringPortal.Controllers.Admin
             return Ok(new { success = result });
         }
 
-        [HttpPost("delete/{id}")]
-        public IActionResult Delete(int id)
-        {
-            bool result = _orders.Delete(id);
-            return Ok(new { success = result });
-        }
 
-        [HttpPost("activeinactive/{id}")]
-        public IActionResult ActiveInActive(int id)
-        {
-            bool result = _orders.ActiveInActive(id);
-            return Ok(new { success = result });
-        }
     }
 }
