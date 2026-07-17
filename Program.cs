@@ -45,6 +45,7 @@ builder.Services.AddScoped<GayatriCateringPortal.Interfaces.IUserRoleMappingRepo
 builder.Services.AddScoped<GayatriCateringPortal.Interfaces.IAddOnRepository, GayatriCateringPortal.Repositories.AddOnRepository>();
 builder.Services.AddScoped<GayatriCateringPortal.Interfaces.IEventMasterRepository, GayatriCateringPortal.Repositories.EventMasterRepository>();
 builder.Services.AddScoped<GayatriCateringPortal.Interfaces.IEventDetailsRepository, GayatriCateringPortal.Repositories.EventDetailsRepository>();
+builder.Services.AddScoped<GayatriCateringPortal.Interfaces.IDriverRepository, GayatriCateringPortal.Repositories.DriverRepository>();
 builder.Services.AddScoped<GayatriCateringPortal.Interfaces.Customer.IPackageRepository, GayatriCateringPortal.Repositories.Customer.PackageRepository>();
 builder.Services.AddScoped<GayatriCateringPortal.Interfaces.Customer.IMYOrderRepository, GayatriCateringPortal.Repositories.Customer.MYOrderRepository>();
 

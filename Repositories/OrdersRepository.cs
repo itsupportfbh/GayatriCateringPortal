@@ -277,7 +277,9 @@ public class OrdersRepository : IOrdersRepository
 
             using (var cmd = CreateTransactionCommand("SP_CreateCustomerMaster", conn, transaction))
             {
-                AddParameter(cmd, "@Code", string.IsNullOrWhiteSpace(customer.Code) ? $"CUST-{now:yyyyMMddHHmmssfff}" : customer.Code);
+                // CustomerMaster.Code has a short database column. Keep generated
+                // customer codes within 15 characters: C + yyMMddHHmmssff.
+                AddParameter(cmd, "@Code", string.IsNullOrWhiteSpace(customer.Code) ? $"C{now:yyMMddHHmmssff}" : customer.Code.Trim());
                 AddParameter(cmd, "@Name", customer.Name.Trim());
                 AddParameter(cmd, "@MobileNo", customer.MobileNo?.Trim());
                 AddParameter(cmd, "@EmailId", customer.EmailId?.Trim() ?? string.Empty);
@@ -285,11 +287,11 @@ public class OrdersRepository : IOrdersRepository
                 AddParameter(cmd, "@Pincode", customer.Pincode);
                 AddParameter(cmd, "@Remarks", customer.Remarks);
                 AddParameter(cmd, "@IsActive", true);
+                AddParameter(cmd, "@IsDeleted", false);
                 AddParameter(cmd, "@CreatedBy", createdBy);
                 AddParameter(cmd, "@CreatedDate", now);
                 AddParameter(cmd, "@UpdatedBy", null);
                 AddParameter(cmd, "@UpdatedDate", null);
-                AddParameter(cmd, "@IsDeleted", false);
                 customer.Id = ExecuteId(cmd, "customer");
             }
 
@@ -380,12 +382,8 @@ public class OrdersRepository : IOrdersRepository
             {
                 AddParameter(cmd, "@CustomerId", customer.Id);
                 AddParameter(cmd, "@OrderId", order.Id);
-                AddParameter(cmd, "@EventDate", details.EventStartDate ?? details.EventDate);
-                AddParameter(cmd, "@AddressLine1", details.AddressLine1);
-                AddParameter(cmd, "@AddressLine2", details.AddressLine2);
-                AddParameter(cmd, "@City", details.City);
-                AddParameter(cmd, "@State", details.State);
-                AddParameter(cmd, "@Country", details.Country);
+                AddParameter(cmd, "@EventDate", details.EventDate ?? details.EventDate);
+                AddParameter(cmd, "@Address", details.Address);
                 AddParameter(cmd, "@Notes", details.Notes);
                 AddParameter(cmd, "@MealPeriodId", details.MealPeriodId);
                 AddAudit(cmd, details.CreatedBy > 0 ? details.CreatedBy : createdBy, now);
@@ -395,15 +393,15 @@ public class OrdersRepository : IOrdersRepository
             transaction.Commit();
             return order.Id;
         }
-        catch (SqlException)
+        catch (SqlException ex)
         {
             if (transaction != null) transaction.Rollback();
-            throw new Exception("Database error");
+            throw new Exception("Unable to submit order: " + ex.Message, ex);
         }
         catch (Exception ex)
         {
             if (transaction != null) transaction.Rollback();
-            throw new Exception(ex.StackTrace);
+            throw new Exception("Unable to submit order: " + ex.Message, ex);
         }
         finally
         {

@@ -1,7 +1,11 @@
-$(document).ready(function () {
-    loadPendingOrder();
-    loadDelivered();
+$(document).ready(function () {    
+    loadDriverMaster(function () {
+        loadPendingOrder();
+        loadDelivered();
+    });
 });
+
+var driverMaster = [];
 
 function loadPendingOrder() {
     //showlogiLoader(true);
@@ -67,12 +71,9 @@ function renderLogisList(rows) {
 
             <td>
                 <select class="form-select driver"
-                        id="driver_${item.id}">
-                    <option value="">Select Driver</option>
-                    <option value="David">David</option>
-                    <option value="Kevin">Kevin</option>
-                    <option value="Alex">Alex</option>
-                </select>
+        id="driver_${item.id}">
+    ${getDriverDropdown(item.driverId)}
+</select>
             </td>
 
             <td>
@@ -96,6 +97,43 @@ function renderLogisList(rows) {
     });
 
     $("#PendingTable tbody").html(html);
+    if (typeof renderDataTable === 'function') {
+        renderDataTable('PendingTable');
+    }
+}
+
+function loadDriverMaster(callback) {
+    $.ajax({
+        url: '/Admin/Driver/get',
+        type: 'GET',
+        dataType: 'json',
+        success: function (res) {
+            driverMaster = res || [];
+
+            if (callback) {
+                callback();
+            }
+        },
+        error: function () {
+            showToast('Unable to load drivers.', 3000,
+                { type: 'error', title: 'Error' });
+        }
+    });
+}
+
+function getDriverDropdown(selectedDriverId) {
+
+    var options = '<option value="">Select Driver</option>';
+
+    $.each(driverMaster, function (i, driver) {
+
+        options += `<option value="${driver.id}"
+                        ${driver.id == selectedDriverId ? 'selected' : ''}>
+                        ${driver.code} - ${driver.name}
+                    </option>`;
+    });
+
+    return options;
 }
 
 function renderLogisDelList(rows) {
@@ -116,6 +154,9 @@ function renderLogisDelList(rows) {
     });
 
     $("#DeliveredTable tbody").html(html);
+    if (typeof renderDataTable === 'function') {
+        renderDataTable('DeliveredTable');
+    }
 }
 function assignDelivery(id, OrderDate, OrderNumber, DeliveryAddress) {
 

@@ -5,7 +5,7 @@ namespace GayatriCateringPortal.Models
     public class LogisticsDetails
     {
         public int Id { get; set; }
-        public string? OrderDate { get; set; }
+        public DateTime OrderDate { get; set; }
         public string? OrderNumber { get; set; }
         public string? Location { get; set; }
         public string? DriverName { get; set; }
