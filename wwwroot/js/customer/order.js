@@ -7,6 +7,7 @@ $(function () {
         selectedEvent: '',
         eventName: '',
         eventMinPax: 0,
+        eventAdvanceBookingDays: 0,
         pax: 0,
         selectedPackage: '',
         packageName: '-',
@@ -67,7 +68,8 @@ $(function () {
                     return {
                         id: String(item.id ?? item.Id ?? ''),
                         name: item.name ?? item.Name ?? 'Event',
-                        minPax: Number(item.minPax ?? item.MinPax ?? 0)
+                        minPax: Number(item.minPax ?? item.MinPax ?? 0),
+                        advanceBookingDays: Number(item.advanceBookingDays ?? item.AdvanceBookingDays ?? 0)
                     };
                 }).filter(function (item) { return item.id; });
                 renderStep();
@@ -548,13 +550,23 @@ $(function () {
             '<div class="form-group"><label>Contact Person <span class="field-required">*</span></label><input id="detailContact" class="form-control" value="' + d.contact + '"><div class="field-error hidden" id="detailContactError"></div></div>' +
             '<div class="form-group"><label>Email</label><input id="detailEmail" class="form-control" value="' + d.email + '"><div class="field-error hidden" id="detailEmailError"></div></div>' +
             '<div class="form-group"><label>Mobile / WhatsApp <span class="field-required">*</span></label><input id="detailMobile" class="form-control" value="' + d.mobile + '"><div class="field-error hidden" id="detailMobileError"></div></div>' +
-            '<div class="form-group"><label>Event Date <span class="field-required">*</span></label><input id="detailDate" class="form-control" type="date" value="' + d.eventDate + '"><div class="field-error hidden" id="detailDateError"></div></div>' +
+            '<div class="form-group"><label>Event Date <span class="field-required">*</span></label><input id="detailDate" class="form-control" type="date" min="' + getMinimumEventDate() + '" value="' + d.eventDate + '"><div class="muted" style="font-size:12px;margin-top:5px">Book at least ' + state.eventAdvanceBookingDays + ' day(s) in advance.</div><div class="field-error hidden" id="detailDateError"></div></div>' +
             '<div class="form-group"><label>Meal Period <span class="field-required">*</span></label><select id="detailPeriod" class="form-control"' + (mealPeriods.length ? '' : ' disabled') + '><option value="">' + mealPeriodPlaceholder + '</option>' + mealPeriodOptions + '</select><div class="field-error hidden" id="detailPeriodError"></div></div>' +
             '<div class="form-group event-address-field"><label for="detailAddressLine1">Address Line 1 <span class="field-required">*</span></label><input type="text" class="form-control" id="detailAddressLine1" name="AddressLine1" autocomplete="address-line1" placeholder="Enter address line 1" value="' + escapeHtml(d.addressLine1 || '') + '"><div class="field-error hidden" id="detailAddressLine1Error"></div></div>' +
             '<div class="form-group"><label>Postal Code </label><input id="detailPostal" value="' + d.postal + '"></div>' +
             '</div><div class="form-group"><label>Notes</label><textarea id="detailNotes" rows="3">' + d.notes + '</textarea></div></div>';
         showOrderLoader(false);
         $('#orderStepContent').html(html);
+    }
+
+    function getMinimumEventDate() {
+        var date = new Date();
+        date.setHours(0, 0, 0, 0);
+        date.setDate(date.getDate() + Math.max(0, Number(state.eventAdvanceBookingDays) || 0));
+        var year = date.getFullYear();
+        var month = String(date.getMonth() + 1).padStart(2, '0');
+        var day = String(date.getDate()).padStart(2, '0');
+        return year + '-' + month + '-' + day;
     }
 
     function loadMealPeriods() {
@@ -1039,6 +1051,7 @@ $(function () {
         state.selectedEvent = '';
         state.eventName = '';
         state.eventMinPax = 0;
+        state.eventAdvanceBookingDays = 0;
         state.selectedPackage = '';
         state.packageName = '-';
         state.packagePrice = 0;
@@ -1063,6 +1076,7 @@ $(function () {
         state.selectedEvent = selectedEvent ? selectedEvent.id : '';
         state.eventName = selectedEvent ? selectedEvent.name : '';
         state.eventMinPax = selectedEvent ? selectedEvent.minPax : 0;
+        state.eventAdvanceBookingDays = selectedEvent ? selectedEvent.advanceBookingDays : 0;
         state.selectedPackage = '';
         state.packageName = '-';
         state.packagePrice = 0;
@@ -1236,6 +1250,16 @@ $(function () {
                 }
             }
         });
+
+        var eventDate = String(state.details.eventDate || '').trim();
+        var minimumEventDate = getMinimumEventDate();
+        if (eventDate && eventDate < minimumEventDate) {
+            hasErrors = true;
+            if (showFeedback) {
+                setFieldError('#detailDate', '#detailDateError', 'Event date must be on or after ' + minimumEventDate);
+                if (!firstInvalid) firstInvalid = '#detailDate';
+            }
+        }
 
         var email = $('#detailEmail').length
             ? String($('#detailEmail').val() || '').trim()

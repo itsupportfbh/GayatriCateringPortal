@@ -15,7 +15,14 @@ public class EventDetailsController : Controller
     public IActionResult GetByEventId(int eventId)
     {
         if (eventId <= 0) return BadRequest();
-        return Ok(_repository.GetByEventId(eventId));
+        try
+        {
+            return Ok(_repository.GetByEventId(eventId));
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { message = "Unable to load configured event packages: " + ex.Message });
+        }
     }
 
     [HttpPost("save")]

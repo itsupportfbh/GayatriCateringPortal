@@ -40,7 +40,22 @@ public class EventMasterController : Controller
     public IActionResult Get(int id)
     {
         var item = _repository.GetById(id);
-        return item == null ? NotFound() : Ok(item);
+        if (item == null) return NotFound();
+
+        return Ok(new
+        {
+            item.Id,
+            item.Name,
+            item.MinPax,
+            item.AdvanceBookingDays,
+            item.IsActive,
+            item.IsDeleted,
+            item.CreatedBy,
+            item.CreatedDate,
+            item.UpdatedBy,
+            item.UpdatedDate,
+            packageDetails = item.PackageDetails
+        });
     }
 
     [HttpPost("create")]
@@ -57,10 +72,17 @@ public class EventMasterController : Controller
     public IActionResult Update([FromBody] EventMaster item)
     {
         if (item == null || item.Id <= 0) return BadRequest();
-        var result = _repository.Update(item);
-        return result == -1
-            ? Ok(new { success = false, message = "Event with this name already exists" })
-            : Ok(new { success = result > 0 });
+        try
+        {
+            var result = _repository.Update(item);
+            return result == -1
+                ? Ok(new { success = false, message = "Event with this name already exists" })
+                : Ok(new { success = result > 0, message = result > 0 ? null : "Event was not updated." });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { success = false, message = ex.Message });
+        }
     }
 
     [HttpPost("delete/{id:int}")]
