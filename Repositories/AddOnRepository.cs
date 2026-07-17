@@ -59,9 +59,6 @@ namespace GayatriCateringPortal.Repositories
 
 
 
-
-
-
         // COMMON DATA READER MAPPING
         private List<AddOnMaster> List(IDataReader reader)
         {

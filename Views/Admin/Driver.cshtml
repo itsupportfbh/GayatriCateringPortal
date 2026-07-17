@@ -1,0 +1,151 @@
+﻿@{
+    ViewData["Title"] = "Communications";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/admin/driver.css" asp-append-version="true">
+    }
+
+    <div class="page-header">
+        <div>
+            <div class="page-title">Communications</div>
+            <div class="page-subtitle">Communication log — WhatsApp, email and SMS history</div>
+        </div>
+        <div class="page-header-actions">
+            <button class="btn btn-orange btn-add" id="btnAddDriver" data-permission="create" onclick="opendriverModal()">+ Add Driver</button>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="panel-header">
+            <div class="panel-title">Driver</div>
+        </div>
+        <div class="muted" style="margin-bottom:16px">Track outbound communication across WhatsApp, email and SMS.</div>
+        <div class="table-wrap">
+            <table class="tbl" id="driverList" data-page-size="10">
+                <thead>
+                    <tr>
+                        <th class="sortable">#</th>
+                        <th class="sortable">Channel</th>
+                        <th class="sortable">ToAddress</th>
+                        <th class="sortable">Message</th>
+                        <th class="sortable">Status</th>
+                        <th class="sortable">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- rows rendered by ~/js/admin/comms.js -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Per-view Comms modal -->
+    <!-- Driver Modal -->
+    <div class="modal-overlay hidden" id="driverModal">
+        <div class="modal-box" style="max-width:800px;">
+            <div class="modal-header">
+                <span class="modal-title">Driver Master</span>
+                <button class="modal-close" onclick="closeDriverModal()">✕</button>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6 form-group">
+                    <label>Driver Code <span class="text-danger">*</span></label>
+                    <input type="text" id="Code" class="form-control" maxlength="20">
+                </div>
+
+                <div class="col-md-6 form-group">
+                    <label>Driver Name <span class="text-danger">*</span></label>
+                    <input type="text" id="Name" class="form-control" maxlength="100">
+                </div>
+
+                <div class="col-md-6 form-group">
+                    <label>Mobile No <span class="text-danger">*</span></label>
+                    <input type="text" id="MobileNo" class="form-control" maxlength="10">
+                </div>
+
+                <div class="col-md-6 form-group">
+                    <label>Email <span class="text-danger">*</span></label>
+                    <input type="email" id="Email" class="form-control" maxlength="100">
+                </div>
+
+                <div class="col-md-6 form-group">
+                    <label>License No</label>
+                    <input type="text" id="LicenseNo" class="form-control" maxlength="30">
+                </div>
+
+                <div class="col-md-6 form-group">
+                    <label>License Expiry Date</label>
+                    <input type="date" id="LicenseExpiryDate" class="form-control">
+                </div>
+
+                <div class="col-md-6 form-group">
+                    <label>Date of Birth</label>
+                    <input type="date" id="DateofBirth" class="form-control">
+                </div>
+
+                <div class="col-md-6 form-group">
+                    <label>Gender</label>
+                    <select id="Gender" class="form-control">
+                        <option value="">Select</option>
+                        <option value="M">Male</option>
+                        <option value="F">Female</option>
+                        <option value="O">Other</option>
+                    </select>
+                </div>
+
+                <div class="col-md-12 form-group">
+                    <label>Address</label>
+                    <textarea id="Address" class="form-control" rows="2"></textarea>
+                </div>
+
+                <div class="col-md-4 form-group">
+                    <label>City</label>
+                    <input type="text" id="City" class="form-control">
+                </div>
+
+                <div class="col-md-4 form-group">
+                    <label>State</label>
+                    <input type="text" id="State" class="form-control">
+                </div>
+
+                <div class="col-md-4 form-group">
+                    <label>Pincode</label>
+                    <input type="text" id="Pincode" class="form-control" maxlength="6">
+                </div>
+
+                <div class="col-md-6 form-group">
+                    <label>Vehicle Type</label>
+                    <input type="text" id="VehicleType" class="form-control">
+                </div>
+
+                <div class="col-md-6 form-group">
+                    <label>Vehicle No</label>
+                    <input type="text" id="VehicleNo" class="form-control">
+                </div>
+
+                <div class="col-md-6 form-group">
+                    <label>Experience (Years)</label>
+                    <input type="number" id="ExperienceYears" class="form-control" min="0">
+                </div>
+
+                <div class="col-md-6 form-group">
+                    <label>Joining Date</label>
+                    <input type="date" id="JoiningDate" class="form-control">
+                </div>                
+            </div>
+
+            <input type="hidden" id="driverId" />
+
+            <div class="actions">
+                <button class="btn btn-light" id="btnClearDriver">Clear</button>
+                <button class="btn btn-primary" id="btnSaveDriver" onclick="saveDriver()">Save</button>
+            </div>
+        </div>
+    </div>
+
+    @section Scripts {
+        <script src="~/js/admin/table-utils.js" asp-append-version="true"></script>
+        <script src="~/js/admin/driver.js" asp-append-version="true"></script>
+    }

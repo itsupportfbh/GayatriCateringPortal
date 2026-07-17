@@ -684,7 +684,7 @@ function ensureRowActionPrintButtons(root) {
     }
 
     menus.forEach(function (menu) {
-        if (!menu || menu.querySelector('.action-item.btn-print')) {
+        if (!menu || menu.closest('[data-no-print="true"]') || menu.querySelector('.action-item.btn-print')) {
             return;
         }
 
