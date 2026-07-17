@@ -29,13 +29,13 @@ public class SettingsRepository : ISettingsRepository
             }
             return list ?? new List<Organization>();
         }
-        catch (SqlException ex)
+        catch (SqlException)
         {
-            throw new Exception("Database error while loading organization settings: " + ex.Message, ex);
+            throw new Exception("Database error");
         }
         catch (Exception ex)
         {
-            throw new Exception("Unable to load organization settings: " + ex.Message, ex);
+            throw new Exception(ex.StackTrace);
         }
         finally
         {
@@ -61,21 +61,19 @@ public class SettingsRepository : ISettingsRepository
                     cmd.Parameters.Add(DataFactory.CreateParameter("@Email", (object?)item.Email ?? DBNull.Value));
                     cmd.Parameters.Add(DataFactory.CreateParameter("@Hotline", (object?)item.Hotline ?? DBNull.Value));
                     cmd.Parameters.Add(DataFactory.CreateParameter("@whatsapp", (object?)item.Whatsapp ?? DBNull.Value));
-                    cmd.Parameters.Add(DataFactory.CreateParameter("@DefaultDeposit", item.DefaultDeposit));
                     cmd.Parameters.Add(DataFactory.CreateParameter("@QuotationValidity", item.QuotationValidity));
-                    cmd.Parameters.Add(DataFactory.CreateParameter("@MinOrderPax", item.MinOrderPax));
                     cmd.Parameters.Add(DataFactory.CreateParameter("@GSTRate", item.GSTRate));
-                    cmd.Parameters.Add(DataFactory.CreateParameter("@Servicecharge", item.Servicecharge));
                     cmd.Parameters.Add(DataFactory.CreateParameter("@PortalMode", item.PortalMode));
                     cmd.Parameters.Add(DataFactory.CreateParameter("@GSTNO", (object?)item.GSTNO ?? DBNull.Value));
                     cmd.Parameters.Add(DataFactory.CreateParameter("@IsActive", item.IsActive));
                     cmd.Parameters.Add(DataFactory.CreateParameter("@IsDeleted", item.IsDeleted));
                     cmd.Parameters.Add(DataFactory.CreateParameter("@CreatedBy", item.CreatedBy));
-                    cmd.Parameters.Add(DataFactory.CreateParameter("@CreatedDate", DateTime.TryParse(item.CreatedDate, out var createdDate) ? createdDate : (object?)DBNull.Value));
-                    cmd.Parameters.Add(DataFactory.CreateParameter("@AccountHolderName", (object?)item.AccountHolderName ?? DBNull.Value));
-                    cmd.Parameters.Add(DataFactory.CreateParameter("@IFSCCode", (object?)item.IFSCCode ?? DBNull.Value));
-                    cmd.Parameters.Add(DataFactory.CreateParameter("@AccNo", (object?)item.AccNo ?? DBNull.Value));
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@CreatedDate",item.CreatedDate));
                     cmd.Parameters.Add(DataFactory.CreateParameter("@UPIId", (object?)item.UPIId ?? DBNull.Value));
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@PaymentGatwayDetails", (object?)item.PaymentGatwayDetails ?? DBNull.Value));
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@UpcomingGSTRate", item.UpcomingGSTRate.HasValue ? item.UpcomingGSTRate.Value : (object?)DBNull.Value));
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@GSTEffectiveFrom", item.GSTEffectiveFrom.HasValue ? item.GSTEffectiveFrom.Value : (object?)DBNull.Value));
+
 
                     var result = DataFactory.ExecuteScalar(cmd);
                     if (result != null)
@@ -119,21 +117,19 @@ public class SettingsRepository : ISettingsRepository
                     cmd.Parameters.Add(DataFactory.CreateParameter("@Email", (object?)item.Email ?? DBNull.Value));
                     cmd.Parameters.Add(DataFactory.CreateParameter("@Hotline", (object?)item.Hotline ?? DBNull.Value));
                     cmd.Parameters.Add(DataFactory.CreateParameter("@whatsapp", (object?)item.Whatsapp ?? DBNull.Value));
-                    cmd.Parameters.Add(DataFactory.CreateParameter("@DefaultDeposit", item.DefaultDeposit));
                     cmd.Parameters.Add(DataFactory.CreateParameter("@QuotationValidity", item.QuotationValidity));
-                    cmd.Parameters.Add(DataFactory.CreateParameter("@MinOrderPax", item.MinOrderPax));
                     cmd.Parameters.Add(DataFactory.CreateParameter("@GSTRate", item.GSTRate));
-                    cmd.Parameters.Add(DataFactory.CreateParameter("@Servicecharge", item.Servicecharge));
                     cmd.Parameters.Add(DataFactory.CreateParameter("@PortalMode", item.PortalMode));
                     cmd.Parameters.Add(DataFactory.CreateParameter("@GSTNO", (object?)item.GSTNO ?? DBNull.Value));
                     cmd.Parameters.Add(DataFactory.CreateParameter("@IsActive", item.IsActive));
                     cmd.Parameters.Add(DataFactory.CreateParameter("@IsDeleted", item.IsDeleted));
                     cmd.Parameters.Add(DataFactory.CreateParameter("@UpdatedBy", item.UpdatedBy));
-                    cmd.Parameters.Add(DataFactory.CreateParameter("@UpdatedDate", DateTime.TryParse(item.UpdatedDate, out var updatedDate) ? updatedDate : (object?)DBNull.Value));
-                    cmd.Parameters.Add(DataFactory.CreateParameter("@AccountHolderName", (object?)item.AccountHolderName ?? DBNull.Value));
-                    cmd.Parameters.Add(DataFactory.CreateParameter("@IFSCCode", (object?)item.IFSCCode ?? DBNull.Value));
-                    cmd.Parameters.Add(DataFactory.CreateParameter("@AccNo", (object?)item.AccNo ?? DBNull.Value));
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@UpdatedDate", item.UpdatedDate ));
                     cmd.Parameters.Add(DataFactory.CreateParameter("@UPIId", (object?)item.UPIId ?? DBNull.Value));
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@PaymentGatwayDetails", (object?)item.PaymentGatwayDetails ?? DBNull.Value));
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@UpcomingGSTRate", item.UpcomingGSTRate.HasValue ? item.UpcomingGSTRate.Value : (object?)DBNull.Value));
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@GSTEffectiveFrom", item.GSTEffectiveFrom.HasValue ? item.GSTEffectiveFrom.Value : (object?)DBNull.Value));
+
 
                     var result = DataFactory.ExecuteScalar(cmd);
                     if (result != null)
@@ -165,53 +161,82 @@ public class SettingsRepository : ISettingsRepository
         var list = new List<Organization>();
         try
         {
-            var columns = Enumerable.Range(0, reader.FieldCount)
-                .Select(reader.GetName)
-                .ToHashSet(StringComparer.OrdinalIgnoreCase);
-
-            object? Value(string column) =>
-                columns.Contains(column) && reader[column] != DBNull.Value ? reader[column] : null;
-
             while (reader.Read())
             {
-                var item = new Organization
-                {
-                    Id = Value("Id") is { } id ? Convert.ToInt32(id) : 0,
-                    Name = Convert.ToString(Value("Name")) ?? string.Empty,
-                    UEN = Convert.ToString(Value("UEN")) ?? string.Empty,
-                    Address = Convert.ToString(Value("Address")) ?? string.Empty,
-                    Email = Convert.ToString(Value("Email")) ?? string.Empty,
-                    Hotline = Convert.ToString(Value("Hotline")) ?? string.Empty,
-                    Whatsapp = Convert.ToString(Value("Whatsapp")) ?? string.Empty,
-                    DefaultDeposit = Value("DefaultDeposit") is { } deposit ? Convert.ToInt32(deposit) : 0,
-                    QuotationValidity = Value("QuotationValidity") is { } validity ? Convert.ToInt32(validity) : 0,
-                    MinOrderPax = Value("MinOrderPax") is { } minPax ? Convert.ToInt32(minPax) : 0,
-                    GSTRate = Value("GSTRate") is { } gst ? Convert.ToInt32(gst) : 0,
-                    Servicecharge = Value("Servicecharge") is { } charge ? Convert.ToInt32(charge) : 0,
-                    PortalMode = Convert.ToString(Value("PortalMode")) ?? string.Empty,
-                    GSTNO = Convert.ToString(Value("GSTNO")) ?? string.Empty,
-                    IsActive = Value("IsActive") is { } active && Convert.ToBoolean(active),
-                    IsDeleted = Value("IsDeleted") is { } deleted && Convert.ToBoolean(deleted),
-                    CreatedBy = Value("CreatedBy") is { } createdBy ? Convert.ToInt32(createdBy) : 0,
-                    CreatedDate = Convert.ToString(Value("CreatedDate")) ?? string.Empty,
-                    UpdatedBy = Value("UpdatedBy") is { } updatedBy ? Convert.ToInt32(updatedBy) : 0,
-                    UpdatedDate = Convert.ToString(Value("UpdatedDate")),
-                    AccountHolderName = Convert.ToString(Value("AccountHolderName")) ?? string.Empty,
-                    IFSCCode = Convert.ToString(Value("IFSCCode")) ?? string.Empty,
-                    AccNo = Convert.ToString(Value("AccNo")) ?? string.Empty,
-                    UPIId = Convert.ToString(Value("UPIId")) ?? string.Empty
-                };
+                var item = new Organization();
+
+                if (reader["Id"] != DBNull.Value)
+                    item.Id = Convert.ToInt32(reader["Id"])!;
+
+                if (reader["Name"] != DBNull.Value)
+                    item.Name = Convert.ToString(reader["Name"])!;
+
+                if (reader["UEN"] != DBNull.Value)
+                    item.UEN = Convert.ToString(reader["UEN"])!;
+
+                if (reader["Address"] != DBNull.Value)
+                    item.Address = Convert.ToString(reader["Address"]);
+
+                if (reader["Email"] != DBNull.Value)
+                    item.Email = Convert.ToString(reader["Email"]);
+
+                if (reader["Hotline"] != DBNull.Value)
+                    item.Hotline = Convert.ToString(reader["Hotline"]);
+
+                if (reader["Whatsapp"] != DBNull.Value)
+                    item.Whatsapp = Convert.ToString(reader["Whatsapp"]);
+
+
+                if (reader["QuotationValidity"] != DBNull.Value)
+                    item.QuotationValidity = Convert.ToInt32(reader["QuotationValidity"]);
+
+                if (reader["GSTRate"] != DBNull.Value)
+                    item.GSTRate = Convert.ToDecimal(reader["GSTRate"]);
+
+                if (reader["UpcomingGSTRate"] != DBNull.Value)
+                    item.UpcomingGSTRate = Convert.ToDecimal(reader["UpcomingGSTRate"]);
+
+                if (reader["GSTEffectiveFrom"] != DBNull.Value)
+                    item.GSTEffectiveFrom = Convert.ToDateTime(reader["GSTEffectiveFrom"]);
+
+                if (reader["PortalMode"] != DBNull.Value)
+                    item.PortalMode = Convert.ToString(reader["PortalMode"]);
+
+                if (reader["IsActive"] != DBNull.Value)
+                    item.IsActive = Convert.ToBoolean(reader["IsActive"]);
+
+                if (reader["IsDeleted"] != DBNull.Value)
+                    item.IsDeleted = Convert.ToBoolean(reader["IsDeleted"]);
+
+                if (reader["CreatedBy"] != DBNull.Value)
+                    item.CreatedBy = Convert.ToInt32(reader["CreatedBy"]);
+
+                if (reader["CreatedDate"] != DBNull.Value)
+                    item.CreatedDate = Convert.ToDateTime(reader["CreatedDate"]);
+
+                if (reader["UpdatedBy"] != DBNull.Value)
+                    item.UpdatedBy = Convert.ToInt32(reader["UpdatedBy"]);
+
+                if (reader["UpdatedDate"] != DBNull.Value)
+                    item.UpdatedDate = Convert.ToDateTime(reader["UpdatedDate"]);
+
+
+                if (reader["UPIId"] != DBNull.Value)
+                    item.UPIId = Convert.ToString(reader["UPIId"]);
+
+                if (reader["PaymentGatwayDetails"] != DBNull.Value)
+                    item.PaymentGatwayDetails = Convert.ToString(reader["PaymentGatwayDetails"]);
 
                 list.Add(item);
             }
         }
-        catch (SqlException ex)
+        catch (SqlException)
         {
-            throw new Exception("Database error while reading organization settings: " + ex.Message, ex);
+            throw new Exception("Database error");
         }
         catch (Exception ex)
         {
-            throw new Exception("Unable to read organization settings: " + ex.Message, ex);
+            throw new Exception(ex.StackTrace);
         }
 
         return list;

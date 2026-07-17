@@ -7,8 +7,8 @@
 
 /* users modal is wider because it contains more fields */
 #usersModal .modal-box {
-    width: 1180px;
-    max-width: calc(100vw - 56px);
+    width: min(980px, 94vw);
+    max-width: min(980px, 94vw);
     max-height: 88vh;
     overflow-y: auto;
     overflow-x: hidden;
@@ -28,6 +28,24 @@
 
 #usersModal .actions {
     margin-top: 4px;
+}
+
+#usersModal .users-is-admin-toggle {
+    margin-top: 34px;
+}
+
+#usersModal .users-span-2 {
+    grid-column: span 2;
+}
+
+#usersModal textarea.form-control {
+    min-height: 40px;
+    height: 40px;
+    resize: vertical;
+}
+
+#usersModal .form-control {
+    min-height: 40px;
 }
 
 #userImagePreview {
@@ -292,14 +310,15 @@
 @media (max-width: 900px) {
     #usersModal .modal-box {
         max-width: calc(100vw - 28px);
-    }
-
-    #usersModal .form-row.col4 {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
+        padding: 18px;
     }
 
     #usersModal .form-row.col3 {
         grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    #usersModal .users-is-admin-toggle {
+        margin-top: 30px;
     }
 
     .user-card-meta-grid {
@@ -308,11 +327,42 @@
 }
 
 @media (max-width: 640px) {
-    #usersModal .form-row.col4 {
-        grid-template-columns: 1fr;
+    #usersModal .modal-box {
+        max-width: calc(100vw - 18px);
+        padding: 14px;
+        border-radius: 12px;
     }
 
     #usersModal .form-row.col3 {
         grid-template-columns: 1fr;
+        gap: 10px;
+    }
+
+    #usersModal .form-group {
+        margin-bottom: 8px;
+    }
+
+    #usersModal .users-span-2 {
+        grid-column: auto;
+    }
+
+    #usersModal .users-is-admin-toggle {
+        margin-top: 4px;
+    }
+
+    #usersModal textarea.form-control {
+        min-height: 40px;
+        height: 40px;
+    }
+
+    .user-image-preview-row {
+        flex-direction: column;
+        align-items: flex-start;
+        min-height: 0;
+        gap: 8px;
+    }
+
+    .user-image-actions {
+        min-height: 0;
     }
 }

@@ -25,6 +25,14 @@ public class OrganizationController : Controller
             return NotFound(new { message = "Organization GST rate is not configured." });
         }
 
+        var effectiveGstRate = organization.GSTRate;
+        var hasUpcomingConfigured = organization.UpcomingGSTRate.HasValue && organization.GSTEffectiveFrom.HasValue;
+
+        if (hasUpcomingConfigured && DateTime.Today >= organization.GSTEffectiveFrom!.Value.Date)
+        {
+            effectiveGstRate = organization.UpcomingGSTRate!.Value;
+        }
+
         return Ok(new
         {
             name = organization.Name,
@@ -33,7 +41,10 @@ public class OrganizationController : Controller
             email = organization.Email,
             hotline = organization.Hotline,
             whatsapp = organization.Whatsapp,
-            gstRate = organization.GSTRate
+            gstRate = effectiveGstRate,
+            currentGstRate = organization.GSTRate,
+            upcomingGstRate = organization.UpcomingGSTRate,
+            gstEffectiveFrom = organization.GSTEffectiveFrom?.ToString("yyyy-MM-dd")
         });
     }
 }

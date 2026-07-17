@@ -187,7 +187,7 @@
             success: function (res) {
                 if (res && res.success) {
                     showToast(res.message || 'OTP sent successfully.', 2500, { type: 'success', title: 'OTP Sent' });
-                    startOtpTimer(res.expiresInSeconds || 30);
+                    startOtpTimer(res.expiresInSeconds || 60);
                     $('#loginCode').val('');
                     $('#loginCode').focus();
                 } else {
