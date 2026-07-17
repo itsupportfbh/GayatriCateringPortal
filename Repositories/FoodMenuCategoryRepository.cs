@@ -257,12 +257,12 @@ namespace GayatriCateringPortal.Repositories
                     if (reader["CreatedBy"] != DBNull.Value)
                         item.CreatedBy = Convert.ToInt32(reader["CreatedBy"]);
                     if (reader["CreatedDate"] != DBNull.Value)
-                        item.CreatedDate = Convert.ToString(reader["CreatedDate"]);
+                        item.CreatedDate = Convert.ToDateTime(reader["CreatedDate"]);
 
                     if (reader["UpdatedBy"] != DBNull.Value)
                         item.UpdatedBy = Convert.ToInt32(reader["UpdatedBy"]);
                     if (reader["UpdatedDate"] != DBNull.Value)
-                        item.UpdatedDate = Convert.ToString(reader["UpdatedDate"]);
+                        item.UpdatedDate = Convert.ToDateTime(reader["UpdatedDate"]);
 
                     list.Add(item);
                 }

@@ -24,9 +24,9 @@ namespace GayatriCateringPortal.Models
         public string GSTNO { get; set; } = null!;
         public bool IsActive { get; set; }
         public bool IsDeleted { get; set; }
-        public string CreatedDate { get; set; } = null!;
+        public DateTime? CreatedDate { get; set; } = null!;
         public int CreatedBy { get; set; }
-        public string? UpdatedDate { get; set; }
+        public DateTime? UpdatedDate { get; set; }
         public int UpdatedBy { get; set; }
 
         // Keep backward compatibility with existing front-end keys.

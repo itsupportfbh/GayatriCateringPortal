@@ -16,9 +16,9 @@ namespace GayatriCateringPortal.Models
         public decimal DepositAmount { get; set; }
         public bool IsDeleted { get; set; }
         public int CreatedBy { get; set; }
-        public string CreatedDate { get; set; } = null!;
+        public DateTime? CreatedDate { get; set; } = null!;
         public int UpdatedBy { get; set; }
-        public string? UpdatedDate { get; set; }
+        public DateTime? UpdatedDate { get; set; }
         public bool IsActive { get; set; }
     }
 }

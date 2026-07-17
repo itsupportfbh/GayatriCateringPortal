@@ -101,7 +101,7 @@ namespace GayatriCateringPortal.Repositories
                         cmd.Parameters.Add(DataFactory.CreateParameter("@Gender", (object?)item.Gender ?? DBNull.Value));
                         cmd.Parameters.Add(DataFactory.CreateParameter("@Address", (object?)item.Address ?? DBNull.Value));
                         cmd.Parameters.Add(DataFactory.CreateParameter("@City", (object?)item.City ?? DBNull.Value));
-                        cmd.Parameters.Add(DataFactory.CreateParameter("@State", (object?)item.state ?? DBNull.Value));
+                        cmd.Parameters.Add(DataFactory.CreateParameter("@State", (object?)item.State ?? DBNull.Value));
                         cmd.Parameters.Add(DataFactory.CreateParameter("@Pincode", (object?)item.Pincode ?? DBNull.Value));
                         cmd.Parameters.Add(DataFactory.CreateParameter("@VehicleType", (object?)item.VehicleType ?? DBNull.Value));
                         cmd.Parameters.Add(DataFactory.CreateParameter("@VehicleNo", (object?)item.VehicleNo ?? DBNull.Value));
@@ -110,7 +110,6 @@ namespace GayatriCateringPortal.Repositories
                         cmd.Parameters.Add(DataFactory.CreateParameter("@IsActive", item.IsActive));
                         cmd.Parameters.Add(DataFactory.CreateParameter("@IsDeleted", item.IsDeleted));
                         cmd.Parameters.Add(DataFactory.CreateParameter("@CreatedBy", item.CreatedBy));
-                        cmd.Parameters.Add(DataFactory.CreateParameter("@CreatedDate", DateTime.TryParse(item.CreatedDate, out var createdDate) ? createdDate : (object?)DBNull.Value));
 
                         var result = DataFactory.ExecuteScalar(cmd);
                         if (result != null)
@@ -157,7 +156,7 @@ namespace GayatriCateringPortal.Repositories
                         cmd.Parameters.Add(DataFactory.CreateParameter("@Gender", (object?)item.Gender ?? DBNull.Value));
                         cmd.Parameters.Add(DataFactory.CreateParameter("@Address", (object?)item.Address ?? DBNull.Value));
                         cmd.Parameters.Add(DataFactory.CreateParameter("@City", (object?)item.City ?? DBNull.Value));
-                        cmd.Parameters.Add(DataFactory.CreateParameter("@State", (object?)item.state ?? DBNull.Value));
+                        cmd.Parameters.Add(DataFactory.CreateParameter("@State", (object?)item.State ?? DBNull.Value));
                         cmd.Parameters.Add(DataFactory.CreateParameter("@Pincode", (object?)item.Pincode ?? DBNull.Value));
                         cmd.Parameters.Add(DataFactory.CreateParameter("@VehicleType", (object?)item.VehicleType ?? DBNull.Value));
                         cmd.Parameters.Add(DataFactory.CreateParameter("@VehicleNo", (object?)item.VehicleNo ?? DBNull.Value));
@@ -166,7 +165,6 @@ namespace GayatriCateringPortal.Repositories
                         cmd.Parameters.Add(DataFactory.CreateParameter("@IsActive", item.IsActive));
                         cmd.Parameters.Add(DataFactory.CreateParameter("@IsDeleted", item.IsDeleted));
                         cmd.Parameters.Add(DataFactory.CreateParameter("@UpdatedBy", item.UpdatedBy));
-                        cmd.Parameters.Add(DataFactory.CreateParameter("@UpdatedDate", DateTime.TryParse(item.UpdatedDate, out var UpdatedDate) ? UpdatedDate : (object?)DBNull.Value));
 
                         var result = DataFactory.ExecuteScalar(cmd);
                         if (result != null)
@@ -292,7 +290,7 @@ namespace GayatriCateringPortal.Repositories
                     if (reader["City"] != DBNull.Value)
                         item.City = Convert.ToString(reader["City"]);
                     if (reader["state"] != DBNull.Value)
-                        item.state = Convert.ToString(reader["state"]);
+                        item.State = Convert.ToString(reader["state"]);
                     if (reader["Pincode"] != DBNull.Value)
                         item.Pincode = Convert.ToString(reader["Pincode"]);
                     if (reader["VehicleType"] != DBNull.Value)
@@ -310,11 +308,11 @@ namespace GayatriCateringPortal.Repositories
                     if (reader["CreatedBy"] != DBNull.Value)
                         item.CreatedBy = Convert.ToInt32(reader["CreatedBy"]);
                     if (reader["CreatedDate"] != DBNull.Value)
-                        item.CreatedDate = Convert.ToString(reader["CreatedDate"]);
+                        item.CreatedDate = Convert.ToDateTime(reader["CreatedDate"]);
                     if (reader["UpdatedBy"] != DBNull.Value)
                         item.UpdatedBy = Convert.ToInt32(reader["UpdatedBy"]);
                     if (reader["UpdatedDate"] != DBNull.Value)
-                        item.UpdatedDate = Convert.ToString(reader["UpdatedDate"]);
+                        item.UpdatedDate = Convert.ToDateTime(reader["UpdatedDate"]);
 
                     list.Add(item);
                 }
