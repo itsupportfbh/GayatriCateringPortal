@@ -807,6 +807,7 @@ $(function () {
             orderNumber: generateOrderNumber(),
             customerId: 0,
             packageId: parseInt(state.selectedPackage, 10) || null,
+            eventId: parseInt(state.selectedEvent, 10) || null,
             mealPeriodId: parseInt(state.details.mealPeriodId, 10) || null,
             locationId: null,
             eventDate: state.details.eventDate || null,
