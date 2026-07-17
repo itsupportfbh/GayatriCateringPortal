@@ -71,7 +71,7 @@ public class SettingsRepository : ISettingsRepository
                     cmd.Parameters.Add(DataFactory.CreateParameter("@IsActive", item.IsActive));
                     cmd.Parameters.Add(DataFactory.CreateParameter("@IsDeleted", item.IsDeleted));
                     cmd.Parameters.Add(DataFactory.CreateParameter("@CreatedBy", item.CreatedBy));
-                    cmd.Parameters.Add(DataFactory.CreateParameter("@CreatedDate", DateTime.TryParse(item.CreatedDate, out var createdDate) ? createdDate : (object?)DBNull.Value));
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@CreatedDate", item.CreatedDate));
                     cmd.Parameters.Add(DataFactory.CreateParameter("@AccountHolderName", (object?)item.AccountHolderName ?? DBNull.Value));
                     cmd.Parameters.Add(DataFactory.CreateParameter("@IFSCCode", (object?)item.IFSCCode ?? DBNull.Value));
                     cmd.Parameters.Add(DataFactory.CreateParameter("@AccNo", (object?)item.AccNo ?? DBNull.Value));
@@ -129,7 +129,7 @@ public class SettingsRepository : ISettingsRepository
                     cmd.Parameters.Add(DataFactory.CreateParameter("@IsActive", item.IsActive));
                     cmd.Parameters.Add(DataFactory.CreateParameter("@IsDeleted", item.IsDeleted));
                     cmd.Parameters.Add(DataFactory.CreateParameter("@UpdatedBy", item.UpdatedBy));
-                    cmd.Parameters.Add(DataFactory.CreateParameter("@UpdatedDate", DateTime.TryParse(item.UpdatedDate, out var updatedDate) ? updatedDate : (object?)DBNull.Value));
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@UpdatedDate", item.UpdatedDate));
                     cmd.Parameters.Add(DataFactory.CreateParameter("@AccountHolderName", (object?)item.AccountHolderName ?? DBNull.Value));
                     cmd.Parameters.Add(DataFactory.CreateParameter("@IFSCCode", (object?)item.IFSCCode ?? DBNull.Value));
                     cmd.Parameters.Add(DataFactory.CreateParameter("@AccNo", (object?)item.AccNo ?? DBNull.Value));
@@ -193,9 +193,9 @@ public class SettingsRepository : ISettingsRepository
                     IsActive = Value("IsActive") is { } active && Convert.ToBoolean(active),
                     IsDeleted = Value("IsDeleted") is { } deleted && Convert.ToBoolean(deleted),
                     CreatedBy = Value("CreatedBy") is { } createdBy ? Convert.ToInt32(createdBy) : 0,
-                    CreatedDate = Convert.ToString(Value("CreatedDate")) ?? string.Empty,
+                    CreatedDate = Convert.ToDateTime(Value("CreatedDate")),
                     UpdatedBy = Value("UpdatedBy") is { } updatedBy ? Convert.ToInt32(updatedBy) : 0,
-                    UpdatedDate = Convert.ToString(Value("UpdatedDate")),
+                    UpdatedDate = Convert.ToDateTime(Value("UpdatedDate")),
                     AccountHolderName = Convert.ToString(Value("AccountHolderName")) ?? string.Empty,
                     IFSCCode = Convert.ToString(Value("IFSCCode")) ?? string.Empty,
                     AccNo = Convert.ToString(Value("AccNo")) ?? string.Empty,
