@@ -18,8 +18,7 @@ namespace GayatriCateringPortal.Controllers.Customer
         [HttpGet("")]
         public IActionResult Index()
         {
-            var customers = _customerRepository.GetAll();
-            ViewData["Customers"] = customers;
+       
             ViewData["Mode"] = "customer";
             ViewData["Page"] = "home";
             ViewData["Title"] = "Home";
