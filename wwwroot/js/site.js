@@ -191,6 +191,7 @@ function normalizeProfileImageUrl(url) {
 }
 
 var USER_DETAILS_KEY = 'UserDetails';
+var AUTH_EVENT_KEY = 'gc_auth_event';
 
 function safeParseJson(raw, fallback) {
     try {
@@ -216,6 +217,81 @@ function updateUserDetails(patch) {
     var current = getUserDetails() || {};
     var next = Object.assign({}, current, patch || {});
     return setUserDetails(next);
+}
+
+function isAdminPortalPage() {
+    var path = (window.location.pathname || '').toLowerCase();
+    var body = document.body;
+    return path.indexOf('/admin') === 0 || !!(body && body.classList.contains('admin-mode'));
+}
+
+function clearStoredAuthState() {
+    localStorage.removeItem(USER_DETAILS_KEY);
+    sessionStorage.clear();
+}
+
+function publishAuthEvent(eventType) {
+    try {
+        localStorage.setItem(AUTH_EVENT_KEY, JSON.stringify({ type: eventType || 'unknown', ts: Date.now() }));
+    } catch (e) {
+        // Ignore storage write failures.
+    }
+}
+
+function redirectToCustomerPortal() {
+    if ((window.location.pathname || '').toLowerCase() === '/customer/home') {
+        return;
+    }
+
+    window.location.replace('/Customer/Home');
+}
+
+function syncLoggedOutUiState() {
+    document.body.classList.remove('sidebar-collapsed');
+    renderHeaderProfile();
+    updateSidebarToggle();
+}
+
+function enforceLoggedOutRedirect() {
+    if (!isAdminPortalPage()) {
+        return;
+    }
+
+    var details = getUserDetails() || {};
+    if (details.isLoggedIn === true) {
+        return;
+    }
+
+    syncLoggedOutUiState();
+    redirectToCustomerPortal();
+}
+
+function syncAuthStateWithServer() {
+    return $.ajax({
+        url: '/Login/SessionStatus',
+        type: 'GET',
+        dataType: 'json',
+        cache: false
+    }).done(function (res) {
+        var current = getUserDetails() || {};
+        if (res && res.isLoggedIn === true) {
+            setUserDetails({
+                isLoggedIn: true,
+                userId: parseInt(res.userId || '0', 10) || 0,
+                roleId: parseInt(res.roleId || '0', 10) || 0,
+                userEmail: res.email || current.userEmail || '',
+                userRole: res.roleLabel || current.userRole || 'User',
+                userName: current.userName || 'User',
+                userImage: current.userImage || '',
+                sidebarCollapsed: !!current.sidebarCollapsed
+            });
+            return;
+        }
+
+        clearStoredAuthState();
+    }).fail(function () {
+        clearStoredAuthState();
+    });
 }
 
 function getInitials(name, email) {
@@ -332,12 +408,13 @@ function restoreAppState() {
 function clearClientStorageOnEntry() {
     var body = document.body;
     var isCustomerMode = !!(body && body.classList.contains('customer-mode'));
+    var details = getUserDetails() || {};
 
-    if (!isCustomerMode) {
+    if (!isCustomerMode || details.isLoggedIn === true) {
         return;
     }
 
-    localStorage.clear();
+    localStorage.removeItem(USER_DETAILS_KEY);
     sessionStorage.clear();
 }
 
@@ -360,13 +437,11 @@ function doSignIn() {
 }
 
 function performClientLogout() {
-    document.body.classList.remove('sidebar-collapsed');
-    localStorage.clear();
-    sessionStorage.clear();
-    renderHeaderProfile();
-    updateSidebarToggle();
+    clearStoredAuthState();
+    publishAuthEvent('logout');
+    syncLoggedOutUiState();
     showToast('Logged out', 2200, { type: 'success', title: 'Success' });
-    window.location.href = '/Customer/Home';
+    redirectToCustomerPortal();
 }
 
 function performLogout() {
@@ -715,10 +790,14 @@ document.addEventListener('DOMContentLoaded', function () {
     var brandLink = document.querySelector('.top-nav .brand');
 
     clearClientStorageOnEntry();
-    restoreAppState();
     initRichDatePickers(document);
     decorateActionButtons(document);
     ensureRowActionPrintButtons(document);
+
+    syncAuthStateWithServer().always(function () {
+        restoreAppState();
+        enforceLoggedOutRedirect();
+    });
 
     if (loginBtn) {
         loginBtn.addEventListener('click', function () {
@@ -766,6 +845,35 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         });
     }
+});
+
+window.addEventListener('pageshow', function () {
+    enforceLoggedOutRedirect();
+});
+
+window.addEventListener('storage', function (event) {
+    if (event.key && event.key !== USER_DETAILS_KEY && event.key !== AUTH_EVENT_KEY) {
+        return;
+    }
+
+    if (!getUserDetails() || getUserDetails().isLoggedIn !== true) {
+        enforceLoggedOutRedirect();
+        return;
+    }
+
+    renderHeaderProfile();
+    updateSidebarToggle();
+});
+
+$(document).ajaxError(function (_event, xhr) {
+    if (!xhr || xhr.status !== 401) {
+        return;
+    }
+
+    clearStoredAuthState();
+    publishAuthEvent('session-expired');
+    syncLoggedOutUiState();
+    redirectToCustomerPortal();
 });
 
 window.renderHeaderProfile = renderHeaderProfile;

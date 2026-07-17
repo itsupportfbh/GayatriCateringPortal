@@ -58,6 +58,69 @@ button {
     display: none !important
 }
 
+.app-boot-loader {
+    position: fixed;
+    inset: var(--top-nav-height) 0 0 0;
+    z-index: 9500;
+    background: rgba(245,245,240,0.88);
+    backdrop-filter: blur(2px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    opacity: 1;
+    visibility: visible;
+    transition: opacity .28s ease, visibility .28s ease;
+}
+
+.app-boot-loader.is-hiding {
+    opacity: 0;
+    visibility: hidden;
+}
+
+.app-boot-card {
+    width: min(360px, 92vw);
+    background: #fff;
+    border: 1px solid var(--gray-200);
+    border-radius: 16px;
+    box-shadow: 0 16px 40px rgba(0,0,0,.14);
+    padding: 24px 22px;
+    text-align: center;
+}
+
+.app-boot-logo {
+    height: 52px;
+    width: auto;
+    max-width: 180px;
+    object-fit: contain;
+    border-radius: 10px;
+    margin-bottom: 14px;
+    background: #fff;
+}
+
+.app-boot-title {
+    font-size: 20px;
+    font-weight: 900;
+    color: var(--green-dark);
+    margin-bottom: 4px;
+}
+
+.app-boot-subtitle {
+    font-size: 13px;
+    color: var(--gray-500);
+    margin-bottom: 14px;
+}
+
+.app-boot-card .spinner {
+    margin: 0 auto;
+    width: 34px;
+    height: 34px;
+    border: 4px solid rgba(0,0,0,0.08);
+    border-top-color: var(--orange);
+    border-radius: 50%;
+    animation: pageloader-spin 0.9s linear infinite;
+}
+
 /* Page loader styles (shared across app) */
 .pageloaderfull {
     position: fixed;

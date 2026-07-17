@@ -21,13 +21,7 @@ namespace GayatriCateringPortal.Models
         public DateTime? UpdatedDate { get; set; }
         public string? Image { get; set; }
         public int? Gender { get; set; }
-        public DateTime? DOB { get; set; }
-        public int? Age { get; set; }
-        public string? Address1 { get; set; }
-        public string? Address2 { get; set; }
-        public int? Country { get; set; }
-        public int? State { get; set; }
-        public int? City { get; set; }
+        public string? Address { get; set; }
         public int? PostalCode { get; set; }
     }
 

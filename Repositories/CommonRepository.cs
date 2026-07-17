@@ -405,6 +405,71 @@ namespace GayatriCateringPortal.Repositories
             }
         }
 
+        public RolePermissionItem GetMenuRights(int roleId, int entityNo)
+        {
+            IDbConnection conn = null;
+            IDbCommand cmd = null;
+            IDataReader reader = null;
+
+            try
+            {
+                using (conn = DataFactory.CreateConnection())
+                {
+                    conn.Open();
+                    using (cmd = DataFactory.CreateCommand("SP_GetMenuRightsByEntityNo", conn))
+                    {
+                        var sqlCmd = (SqlCommand)cmd;
+                        sqlCmd.CommandType = CommandType.StoredProcedure;
+                        sqlCmd.CommandTimeout = 60;
+                        cmd.Parameters.Add(DataFactory.CreateParameter("@RoleId", roleId));
+                        cmd.Parameters.Add(DataFactory.CreateParameter("@EntityNo", entityNo));
+
+                        reader = DataFactory.ExecuteReader(cmd);
+                        if (reader.Read())
+                        {
+                            return new RolePermissionItem
+                            {
+                                RoleId = reader["RoleId"] != DBNull.Value ? Convert.ToInt32(reader["RoleId"]) : roleId,
+                                EntityNo = reader["EntityNo"] != DBNull.Value ? Convert.ToInt32(reader["EntityNo"]) : entityNo,
+                                View = reader["View"] != DBNull.Value && Convert.ToBoolean(reader["View"]),
+                                Create = reader["Create"] != DBNull.Value && Convert.ToBoolean(reader["Create"]),
+                                Edit = reader["Edit"] != DBNull.Value && Convert.ToBoolean(reader["Edit"]),
+                                Delete = reader["Delete"] != DBNull.Value && Convert.ToBoolean(reader["Delete"]),
+                                ActiveInActive = reader["ActiveInActive"] != DBNull.Value && Convert.ToBoolean(reader["ActiveInActive"]),
+                                Download = reader["Download"] != DBNull.Value && Convert.ToBoolean(reader["Download"]),
+                                Print = reader["Print"] != DBNull.Value && Convert.ToBoolean(reader["Print"])
+                            };
+                        }
+                    }
+                }
+
+                return new RolePermissionItem
+                {
+                    RoleId = roleId,
+                    EntityNo = entityNo,
+                    View = false,
+                    Create = false,
+                    Edit = false,
+                    Delete = false,
+                    ActiveInActive = false,
+                    Download = false,
+                    Print = false
+                };
+            }
+            catch (SqlException ex)
+            {
+                throw new Exception("Database error in GetMenuRights: " + ex.Message);
+            }
+            catch (Exception ex)
+            {
+                throw new Exception(ex.StackTrace);
+            }
+            finally
+            {
+                if (conn != null && conn.State != ConnectionState.Closed) conn.Close();
+            }
+        }
+
         public async Task<FileUploadResult> FileUpload(IFormFile postedFile, string folderName)
         {
             if (postedFile == null || postedFile.Length == 0)

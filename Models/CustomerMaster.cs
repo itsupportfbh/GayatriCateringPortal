@@ -9,15 +9,8 @@ namespace GayatriCateringPortal.Models
         public string Name { get; set; } = string.Empty;
         public string? MobileNo { get; set; }
         public string? EmailId { get; set; }
-        public int? Age { get; set; }
-        public string? AddressLine1 { get; set; }
-        public string? AddressLine2 { get; set; }
-        public int CityId { get; set; }
-        public int StateId { get; set; }
-        public int CountryId { get; set; }
+        public string? Address { get; set; }
         public string? Pincode { get; set; }
-        public DateTime? DateOfBirth { get; set; }
-        public int? Gender { get; set; }
         public string? Remarks { get; set; }
         public bool IsActive { get; set; }
         public int CreatedBy { get; set; }

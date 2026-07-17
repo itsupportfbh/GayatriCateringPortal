@@ -171,7 +171,7 @@ namespace GayatriCateringPortal.Controllers
             _loginRepository.ClearOtp(email);
 
             var roleLabel = selectedRole.RoleName;
-            var redirectUrl = GetRedirectUrlFromMenus(roleId);
+            var redirectUrl = roleId > 0 ? "/Admin/Dashboard" : "/Customer/Home";
 
             HttpContext.Session.SetInt32("UserId", user.Id);
             HttpContext.Session.SetInt32("RoleId", roleId);
@@ -197,6 +197,24 @@ namespace GayatriCateringPortal.Controllers
         {
             HttpContext.Session.Clear();
             return Ok(new { success = true });
+        }
+
+        [HttpGet("SessionStatus")]
+        public IActionResult SessionStatus()
+        {
+            var userId = HttpContext.Session.GetInt32("UserId") ?? 0;
+            var roleId = HttpContext.Session.GetInt32("RoleId") ?? 0;
+            var roleLabel = HttpContext.Session.GetString("RoleName") ?? string.Empty;
+            var email = HttpContext.Session.GetString("UserEmail") ?? string.Empty;
+
+            return Ok(new
+            {
+                isLoggedIn = userId > 0 && roleId > 0,
+                userId,
+                roleId,
+                roleLabel,
+                email
+            });
         }
 
         private static bool IsValidEmail(string email)
@@ -234,38 +252,6 @@ namespace GayatriCateringPortal.Controllers
                         </div>
                     </div>
                 </div>";
-        }
-
-        private string GetRedirectUrlFromMenus(int roleId)
-        {
-            try
-            {
-                var groups = _commonRepository.GetMenuGroups(roleId);
-                if (groups != null)
-                {
-                    for (var gi = 0; gi < groups.Count; gi++)
-                    {
-                        var menus = groups[gi]?.Menus;
-                        if (menus == null) continue;
-
-                        for (var mi = 0; mi < menus.Count; mi++)
-                        {
-                            var route = (menus[mi]?.Route ?? string.Empty).Trim();
-                            if (!string.IsNullOrWhiteSpace(route))
-                            {
-                                return route;
-                            }
-                        }
-                    }
-                }
-            }
-
-            catch
-            {
-                // fall back below
-            }
-
-            return "/Customer/Home";
         }
 
         private string? BuildUserImageUrl(string? imageFileName)

@@ -281,15 +281,8 @@ public class OrdersRepository : IOrdersRepository
                 AddParameter(cmd, "@Name", customer.Name.Trim());
                 AddParameter(cmd, "@MobileNo", customer.MobileNo?.Trim());
                 AddParameter(cmd, "@EmailId", customer.EmailId?.Trim() ?? string.Empty);
-                AddParameter(cmd, "@Age", customer.Age);
-                AddParameter(cmd, "@AddressLine1", customer.AddressLine1?.Trim() ?? string.Empty);
-                AddParameter(cmd, "@AddressLine2", customer.AddressLine2?.Trim() ?? string.Empty);
-                AddParameter(cmd, "@CityId", customer.CityId > 0 ? customer.CityId : null);
-                AddParameter(cmd, "@StateId", customer.StateId > 0 ? customer.StateId : null);
-                AddParameter(cmd, "@CountryId", customer.CountryId > 0 ? customer.CountryId : null);
+                AddParameter(cmd, "@Address", customer.Address?.Trim() ?? string.Empty);
                 AddParameter(cmd, "@Pincode", customer.Pincode);
-                AddParameter(cmd, "@DateOfBirth", customer.DateOfBirth);
-                AddParameter(cmd, "@Gender", customer.Gender);
                 AddParameter(cmd, "@Remarks", customer.Remarks);
                 AddParameter(cmd, "@IsActive", true);
                 AddParameter(cmd, "@CreatedBy", createdBy);

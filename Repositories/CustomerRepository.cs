@@ -101,17 +101,8 @@ public class CustomerRepository : ICustomerRepository
 
                     cmd.Parameters.Add(DataFactory.CreateParameter("@MobileNo", customer.MobileNo ?? (object)DBNull.Value));
                     cmd.Parameters.Add(DataFactory.CreateParameter("@EmailId", customer.EmailId ?? (object)DBNull.Value));
-                    cmd.Parameters.Add(DataFactory.CreateParameter("@Age", customer.Age ?? (object)DBNull.Value));
-                    cmd.Parameters.Add(DataFactory.CreateParameter("@AddressLine1", customer.AddressLine1 ?? (object)DBNull.Value));
-                    cmd.Parameters.Add(DataFactory.CreateParameter("@AddressLine2", customer.AddressLine2 ?? (object)DBNull.Value));
-
-                    cmd.Parameters.Add(DataFactory.CreateParameter("@CityId", customer.CityId));
-                    cmd.Parameters.Add(DataFactory.CreateParameter("@StateId", customer.StateId));
-                    cmd.Parameters.Add(DataFactory.CreateParameter("@CountryId", customer.CountryId));
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@Address", customer.Address ?? (object)DBNull.Value));
                     cmd.Parameters.Add(DataFactory.CreateParameter("@Pincode", customer.Pincode ?? (object)DBNull.Value));
-
-                    cmd.Parameters.Add(DataFactory.CreateParameter("@DateOfBirth", customer.DateOfBirth ?? (object)DBNull.Value));
-                    cmd.Parameters.Add(DataFactory.CreateParameter("@Gender", customer.Gender ?? (object)DBNull.Value));
 
                     cmd.Parameters.Add(DataFactory.CreateParameter("@Remarks", customer.Remarks ?? (object)DBNull.Value));
                     cmd.Parameters.Add(DataFactory.CreateParameter("@IsActive", customer.IsActive));
@@ -160,17 +151,8 @@ public class CustomerRepository : ICustomerRepository
                     cmd.Parameters.Add(DataFactory.CreateParameter("@Name", customer.Name ?? (object)DBNull.Value));
                     cmd.Parameters.Add(DataFactory.CreateParameter("@MobileNo", customer.MobileNo ?? (object)DBNull.Value));
                     cmd.Parameters.Add(DataFactory.CreateParameter("@EmailId", customer.EmailId ?? (object)DBNull.Value));
-                    cmd.Parameters.Add(DataFactory.CreateParameter("@Age", customer.Age ?? (object)DBNull.Value));
-                    cmd.Parameters.Add(DataFactory.CreateParameter("@AddressLine1", customer.AddressLine1 ?? (object)DBNull.Value));
-                    cmd.Parameters.Add(DataFactory.CreateParameter("@AddressLine2", customer.AddressLine2 ?? (object)DBNull.Value));
-
-                    cmd.Parameters.Add(DataFactory.CreateParameter("@CityId", customer.CityId));
-                    cmd.Parameters.Add(DataFactory.CreateParameter("@StateId", customer.StateId));
-                    cmd.Parameters.Add(DataFactory.CreateParameter("@CountryId", customer.CountryId));
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@Address", customer.Address ?? (object)DBNull.Value));
                     cmd.Parameters.Add(DataFactory.CreateParameter("@Pincode", customer.Pincode ?? (object)DBNull.Value));
-
-                    cmd.Parameters.Add(DataFactory.CreateParameter("@DateOfBirth", customer.DateOfBirth ?? (object)DBNull.Value));
-                    cmd.Parameters.Add(DataFactory.CreateParameter("@Gender", customer.Gender ?? (object)DBNull.Value));
 
                     cmd.Parameters.Add(DataFactory.CreateParameter("@Remarks", customer.Remarks ?? (object)DBNull.Value));
                     cmd.Parameters.Add(DataFactory.CreateParameter("@IsActive", customer.IsActive));
@@ -328,23 +310,9 @@ public class CustomerRepository : ICustomerRepository
 
                 if (reader["EmailId"] != DBNull.Value)customer.EmailId = Convert.ToString(reader["EmailId"]);
 
-                if (HasColumn(reader, "Age") && reader["Age"] != DBNull.Value) customer.Age = Convert.ToInt32(reader["Age"]);
-
-                if (reader["AddressLine1"] != DBNull.Value) customer.AddressLine1 = Convert.ToString(reader["AddressLine1"]);
-
-                if (reader["AddressLine2"] != DBNull.Value)  customer.AddressLine2 = Convert.ToString(reader["AddressLine2"]);
-
-                if (reader["CityId"] != DBNull.Value) customer.CityId = Convert.ToInt32(reader["CityId"]);
-
-                if (reader["StateId"] != DBNull.Value)customer.StateId = Convert.ToInt32(reader["StateId"]);
-
-                if (reader["CountryId"] != DBNull.Value)customer.CountryId = Convert.ToInt32(reader["CountryId"]);
+                if (HasColumn(reader, "Address") && reader["Address"] != DBNull.Value) customer.Address = Convert.ToString(reader["Address"]);
 
                 if (reader["Pincode"] != DBNull.Value) customer.Pincode = Convert.ToString(reader["Pincode"]);
-
-                if (reader["DateOfBirth"] != DBNull.Value)  customer.DateOfBirth = Convert.ToDateTime(reader["DateOfBirth"]);
-
-                if (reader["Gender"] != DBNull.Value)customer.Gender = Convert.ToInt32(reader["Gender"]);
 
                 if (reader["Remarks"] != DBNull.Value) customer.Remarks = Convert.ToString(reader["Remarks"]);
 

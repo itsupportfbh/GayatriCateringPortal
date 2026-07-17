@@ -89,6 +89,29 @@ namespace GayatriCateringPortal.Controllers
             return Ok(items);
         }
 
+        [HttpGet("GetMenuRights")]
+        public IActionResult GetMenuRights(int roleId, int entityNo)
+        {
+            if (roleId <= 0 || entityNo <= 0)
+            {
+                return Ok(new RolePermissionItem
+                {
+                    RoleId = roleId,
+                    EntityNo = entityNo,
+                    View = false,
+                    Create = false,
+                    Edit = false,
+                    Delete = false,
+                    ActiveInActive = false,
+                    Download = false,
+                    Print = false
+                });
+            }
+
+            var rights = _common.GetMenuRights(roleId, entityNo);
+            return Ok(rights);
+        }
+
         [HttpPost("FileUpload")]
         public async Task<IActionResult> FileUpload(string folderName)
         {

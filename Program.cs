@@ -59,6 +59,7 @@ if (!app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseRouting();
 app.UseSession();
+app.UseMiddleware<GayatriCateringPortal.Common.AdminSessionMiddleware>();
 app.MapStaticAssets();
 
 app.MapControllerRoute(
