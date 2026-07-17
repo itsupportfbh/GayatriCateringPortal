@@ -5,42 +5,41 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace GayatriCateringPortal.Controllers.Admin
 {
-    [Route("Admin/FoodMenus")]
-    public class FoodMenuController : Controller
+    [Route("Admin/Driver")]
+    public class DriverController : Controller
     {
-        private readonly IFoodMenuRepository _menusRepository;
-
-        public FoodMenuController(IFoodMenuRepository menusRepository)
+        private readonly IDriverRepository _driverRepository;
+        public DriverController(IDriverRepository driverRepository)
         {
-            _menusRepository = menusRepository;
+            _driverRepository = driverRepository;
         }
 
         [HttpGet("")]
         public IActionResult Index()
         {
             ViewData["Mode"] = "admin";
-            ViewData["Page"] = "menus";
-            ViewData["Title"] = "Menus";
-            return View("~/Views/Admin/FoodMenus.cshtml");
+            ViewData["Page"] = "driver";
+            ViewData["Title"] = "Driver";
+            return View("~/Views/Admin/Driver.cshtml");
         }
 
         [HttpGet("get")]
         public IActionResult GetAll()
         {
-            var items = _menusRepository.GetAll();
+            var items = _driverRepository.GetAll();
             return Ok(items);
         }
 
         [HttpGet("get/{id}")]
         public IActionResult Get(int id)
         {
-            var item = _menusRepository.GetById(id);
+            var item = _driverRepository.GetById(id);
             if (item == null) return NotFound();
             return Ok(item);
         }
 
         [HttpPost("create")]
-        public IActionResult Create([FromBody] FoodMenu item)
+        public IActionResult Create([FromBody] DriverMaster item)
         {
             if (!ModelState.IsValid)
             {
@@ -50,18 +49,18 @@ namespace GayatriCateringPortal.Controllers.Admin
             }
 
             if (item == null) return BadRequest();
-            int newId = _menusRepository.Create(item);
+            int newId = _driverRepository.Create(item);
 
             if (newId == -1)
             {
-                return Ok(new { success = false, message = "Menu already exists" });
+                return Ok(new { success = false, message = "Driver already exists" });
             }
 
             return Ok(new { success = newId > 0, id = newId });
         }
 
         [HttpPost("update")]
-        public IActionResult Update([FromBody] FoodMenu item)
+        public IActionResult Update([FromBody] DriverMaster item)
         {
             if (!ModelState.IsValid)
             {
@@ -71,11 +70,11 @@ namespace GayatriCateringPortal.Controllers.Admin
             }
 
             if (item == null) return BadRequest();
-            int result = _menusRepository.Update(item);
+            int result = _driverRepository.Update(item);
 
             if (result == -1)
             {
-                return Ok(new { success = false, message = "Menu already exists" });
+                return Ok(new { success = false, message = "Driver already exists" });
             }
 
             return Ok(new { success = result > 0 });
@@ -84,14 +83,14 @@ namespace GayatriCateringPortal.Controllers.Admin
         [HttpPost("delete/{id}")]
         public IActionResult Delete(int id)
         {
-            bool result = _menusRepository.Delete(id);
+            bool result = _driverRepository.Delete(id);
             return Ok(new { success = result });
         }
 
         [HttpPost("activeinactive/{id}")]
         public IActionResult ActiveInActive(int id, [FromQuery] bool status)
         {
-            bool result = _menusRepository.ActiveInActive(id, status);
+            bool result = _driverRepository.ActiveInActive(id, status);
             return Ok(new { success = result });
         }
     }
