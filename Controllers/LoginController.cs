@@ -48,7 +48,7 @@ namespace GayatriCateringPortal.Controllers
 
             try
             {
-                const int expirySeconds = 30;
+                const int expirySeconds = 60;
                 var otp = _loginRepository.CreateOtp(email, expirySeconds);
 
                 await _commonRepository.SendEmail(

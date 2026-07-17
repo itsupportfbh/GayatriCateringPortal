@@ -49,58 +49,66 @@ public class UserRoleMappingRepository : IUserRoleMappingRepository
 
     public bool CreateUserRoleMappings(List<UserRoleMapping> items)
     {
+        IDbConnection conn = null;
+        IDbCommand cmd = null;
+        IDbTransaction transaction = null;
+
         try
         {
             if (items == null || items.Count == 0)
                 return false;
 
             int userId = items[0].UserId;
-            using (var conn = (SqlConnection)DataFactory.CreateConnection())
+            using (conn = DataFactory.CreateConnection())
             {
                 conn.Open();
-                using (var transaction = conn.BeginTransaction())
+
+                transaction = conn.BeginTransaction();
+                try
+                {
+                    using (cmd = DataFactory.CreateCommand("DeleteUserRoleMappingByUserId", conn))
+                    {
+                        var sqlDeleteCmd = (SqlCommand)cmd;
+                        sqlDeleteCmd.CommandType = CommandType.StoredProcedure;
+                        sqlDeleteCmd.Transaction = (SqlTransaction)transaction;
+                        cmd.Parameters.Add(DataFactory.CreateParameter("@UserId", userId));
+                        DataFactory.ExecuteNonQuery(cmd);
+                    }
+
+                    for (int i = 0; i < items.Count; i++)
+                    {
+                        var item = items[i];
+                        using (cmd = DataFactory.CreateCommand("SP_CreateUserRoleMapping", conn))
+                        {
+                            var sqlInsertCmd = (SqlCommand)cmd;
+                            sqlInsertCmd.CommandType = CommandType.StoredProcedure;
+                            sqlInsertCmd.Transaction = (SqlTransaction)transaction;
+
+                            cmd.Parameters.Add(DataFactory.CreateParameter("@UserId", item.UserId));
+                            cmd.Parameters.Add(DataFactory.CreateParameter("@RoleId", item.RoleId));
+                            cmd.Parameters.Add(DataFactory.CreateParameter("@IsActive", item.IsActive));
+                            cmd.Parameters.Add(DataFactory.CreateParameter("@IsDeleted", item.IsDeleted));
+                            cmd.Parameters.Add(DataFactory.CreateParameter("@CreatedBy", item.CreatedBy));
+                            cmd.Parameters.Add(DataFactory.CreateParameter("@UpdatedBy", item.UpdatedBy));
+
+                            DataFactory.ExecuteNonQuery(cmd);
+                        }
+                    }
+
+                    transaction.Commit();
+                    return true;
+                }
+                catch
                 {
                     try
                     {
-                        using (var deleteCmd = new SqlCommand("DELETE FROM [dbo].[UserRoleMapping] WHERE [UserId] = @UserId", conn, transaction))
-                        {
-                            deleteCmd.Parameters.Add(new SqlParameter("@UserId", SqlDbType.Int) { Value = userId });
-                            deleteCmd.ExecuteNonQuery();
-                        }
-
-                        foreach (var item in items)
-                        {
-                            using (var insertCmd = new SqlCommand(@"
-                                INSERT INTO [dbo].[UserRoleMapping]
-                                    ([UserId], [RoleId], [IsActive], [IsDeleted], [CreatedBy], [CreatedDate], [UpdatedBy], [UpdatedDate])
-                                VALUES
-                                    (@UserId, @RoleId, @IsActive, @IsDeleted, @CreatedBy, GETDATE(), @UpdatedBy, GETDATE())", conn, transaction))
-                            {
-                                insertCmd.Parameters.Add(new SqlParameter("@UserId", SqlDbType.Int) { Value = item.UserId });
-                                insertCmd.Parameters.Add(new SqlParameter("@RoleId", SqlDbType.Int) { Value = item.RoleId });
-                                insertCmd.Parameters.Add(new SqlParameter("@IsActive", SqlDbType.Bit) { Value = item.IsActive });
-                                insertCmd.Parameters.Add(new SqlParameter("@IsDeleted", SqlDbType.Bit) { Value = item.IsDeleted });
-                                insertCmd.Parameters.Add(new SqlParameter("@CreatedBy", SqlDbType.Int) { Value = (object?)item.CreatedBy ?? DBNull.Value });
-                                insertCmd.Parameters.Add(new SqlParameter("@UpdatedBy", SqlDbType.Int) { Value = (object?)item.UpdatedBy ?? DBNull.Value });
-                                insertCmd.ExecuteNonQuery();
-                            }
-                        }
-
-                        transaction.Commit();
-                        return true;
+                        transaction.Rollback();
                     }
                     catch
                     {
-                        try
-                        {
-                            transaction.Rollback();
-                        }
-                        catch
-                        {
-                        }
-
-                        return false;
                     }
+
+                    return false;
                 }
             }
         }
@@ -112,19 +120,28 @@ public class UserRoleMappingRepository : IUserRoleMappingRepository
         {
             return false;
         }
+        finally
+        {
+            if (conn != null && conn.State != ConnectionState.Closed) conn.Close();
+        }
     }
 
-    public bool DeleteUserRoleMappingById(int id)
+    public bool DeleteUserRoleMappingByUserId(int userId)
     {
+        IDbConnection conn = null;
+        IDbCommand cmd = null;
+
         try
         {
-            using (var conn = (SqlConnection)DataFactory.CreateConnection())
+            using (conn = DataFactory.CreateConnection())
             {
                 conn.Open();
-                using (var cmd = new SqlCommand("DELETE FROM [dbo].[UserRoleMapping] WHERE [Id] = @Id", conn))
+                using (cmd = DataFactory.CreateCommand("DeleteUserRoleMappingByUserId", conn))
                 {
-                    cmd.Parameters.Add(new SqlParameter("@Id", SqlDbType.Int) { Value = id });
-                    return cmd.ExecuteNonQuery() > 0;
+                    ((SqlCommand)cmd).CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@UserId", userId));
+                    DataFactory.ExecuteNonQuery(cmd);
+                    return true;
                 }
             }
         }
@@ -135,6 +152,43 @@ public class UserRoleMappingRepository : IUserRoleMappingRepository
         catch (Exception ex)
         {
             throw new Exception(ex.StackTrace);
+        }
+        finally
+        {
+            if (conn != null && conn.State != ConnectionState.Closed) conn.Close();
+        }
+    }
+
+    public bool DeleteUserRoleMappingById(int id)
+    {
+        IDbConnection conn = null;
+        IDbCommand cmd = null;
+
+        try
+        {
+            using (conn = DataFactory.CreateConnection())
+            {
+                conn.Open();
+                using (cmd = DataFactory.CreateCommand("DeleteUserRoleMappingById", conn))
+                {
+                    ((SqlCommand)cmd).CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@Id", id));
+                    var r = DataFactory.ExecuteScalar(cmd);
+                    return r != null && Convert.ToInt32(r) > 0;
+                }
+            }
+        }
+        catch (SqlException)
+        {
+            throw new Exception("Database error");
+        }
+        catch (Exception ex)
+        {
+            throw new Exception(ex.StackTrace);
+        }
+        finally
+        {
+            if (conn != null && conn.State != ConnectionState.Closed) conn.Close();
         }
     }
 

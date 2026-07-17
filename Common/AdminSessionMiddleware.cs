@@ -45,7 +45,9 @@ namespace GayatriCateringPortal.Common
             var roleId = context.Session.GetInt32("RoleId") ?? 0;
             if (userId > 0 && roleId > 0)
             {
-                if (path.StartsWith("/Admin", StringComparison.OrdinalIgnoreCase) && !HasAdminPageAccess(context, roleId, path))
+                if (path.StartsWith("/Admin", StringComparison.OrdinalIgnoreCase)
+                    && IsHtmlPageRequest(context.Request)
+                    && !HasAdminPageAccess(context, roleId, path))
                 {
                     await RejectForbiddenAsync(context);
                     return;
