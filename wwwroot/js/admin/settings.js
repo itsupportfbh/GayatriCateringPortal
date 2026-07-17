@@ -195,9 +195,9 @@ function savesettings() {
         IsActive: true,
         IsDeleted: false,
         CreatedBy: window.getCurrentUserId ? window.getCurrentUserId() : 0,
-        CreatedDate: '',
+        CreatedDate: null,
         UpdatedBy: window.getCurrentUserId ? window.getCurrentUserId() : 0,
-        UpdatedDate: ''
+        UpdatedDate: null
     };
 
     var endpoint = setting.Id ? '/Admin/settings/update' : '/Admin/settings/create';

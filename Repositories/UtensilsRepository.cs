@@ -101,7 +101,7 @@ public class UtensilsRepository : IUtensilsRepository
                     cmd.Parameters.Add(DataFactory.CreateParameter("@IsActive", item.IsActive));
                     cmd.Parameters.Add(DataFactory.CreateParameter("@IsDeleted", item.IsDeleted));
                     cmd.Parameters.Add(DataFactory.CreateParameter("@CreatedBy", item.CreatedBy));
-                    cmd.Parameters.Add(DataFactory.CreateParameter("@CreatedDate", DateTime.TryParse(item.CreatedDate, out var createdDate) ? createdDate : (object?)DBNull.Value));
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@CreatedDate", item.CreatedDate));
 
                     var result = DataFactory.ExecuteScalar(cmd);
                     if (result != null)
@@ -147,9 +147,9 @@ public class UtensilsRepository : IUtensilsRepository
                     cmd.Parameters.Add(DataFactory.CreateParameter("@IsActive", item.IsActive));
                     cmd.Parameters.Add(DataFactory.CreateParameter("@IsDeleted", item.IsDeleted));
                     cmd.Parameters.Add(DataFactory.CreateParameter("@CreatedBy", item.CreatedBy));
-                    cmd.Parameters.Add(DataFactory.CreateParameter("@CreatedDate", DateTime.TryParse(item.CreatedDate, out var createdDate) ? createdDate : (object?)DBNull.Value));
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@CreatedDate", item.CreatedDate));
                     cmd.Parameters.Add(DataFactory.CreateParameter("@UpdatedBy", item.UpdatedBy));
-                    cmd.Parameters.Add(DataFactory.CreateParameter("@UpdatedDate", DateTime.TryParse(item.UpdatedDate, out var updatedDate) ? updatedDate : (object?)DBNull.Value));
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@UpdatedDate", item.UpdatedDate));
 
                     var result = DataFactory.ExecuteScalar(cmd);
                     if (result != null)
@@ -273,9 +273,9 @@ public class UtensilsRepository : IUtensilsRepository
                     IsActive = Value("IsActive") is not { } active || Convert.ToBoolean(active),
                     IsDeleted = Value("IsDeleted") is { } deleted && Convert.ToBoolean(deleted),
                     CreatedBy = Value("CreatedBy") is { } createdBy ? Convert.ToInt32(createdBy) : 0,
-                    CreatedDate = Convert.ToString(Value("CreatedDate")) ?? string.Empty,
+                    CreatedDate = Value("CreatedDate") is { } createdDate ? Convert.ToDateTime(createdDate) : DateTime.MinValue,
                     UpdatedBy = Value("UpdatedBy") is { } updatedBy ? Convert.ToInt32(updatedBy) : 0,
-                    UpdatedDate = Convert.ToString(Value("UpdatedDate"))
+                    UpdatedDate = Value("UpdatedDate") is { } updatedDate ? Convert.ToDateTime(updatedDate) : (DateTime?)null
                 };
 
                 list.Add(item);

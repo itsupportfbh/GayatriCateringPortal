@@ -68,7 +68,7 @@ public class SettingsRepository : ISettingsRepository
                     cmd.Parameters.Add(DataFactory.CreateParameter("@IsActive", item.IsActive));
                     cmd.Parameters.Add(DataFactory.CreateParameter("@IsDeleted", item.IsDeleted));
                     cmd.Parameters.Add(DataFactory.CreateParameter("@CreatedBy", item.CreatedBy));
-                    cmd.Parameters.Add(DataFactory.CreateParameter("@CreatedDate", DateTime.TryParse(item.CreatedDate, out var createdDate) ? createdDate : (object?)DBNull.Value));
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@CreatedDate",item.CreatedDate));
                     cmd.Parameters.Add(DataFactory.CreateParameter("@UPIId", (object?)item.UPIId ?? DBNull.Value));
                     cmd.Parameters.Add(DataFactory.CreateParameter("@PaymentGatwayDetails", (object?)item.PaymentGatwayDetails ?? DBNull.Value));
                     cmd.Parameters.Add(DataFactory.CreateParameter("@UpcomingGSTRate", item.UpcomingGSTRate.HasValue ? item.UpcomingGSTRate.Value : (object?)DBNull.Value));
@@ -124,7 +124,7 @@ public class SettingsRepository : ISettingsRepository
                     cmd.Parameters.Add(DataFactory.CreateParameter("@IsActive", item.IsActive));
                     cmd.Parameters.Add(DataFactory.CreateParameter("@IsDeleted", item.IsDeleted));
                     cmd.Parameters.Add(DataFactory.CreateParameter("@UpdatedBy", item.UpdatedBy));
-                    cmd.Parameters.Add(DataFactory.CreateParameter("@UpdatedDate", DateTime.TryParse(item.UpdatedDate, out var updatedDate) ? updatedDate : (object?)DBNull.Value));
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@UpdatedDate", item.UpdatedDate ));
                     cmd.Parameters.Add(DataFactory.CreateParameter("@UPIId", (object?)item.UPIId ?? DBNull.Value));
                     cmd.Parameters.Add(DataFactory.CreateParameter("@PaymentGatwayDetails", (object?)item.PaymentGatwayDetails ?? DBNull.Value));
                     cmd.Parameters.Add(DataFactory.CreateParameter("@UpcomingGSTRate", item.UpcomingGSTRate.HasValue ? item.UpcomingGSTRate.Value : (object?)DBNull.Value));
@@ -212,13 +212,13 @@ public class SettingsRepository : ISettingsRepository
                     item.CreatedBy = Convert.ToInt32(reader["CreatedBy"]);
 
                 if (reader["CreatedDate"] != DBNull.Value)
-                    item.CreatedDate = Convert.ToString(reader["CreatedDate"]);
+                    item.CreatedDate = Convert.ToDateTime(reader["CreatedDate"]);
 
                 if (reader["UpdatedBy"] != DBNull.Value)
                     item.UpdatedBy = Convert.ToInt32(reader["UpdatedBy"]);
 
                 if (reader["UpdatedDate"] != DBNull.Value)
-                    item.UpdatedDate = Convert.ToString(reader["UpdatedDate"]);
+                    item.UpdatedDate = Convert.ToDateTime(reader["UpdatedDate"]);
 
 
                 if (reader["UPIId"] != DBNull.Value)
