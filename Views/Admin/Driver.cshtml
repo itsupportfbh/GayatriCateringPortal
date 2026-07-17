@@ -12,6 +12,9 @@
             <div class="page-subtitle">Manage driver information, contact details, and vehicle assignments.</div>
         </div>
         <div class="page-header-actions">
+            <div class="app-header-filter">
+                <input type="text" id="DriverSearch" class="tbl-search" data-table="driverList" placeholder="Search Driver...">
+            </div>
             <button class="btn btn-orange btn-add" id="btnAddDriver" data-permission="create" onclick="opendriverModal()">+ Add Driver</button>
         </div>
     </div>
@@ -54,16 +57,19 @@
                 <div class="col-md-6 form-group">
                     <label>Driver Code <span class="text-danger">*</span></label>
                     <input type="text" id="Code" class="form-control" maxlength="20">
+                    <div class="field-error hidden" id="CodeError"></div>
                 </div>
 
                 <div class="col-md-6 form-group">
                     <label>Driver Name <span class="text-danger">*</span></label>
                     <input type="text" id="Name" class="form-control" maxlength="100">
+                    <div class="field-error hidden" id="NameError"></div>
                 </div>
 
                 <div class="col-md-6 form-group">
                     <label>Mobile No <span class="text-danger">*</span></label>
-                    <input type="text" id="MobileNo" class="form-control" maxlength="10">
+                    <input type="text" id="MobileNo" class="form-control" maxlength="15">
+                    <div class="field-error hidden" id="MobileNoError"></div>
                 </div>
 
                 <div class="col-md-6 form-group">

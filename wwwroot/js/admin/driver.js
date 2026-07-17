@@ -14,10 +14,10 @@ function opendriverModal() {
 
     initCategoryField('#ItemCode', '#ItemCodeError');
     initCategoryField('#ItemName', '#ItemNameError');
-    initCategoryField('#MobileNo', '#CategoryIdError');
-    initCategoryField('#Email', '#PriceError');
-    initCategoryField('#LicenseNo', '#PreparationTimeError');
-    initCategoryField('#LicenseExpiryDate', '#FoodTypeError');
+    initCategoryField('#MobileNo', '#MobileNoError');
+    initCategoryField('#Email', '#EmailError');
+    initCategoryField('#LicenseNo', '#LicenseNoError');
+    initCategoryField('#LicenseExpiryDate', '#LicenseExpiryDateError');
     initCategoryField('#DateofBirth', '#DateofBirthError');
     initCategoryField('#Gender', '#GenderError');
     initCategoryField('#Address', '#AddressError');
@@ -134,10 +134,10 @@ function clearDriverForm() {
 
     clearDriverError('#Code', '#CodeError');
     clearDriverError('#Name', '#NameError');
-    clearDriverError('#MobileNo', '#CategoryIdError');
-    clearDriverError('#Email', '#PriceError');
-    clearDriverError('#LicenseNo', '#PreparationTimeError');
-    clearDriverError('#LicenseExpiryDate', '#FoodTypeError');
+    clearDriverError('#MobileNo', '#MobileNoError');
+    clearDriverError('#Email', '#EmailError');
+    clearDriverError('#LicenseNo', '#LicenseNoError');
+    clearDriverError('#LicenseExpiryDate', '#LicenseExpiryDateError');
     clearDriverError('#DateofBirth', '#DateofBirthError');
     clearDriverError('#Gender', '#GenderError');
     clearDriverError('#Address', '#AddressError');
@@ -173,10 +173,10 @@ function initCategoryField(inputSelector, errorSelector) {
 function validateForm() {
     clearDriverError('#Code', '#CodeError');
     clearDriverError('#Name', '#NameError');
-    clearDriverError('#MobileNo', '#CategoryIdError');
-    clearDriverError('#Email', '#PriceError');
-    clearDriverError('#LicenseNo', '#PreparationTimeError');
-    clearDriverError('#LicenseExpiryDate', '#FoodTypeError');
+    clearDriverError('#MobileNo', '#MobileNoError');
+    clearDriverError('#Email', '#EmailError');
+    clearDriverError('#LicenseNo', '#LicenseNoError');
+    clearDriverError('#LicenseExpiryDate', '#LicenseExpiryDateError');
     clearDriverError('#DateofBirth', '#DateofBirthError');
     clearDriverError('#Gender', '#GenderError');
     clearDriverError('#Address', '#AddressError');
