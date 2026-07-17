@@ -24,7 +24,27 @@ public class EventMasterRepository : IEventMasterRepository
         using var cmd = CreateCommand("SP_GetEventMasterById", conn);
         cmd.Parameters.Add(DataFactory.CreateParameter("@Id", id));
         using var reader = DataFactory.ExecuteReader(cmd);
-        return ReadList(reader).FirstOrDefault();
+        var item = ReadList(reader).FirstOrDefault();
+        if (item != null && reader.NextResult())
+        {
+            while (reader.Read())
+            {
+                item.PackageDetails.Add(new EventDetails
+                {
+                    Id = reader["Id"] == DBNull.Value ? 0 : Convert.ToInt32(reader["Id"]),
+                    PackageId = reader["PackageId"] == DBNull.Value ? 0 : Convert.ToInt32(reader["PackageId"]),
+                    PackageName = reader["PackageName"] == DBNull.Value ? string.Empty : Convert.ToString(reader["PackageName"]),
+                    EventId = reader["EventId"] == DBNull.Value ? id : Convert.ToInt32(reader["EventId"]),
+                    IsActive = reader["IsActive"] == DBNull.Value || Convert.ToBoolean(reader["IsActive"]),
+                    IsDeleted = reader["IsDeleted"] != DBNull.Value && Convert.ToBoolean(reader["IsDeleted"]),
+                    CreatedBy = reader["CreatedBy"] == DBNull.Value ? 0 : Convert.ToInt32(reader["CreatedBy"]),
+                    CreatedDate = reader["CreatedDate"] == DBNull.Value ? DateTime.MinValue : Convert.ToDateTime(reader["CreatedDate"]),
+                    UpdatedBy = reader["UpdatedBy"] == DBNull.Value ? null : Convert.ToInt32(reader["UpdatedBy"]),
+                    UpdatedDate = reader["UpdatedDate"] == DBNull.Value ? null : Convert.ToDateTime(reader["UpdatedDate"])
+                });
+            }
+        }
+        return item;
     }
 
     public int Create(EventMaster item)
@@ -36,6 +56,7 @@ public class EventMasterRepository : IEventMasterRepository
             using var cmd = CreateCommand("SP_CreateEventMaster", conn);
             cmd.Parameters.Add(DataFactory.CreateParameter("@Name", item.Name));
             cmd.Parameters.Add(DataFactory.CreateParameter("@MinPax", item.MinPax));
+            cmd.Parameters.Add(DataFactory.CreateParameter("@AdvanceBookingDays", item.AdvanceBookingDays));
             cmd.Parameters.Add(DataFactory.CreateParameter("@PackageIds", item.PackageIds ?? (object)DBNull.Value));
             cmd.Parameters.Add(DataFactory.CreateParameter("@IsActive", item.IsActive));
             cmd.Parameters.Add(DataFactory.CreateParameter("@CreatedBy", item.CreatedBy ?? 0));
@@ -43,7 +64,10 @@ public class EventMasterRepository : IEventMasterRepository
             var result = DataFactory.ExecuteScalar(cmd);
             return result == null ? 0 : Convert.ToInt32(result);
         }
-        catch (SqlException) { return 0; }
+        catch (SqlException ex)
+        {
+            throw new Exception("Unable to create event: " + ex.Message, ex);
+        }
     }
 
     public int Update(EventMaster item)
@@ -56,13 +80,20 @@ public class EventMasterRepository : IEventMasterRepository
             cmd.Parameters.Add(DataFactory.CreateParameter("@Id", item.Id));
             cmd.Parameters.Add(DataFactory.CreateParameter("@Name", item.Name));
             cmd.Parameters.Add(DataFactory.CreateParameter("@MinPax", item.MinPax));
+            cmd.Parameters.Add(DataFactory.CreateParameter("@AdvanceBookingDays", item.AdvanceBookingDays));
             cmd.Parameters.Add(DataFactory.CreateParameter("@IsActive", item.IsActive));
             cmd.Parameters.Add(DataFactory.CreateParameter("@UpdatedBy", item.UpdatedBy ?? 0));
             cmd.Parameters.Add(DataFactory.CreateParameter("@IsDeleted", item.IsDeleted));
             var result = DataFactory.ExecuteScalar(cmd);
-            return result == null ? 0 : Convert.ToInt32(result);
+            // Some deployed versions of SP_UpdateEventMaster perform the update
+            // without selecting @@ROWCOUNT. Reaching this point without a SQL
+            // exception means that version completed successfully.
+            return result == null || result == DBNull.Value ? 1 : Convert.ToInt32(result);
         }
-        catch (SqlException) { return 0; }
+        catch (SqlException ex)
+        {
+            throw new Exception("Unable to update event: " + ex.Message, ex);
+        }
     }
 
     public bool Delete(int id) => ExecuteStatus("DeleteEventMasterById", id);
@@ -105,6 +136,7 @@ public class EventMasterRepository : IEventMasterRepository
                 Id = reader["Id"] == DBNull.Value ? 0 : Convert.ToInt32(reader["Id"]),
                 Name = reader["Name"] == DBNull.Value ? string.Empty : Convert.ToString(reader["Name"]) ?? string.Empty,
                 MinPax = reader["MinPax"] == DBNull.Value ? 0 : Convert.ToInt32(reader["MinPax"]),
+                AdvanceBookingDays = reader["AdvanceBookingDays"] == DBNull.Value ? 0 : Convert.ToInt32(reader["AdvanceBookingDays"]),
                 IsDeleted = reader["IsDeleted"] != DBNull.Value && Convert.ToBoolean(reader["IsDeleted"]),
                 IsActive = reader["IsActive"] != DBNull.Value && Convert.ToBoolean(reader["IsActive"]),
                 CreatedBy = reader["CreatedBy"] == DBNull.Value ? null : Convert.ToInt32(reader["CreatedBy"]),

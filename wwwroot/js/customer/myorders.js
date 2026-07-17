@@ -59,6 +59,7 @@ $(function () {
                 '<span class="badge badge-' + statusClass + '">' + escapeHtml(statusLabel) + '</span>' +
                 '</div>' +
                 '<div class="order-meta order-meta--details">' +
+                '<div class="order-meta-item"><strong>Event</strong><span>' + escapeHtml(o.eventName || '-') + '</span></div>' +
                 '<div class="order-meta-item"><strong>Package</strong><span>' + escapeHtml(o.packageName || '-') + '</span></div>' +
                 '<div class="order-meta-item"><strong>Event Date</strong><span>' + displayDate(o.eventDate) + '</span></div>' +
                 '<div class="order-meta-item"><strong>Meal Period</strong><span>' + escapeHtml(o.mealPeriodName || '-') + '</span></div>' +
@@ -93,6 +94,7 @@ $(function () {
             detailRow('Customer', o.customerName || '-') +
             detailRow('Mobile', o.mobileNo || '-') +
             detailRow('Email', o.emailId || '-') +
+            detailRow('Event', o.eventName || '-') +
             detailRow('Package', o.packageName || '-') +
             detailRow('Event Date', displayDate(o.eventDate)) +
             detailRow('Meal Period', o.mealPeriodName || '-') +

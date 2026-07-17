@@ -64,6 +64,7 @@ public class MYOrderRepository : IMYOrderRepository
                 MobileNo = reader["MobileNo"]?.ToString() ?? string.Empty,
                 EmailId = reader["EmailId"]?.ToString() ?? string.Empty,
                 PackageName = reader["PackageName"]?.ToString() ?? string.Empty,
+                EventName = reader["EventName"]?.ToString() ?? string.Empty,
                 LocationName = reader["LocationName"]?.ToString() ?? string.Empty,
                 EventDate = reader["EventDate"] == DBNull.Value
                     ? null

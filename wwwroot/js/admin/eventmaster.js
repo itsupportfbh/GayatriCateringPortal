@@ -23,10 +23,10 @@ function renderEvents(rows) {
     var html = '';
     (Array.isArray(rows) ? rows : []).forEach(function (item, index) {
         var active = !!item.isActive;
-        html += '<tr><td>' + (index + 1) + '</td><td><strong>' + escapeEventHtml(item.name) + '</strong></td><td>' + (item.minPax || 0) + '</td>' +
+        html += '<tr><td>' + (index + 1) + '</td><td><strong>' + escapeEventHtml(item.name) + '</strong></td><td>' + (item.minPax || 0) + '</td><td>' + (item.advanceBookingDays || 0) + '</td>' +
             '<td><span class="badge ' + (active ? 'badge-confirmed' : 'badge-cancelled') + '">' + (active ? 'Active' : 'Inactive') + '</span></td>' +
             '<td><div class="row-actions"><button type="button" class="dots-btn">&#8943;</button><div class="actions-menu hidden">' +
-            '<button type="button" class="action-item btn-edit" onclick="editEvent(' + item.id + ')">Edit</button>' +
+            (active ? '<button type="button" class="action-item btn-edit" onclick="editEvent(' + item.id + ')">Edit</button>' : '') +
             '<button type="button" class="action-item btn-delete" onclick="deleteEvent(' + item.id + ')">Delete</button>' +
             '<button type="button" class="action-item btn-toggle" onclick="toggleEventStatus(' + item.id + ',' + (!active) + ')">' + (active ? 'Inactive' : 'Active') + '</button>' +
             '</div></div></td></tr>';
@@ -38,6 +38,7 @@ function renderEvents(rows) {
 function initEventForm() {
     $('#eventName').on('input', clearEventErrors);
     $('#minPax').on('input', clearEventErrors);
+    $('#advanceBookingDays').on('input', clearEventErrors);
     $('#addPackageRow').on('click', addEventPackageRow);
     $('#clearEvent').on('click', clearEventForm);
     $('#saveEvent').on('click', saveEvent);
@@ -52,7 +53,13 @@ function initEventForm() {
 
 function loadAvailablePackages(done) {
     $.getJSON('/Admin/Packages/get').done(function (rows) {
-        availablePackages = (Array.isArray(rows) ? rows : []).filter(function (x) { return x.isActive; });
+        availablePackages = (Array.isArray(rows) ? rows : []).map(function (x) {
+            return {
+                id: parseInt(x.id ?? x.Id, 10) || 0,
+                name: x.name ?? x.Name ?? '',
+                isActive: !!(x.isActive ?? x.IsActive)
+            };
+        }).filter(function (x) { return x.id > 0; });
     }).always(done);
 }
 
@@ -72,7 +79,10 @@ function renderEventPackages() {
         var $select = $('<select class="form-control"><option value="0">-- Select package --</option></select>');
         var selectedElsewhere = eventPackages.filter(function (x) { return x !== item; }).map(function (x) { return x.packageId; });
         availablePackages.forEach(function (pkg) {
-            if (selectedElsewhere.indexOf(pkg.id) < 0) $select.append($('<option></option>').val(pkg.id).text(pkg.name));
+            var isCurrentPackage = Number(pkg.id) === Number(item.packageId);
+            if ((pkg.isActive || isCurrentPackage) && selectedElsewhere.indexOf(pkg.id) < 0) {
+                $select.append($('<option></option>').val(pkg.id).text(pkg.name + (!pkg.isActive ? ' (Inactive)' : '')));
+            }
         });
         $select.val(item.packageId || 0).on('change', function () { item.packageId = parseInt(this.value, 10) || 0; renderEventPackages(); });
         var $remove = $('<button type="button" class="btn btn-light btn-sm">Remove</button>').on('click', function () { removeEventPackage(item); });
@@ -90,14 +100,14 @@ function removeEventPackage(item) {
 
 function loadEventForEdit(id) {
     $.getJSON('/Admin/EventMaster/get/' + id).done(function (item) {
-        $('#eventName').val(item.name || ''); $('#minPax').val(item.minPax || '');
-        $.getJSON('/Admin/EventDetails/get?eventId=' + id).done(function (rows) {
-            eventPackages = (Array.isArray(rows) ? rows : []).map(function (x) {
-                return { id: x.id, packageId: x.packageId, originalPackageId: x.packageId };
-            });
-            if (!eventPackages.length) eventPackages.push({ id: 0, packageId: 0 });
-            renderEventPackages();
+        $('#eventName').val(item.name || ''); $('#minPax').val(item.minPax || ''); $('#advanceBookingDays').val(item.advanceBookingDays ?? 0);
+        var rows = item.packageDetails ?? item.PackageDetails ?? [];
+        eventPackages = (Array.isArray(rows) ? rows : []).map(function (x) {
+            var packageId = parseInt(x.packageId ?? x.PackageId, 10) || 0;
+            return { id: parseInt(x.id ?? x.Id, 10) || 0, packageId: packageId, originalPackageId: packageId };
         });
+        if (!eventPackages.length) eventPackages.push({ id: 0, packageId: 0 });
+        renderEventPackages();
     }).fail(function () { showToast('Unable to load event details.', 3000, { type: 'error', title: 'Load failed' }); });
 }
 
@@ -105,6 +115,8 @@ function validateEvent() {
     clearEventErrors(); var valid = true;
     if (!$('#eventName').val().trim()) { $('#eventName').addClass('input-error'); $('#eventNameError').removeClass('hidden').text('Event name is required'); valid = false; }
     if ((parseInt($('#minPax').val(), 10) || 0) <= 0) { $('#minPax').addClass('input-error'); $('#minPaxError').removeClass('hidden').text('Minimum pax is required'); valid = false; }
+    var advanceDays = parseInt($('#advanceBookingDays').val(), 10);
+    if (isNaN(advanceDays) || advanceDays < 0) { $('#advanceBookingDays').addClass('input-error'); $('#advanceBookingDaysError').removeClass('hidden').text('Advance booking days must be zero or more'); valid = false; }
     if (!eventPackages.some(function (x) { return x.packageId > 0; })) { showToast('Add at least one package', 3000, { type: 'error', title: 'Validation' }); valid = false; }
     return valid;
 }
@@ -114,13 +126,13 @@ function saveEvent() {
     if (typeof setButtonBusy === 'function') setButtonBusy('#saveEvent', true, 'Saving...');
     var userId = window.getCurrentUserId ? window.getCurrentUserId() : 0;
     var packageIds = eventPackages.filter(function (x) { return x.packageId > 0; }).map(function (x) { return x.packageId; });
-    var payload = { Id: currentEventId, Name: $('#eventName').val().trim(), MinPax: parseInt($('#minPax').val(), 10), PackageIds: packageIds.join(','), IsActive: true, IsDeleted: false, CreatedBy: userId, UpdatedBy: userId };
+    var payload = { Id: currentEventId, Name: $('#eventName').val().trim(), MinPax: parseInt($('#minPax').val(), 10), AdvanceBookingDays: parseInt($('#advanceBookingDays').val(), 10) || 0, PackageIds: packageIds.join(','), IsActive: true, IsDeleted: false, CreatedBy: userId, UpdatedBy: userId };
     $.ajax({ url: currentEventId ? '/Admin/EventMaster/update' : '/Admin/EventMaster/create', type: 'POST', contentType: 'application/json', data: JSON.stringify(payload) })
         .done(function (result) {
             if (!result || !result.success) return eventSaveFailed(result && result.message);
             if (currentEventId > 0) saveEventDetails(currentEventId, userId);
             else eventSaveComplete();
-        }).fail(function () { eventSaveFailed(); });
+        }).fail(function (xhr) { eventSaveFailed(xhr.responseJSON?.message); });
 }
 
 function saveEventDetails(eventId, userId) {
@@ -150,8 +162,8 @@ function saveEventDetails(eventId, userId) {
 
 function eventSaveComplete() { showToast(currentEventId ? 'Event updated successfully.' : 'Event created successfully.', 500, { type: 'success', title: 'Success' }); setTimeout(function () { location.href = '/Admin/EventMaster'; }, 300); }
 function eventSaveFailed(message) { if (typeof setButtonBusy === 'function') setButtonBusy('#saveEvent', false); showToast(message || 'Unable to save event.', 3000, { type: 'error', title: 'Save failed' }); }
-function clearEventForm() { $('#eventName,#minPax').val(''); eventPackages = []; addEventPackageRow(); clearEventErrors(); }
-function clearEventErrors() { $('#eventName,#minPax').removeClass('input-error'); $('#eventNameError,#minPaxError').addClass('hidden').text(''); }
+function clearEventForm() { $('#eventName,#minPax,#advanceBookingDays').val(''); eventPackages = []; addEventPackageRow(); clearEventErrors(); }
+function clearEventErrors() { $('#eventName,#minPax,#advanceBookingDays').removeClass('input-error'); $('#eventNameError,#minPaxError,#advanceBookingDaysError').addClass('hidden').text(''); }
 function editEvent(id) { location.href = '/Admin/EventMaster/edit?eventId=' + id; }
 
 function deleteEvent(id) { confirmEventAction('Delete this event?', function () { $.post('/Admin/EventMaster/delete/' + id).done(function (r) { eventActionResult(r, 'Event deleted successfully.'); }); }); }
