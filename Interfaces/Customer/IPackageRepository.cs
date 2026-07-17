@@ -6,6 +6,7 @@ namespace GayatriCateringPortal.Interfaces.Customer
     public interface IPackageRepository
     {
         List<Packages> GetAll();
+        List<Packages> GetByEventId(int eventId);
         Packages? GetById(int id);
         List<PackageCategoryChoice> GetCategoriesByPackageId(int packageId);
         List<CategoryMenuChoice> GetMenusByCategoryId(int categoryId);

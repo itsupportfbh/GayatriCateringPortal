@@ -152,7 +152,8 @@
             '.btn-create',
             '[data-permission="create"]',
             '[id^="btnAdd"]',
-            '[id*="Add"]'
+            'button[id*="Add"]',
+            'a.btn[id*="Add"]'
         ]);
 
         toggleByHeuristic($root, canCreate, function (v) {

@@ -52,8 +52,6 @@ function renderPackagesList(rows) {
         var serial = i + 1;
         var packageName = p.name || '';
         var price = parseFloat(p.price) || 0;
-        var minPersons = p.minPersons || 0;
-        var maxPersons = p.maxPersons || 0;
         var active = p.isActive;
         var id = p.id || 0;
 
@@ -71,8 +69,6 @@ function renderPackagesList(rows) {
                 <td>${serial}</td>
                 <td><strong>${packageName}</strong></td>
                 <td class="num">S$ ${price.toFixed(2)}</td>
-                <td>${minPersons}</td>
-                <td>${maxPersons}</td>
                 <td>${statusBadge}</td>
                 <td>
                     <div class="row-actions">
@@ -226,8 +222,6 @@ function collectPayload() {
         Name: $('#packageName').val().toString().trim(),
         Description: $('#packageDescription').val().toString().trim(),
         Price: parseFloat($('#packagePrice').val()) || 0,
-        MinPersons: parseInt($('#minPersons').val(), 10) || 0,
-        MaxPersons: parseInt($('#maxPersons').val(), 10) || null,
         IsActive: true,
         PackageItems: packageCategories
             .filter(function (c) { return c.categoryId; })
@@ -246,14 +240,10 @@ function validateForm() {
     debugger;
     clearFieldError('#packageName', '#packageNameError');
     clearFieldError('#packagePrice', '#packagePriceError');
-    clearFieldError('#minPersons', '#minPersonsError');
-    clearFieldError('#maxPersons', '#maxPersonsError');
 
     var firstInvalid = null;
     var name = $('#packageName').val().toString().trim();
     var price = $('#packagePrice').val();
-    var minPersons = $('#minPersons').val();
-    var maxPersons = $('#maxPersons').val();
 
     if (!name) {
         setFieldError('#packageName', '#packageNameError', 'Package name is required');
@@ -263,26 +253,6 @@ function validateForm() {
     if (!price || parseFloat(price) <= 0) {
         setFieldError('#packagePrice', '#packagePriceError', 'Enter a valid price');
         firstInvalid = firstInvalid || '#packagePrice';
-    }
-
-    if (!minPersons || parseInt(minPersons, 10) <= 0) {
-        setFieldError('#minPersons', '#minPersonsError', 'Minimum pax is required');
-        firstInvalid = firstInvalid || '#minPersons';
-    }
-
-    var minVal = parseInt(minPersons, 10) || 0;
-    var maxVal = parseInt(maxPersons, 10) || 0;
-    
-    if (minVal > 0 && maxVal > 0 && minVal > maxVal) {
-        showToast('Minimum pax should not be greater than maximum pax', 3000, { type: 'error', title: 'Validation' });
-        $('#minPersons').focus();
-        return false;
-    }
-    
-    if (maxVal > 0 && maxVal < minVal) {
-        showToast('Maximum pax must be >= minimum pax', 3000, { type: 'error', title: 'Validation' });
-        $('#maxPersons').focus();
-        return false;
     }
 
     var hasCategorySelected = packageCategories.some(function (c) { return c.categoryId; });
@@ -311,8 +281,6 @@ function loadPackageForEdit(id) {
             $('#packageName').val(packageData.name || '');
             $('#packageDescription').val(packageData.description || '');
             $('#packagePrice').val(packageData.price || '');
-            $('#minPersons').val(packageData.minPersons || '');
-            $('#maxPersons').val(packageData.maxPersons || '');
 
             loadPackageItems(id);
         },
@@ -377,7 +345,6 @@ function loadFoodMenuCategories() {
 function initPackageForm() {
     initField('#packageName', '#packageNameError');
     initField('#packagePrice', '#packagePriceError');
-    initField('#minPersons', '#minPersonsError');
 
     $('#addCategoryRow').on('click', function (e) {
         e.preventDefault();
@@ -424,8 +391,6 @@ function savePackage() {
         Name: payload.Name,
         Description: payload.Description,
         Price: payload.Price,
-        MinPersons: payload.MinPersons,
-        MaxPersons: payload.MaxPersons,
         IsActive: payload.IsActive,
         CreatedBy: window.getCurrentUserId ? window.getCurrentUserId() : 0,
         CreatedDate: null,
@@ -513,13 +478,10 @@ function clearPackageForm() {
     $('#packageName').val('');
     $('#packageDescription').val('');
     $('#packagePrice').val('');
-    $('#minPersons').val('');
-    $('#maxPersons').val('');
     packageCategories = [];
     renderCategories();
     clearFieldError('#packageName', '#packageNameError');
     clearFieldError('#packagePrice', '#packagePriceError');
-    clearFieldError('#minPersons', '#minPersonsError');
 }
 
 function editPackage(id) {
