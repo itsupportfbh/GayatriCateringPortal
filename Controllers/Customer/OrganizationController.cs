@@ -41,6 +41,8 @@ public class OrganizationController : Controller
             email = organization.Email,
             hotline = organization.Hotline,
             whatsapp = organization.Whatsapp,
+            upiId = organization.UPIId,
+            paymentGatewayDetails = organization.PaymentGatwayDetails,
             gstRate = effectiveGstRate,
             currentGstRate = organization.GSTRate,
             upcomingGstRate = organization.UpcomingGSTRate,

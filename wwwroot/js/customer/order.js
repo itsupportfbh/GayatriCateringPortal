@@ -31,6 +31,7 @@ $(function () {
 
     var packages = [];
     var events = [];
+    var packagesLoading = false;
 
     function loadOrganizationGst() {
         return $.ajax({
@@ -82,7 +83,8 @@ $(function () {
 
     function loadOrderPackages(eventId) {
         packages = [];
-        renderStep();
+        packagesLoading = true;
+        renderStep(false);
         $.ajax({
             url: '/Customer/Order/events/' + encodeURIComponent(eventId) + '/packages',
             type: 'GET',
@@ -90,6 +92,12 @@ $(function () {
             error: function () {
                 renderOrderPackages([]);
                 showToast('Unable to load packages for this event.', 3000, { type: 'error', title: 'Package load failed' });
+            },
+            complete: function () {
+                packagesLoading = false;
+                if (currentStep === 1 && state.step1View === 'packages') {
+                    renderStep(false);
+                }
             }
         });
     }
@@ -133,7 +141,7 @@ $(function () {
             return item.id !== '';
         });
 
-        renderStep();
+        renderStep(false);
     }
 
     var includedChoices = [];
@@ -239,10 +247,11 @@ $(function () {
         $panel.toggleClass('hidden', !show);
     }
 
-    function renderStep() {
-        showOrderLoader(true);
-        updateSteps();
-        setTimeout(function () {
+    function renderStep(withLoader) {
+        var useLoader = withLoader !== false;
+
+        function doRender() {
+            updateSteps();
             if (currentStep === 1) renderStep1();
             if (currentStep === 2) renderStep2();
             if (currentStep === 3) renderStep3();
@@ -250,7 +259,15 @@ $(function () {
             if (currentStep === 5) renderStep5();
             if (currentStep === 6) renderStep6();
             updateSummary();
-        }, 80);
+        }
+
+        if (useLoader) {
+            showOrderLoader(true);
+            setTimeout(doRender, 80);
+            return;
+        }
+
+        doRender();
     }
 
     function renderStep1() {
@@ -260,17 +277,23 @@ $(function () {
             var eventOptions = events.map(function (item) {
                 return '<option value="' + item.id + '"' + (item.id === state.selectedEvent ? ' selected' : '') + '>' + escapeHtml(item.name) + '</option>';
             }).join('');
+
+            var packagesPanel = '';
+            if (state.selectedEvent) {
+                packagesPanel = '<div class="section-label">Available Packages</div>' +
+                    '<div class="muted" style="font-size:13px;margin-bottom:12px">Select a package configured for this event.</div>' +
+                    (packagesLoading
+                        ? '<div class="event-packages-loader"><div class="spinner"></div><span>Loading packages...</span></div>'
+                        : packages.length
+                            ? '<div class="pkg-grid">' + packages.map(renderPackageCard).join('') + '</div>'
+                            : '<div class="muted">No packages are configured for this event.</div>');
+            }
+
             html = '<div class="card order-card">' +
                 '<div class="section-label">Select Event</div>' +
                 '<div class="order-fields" style="margin-bottom:18px"><div><label>Event Type</label><select id="eventType"><option value="">-- Select Event --</option>' + eventOptions + '</select></div>' +
                 '<div><label>No. of Pax</label><input type="number" id="eventPaxCount" min="' + state.eventMinPax + '" value="' + (state.selectedEvent ? state.pax : '') + '"' + (state.selectedEvent ? '' : ' disabled') + '></div></div>' +
-                '<div class="section-label">Available Packages</div>' +
-                '<div class="muted" style="font-size:13px;margin-bottom:12px">Select an event first, then choose one of its configured packages.</div>' +
-                (!state.selectedEvent
-                    ? '<div class="muted">Please select an event to view packages.</div>'
-                    : packages.length
-                    ? '<div class="pkg-grid">' + packages.map(renderPackageCard).join('') + '</div>'
-                    : '<div class="muted">No packages are configured for this event.</div>') +
+                packagesPanel +
                 '</div>';
             showOrderLoader(false);
             $('#orderStepContent').html(html);
@@ -281,10 +304,10 @@ $(function () {
             '<div class="section-label">Step 1 - Select Indian Package</div>' +
             '<div class="actions" style="justify-content:flex-end;margin-bottom:10px"><button class="btn btn-light btn-sm" id="btnChangePackage">Change Package</button></div>' +
             '<div class="order-fields">' +
-            '<div><label>Event Type</label><input type="text" value="' + escapeHtml(state.eventName) + '" readonly></div>' +
-            '<div><label>No. of Pax</label><input type="number" id="paxCount" min="' + state.eventMinPax + '" value="' + state.pax + '"></div>' +
-            '<div><label>Package Type</label><input type="text" value="' + escapeHtml(state.packageName) + ' - S$' + state.packagePrice.toFixed(2) + '/pax" readonly></div>' +
-            '<div><label>GST</label><input type="text" value="' + (gstRate * 100).toFixed(0) + '% GST" readonly></div>' +
+            '<div><label>Event Type</label><div class="plain-text-field">' + escapeHtml(state.eventName) + '</div></div>' +
+            '<div><label>No. of Pax</label><div class="plain-text-field">' + state.pax + '</div></div>' +
+            '<div><label>Package</label><div class="plain-text-field">' + escapeHtml(state.packageName) + ' - S$' + state.packagePrice.toFixed(2) + '/pax</div></div>' +
+            '<div><label>GST</label><div class="plain-text-field">' + (gstRate * 100).toFixed(0) + '% GST</div></div>' +
             '</div>' +
             '<div class="choice-block"><div class="section-label">Package Choice Selection - ' + state.packageName.toUpperCase() + '</div>' +
             '<div class="package-value-box"><div>Package Rate<b>' + money(state.packagePrice) + ' / pax</b></div><div>No. of Pax<b>' + state.pax + '</b></div><div>Package Value<b>' + money(packageBase()) + '</b></div></div>' +
@@ -550,7 +573,7 @@ $(function () {
             '<div class="form-group"><label>Mobile / WhatsApp <span class="field-required">*</span></label><input id="detailMobile" class="form-control" value="' + d.mobile + '"><div class="field-error hidden" id="detailMobileError"></div></div>' +
             '<div class="form-group"><label>Event Date <span class="field-required">*</span></label><input id="detailDate" class="form-control" type="date" value="' + d.eventDate + '"><div class="field-error hidden" id="detailDateError"></div></div>' +
             '<div class="form-group"><label>Meal Period <span class="field-required">*</span></label><select id="detailPeriod" class="form-control"' + (mealPeriods.length ? '' : ' disabled') + '><option value="">' + mealPeriodPlaceholder + '</option>' + mealPeriodOptions + '</select><div class="field-error hidden" id="detailPeriodError"></div></div>' +
-            '<div class="form-group event-address-field"><label for="detailAddressLine1">Address Line 1 <span class="field-required">*</span></label><input type="text" class="form-control" id="detailAddressLine1" name="AddressLine1" autocomplete="address-line1" placeholder="Enter address line 1" value="' + escapeHtml(d.addressLine1 || '') + '"><div class="field-error hidden" id="detailAddressLine1Error"></div></div>' +
+            '<div class="form-group event-address-field"><label for="detailAddressLine1">Address <span class="field-required">*</span></label><textarea class="form-control" id="detailAddressLine1" name="AddressLine1" rows="2" placeholder="Enter address">' + escapeHtml(d.addressLine1 || '') + '</textarea><div class="field-error hidden" id="detailAddressLine1Error"></div></div>' +
             '<div class="form-group"><label>Postal Code </label><input id="detailPostal" value="' + d.postal + '"></div>' +
             '</div><div class="form-group"><label>Notes</label><textarea id="detailNotes" rows="3">' + d.notes + '</textarea></div></div>';
         showOrderLoader(false);
@@ -762,7 +785,8 @@ $(function () {
         var organizationWhatsapp = organizationInfo.whatsapp ?? organizationInfo.Whatsapp ?? '-';
 
         var html = '<div class="review-sheet report-review" id="orderReviewReport">' +
-            '<div class="review-top"><div class="review-brand"><img class="review-logo" src="/images/logo.jpg" alt="' + escapeHtml(organizationName) + ' logo"><div><div class="review-title">' + escapeHtml(organizationName) + '</div><div class="review-company-details">UEN: ' + escapeHtml(organizationUen) + '<br>Email: ' + escapeHtml(organizationEmail) + '<br>Hotline: ' + escapeHtml(organizationHotline) + ' &nbsp;|&nbsp; WhatsApp: ' + escapeHtml(organizationWhatsapp) + '</div></div></div><div class="review-line"><strong>Quotation Request</strong><br>Date: ' + new Date().toLocaleDateString('en-SG') + '<br>Status: Draft</div></div>' +
+            '<div class="review-top"><div class="review-brand"><img class="review-logo" src="/images/logo.jpg" alt="' + escapeHtml(organizationName) + ' logo"></div><div class="review-line"><div class="review-title">' + escapeHtml(organizationName) + '</div>UEN: ' + escapeHtml(organizationUen) + '<br>Email: ' + escapeHtml(organizationEmail) + '<br>Hotline: ' + escapeHtml(organizationHotline) + ' &nbsp;|&nbsp; WhatsApp: ' + escapeHtml(organizationWhatsapp) + '</div></div>' +
+            '<div class="review-quote-meta"><strong>Quotation Request</strong><span>Date: ' + new Date().toLocaleDateString('en-SG') + '</span><span>Status: Draft</span></div>' +
             '<div class="review-split"><div><strong>Customer</strong><div>Name : ' + escapeHtml(state.details.company || '-') + '</div><div>Contact: ' + escapeHtml(state.details.contact || '-') + '</div><div>Email: ' + escapeHtml(state.details.email || '-') + '</div><div>Mobile: ' + escapeHtml(state.details.mobile || '-') + '</div></div>' +
             '<div><strong>Event</strong><div>Type: ' + escapeHtml(state.eventName || '-') + '</div><div>Date: ' + escapeHtml(state.details.eventDate || '-') + '</div><div>Meal Period: ' + escapeHtml(state.details.mealPeriod || '-') + '</div><div>Pax: ' + state.pax + '</div><div>Address: ' + escapeHtml(buildDeliveryAddress() || '-') + '</div><div>Notes: ' + escapeHtml(state.details.notes || '-') + '</div></div></div>' +
             '<section class="review-section"><div class="review-table-title">Package Details</div><div class="review-table-wrap"><table class="item-table review-table"><thead><tr><th>Package</th><th>Rate</th><th>Pax</th><th>Amount</th></tr></thead><tbody><tr><td>' + escapeHtml(state.packageName) + '</td><td>' + money(state.packagePrice) + '/pax</td><td>' + state.pax + '</td><td>' + money(packageBase()) + '</td></tr></tbody></table></div></section>' +
@@ -952,7 +976,490 @@ $(function () {
         $('#paymentAmountText').text('Amount: ' + money(amount));
         $('#paymentUpiText').text('UPI ID: ' + upiId);
         $('#paymentQrImage').attr('src', qrUrl);
+        $('#btnPaymentDone').data('order-id', orderId);
         $('#paymentModal').removeClass('hidden');
+    }
+
+    function generateOrderReviewPdfBlob(orderId) {
+        return new Promise(function (resolve, reject) {
+            if (!window.jspdf || !window.jspdf.jsPDF) {
+                reject(new Error('PDF library not loaded'));
+                return;
+            }
+
+            try {
+                var jsPDFCtor = window.jspdf.jsPDF;
+                var doc = new jsPDFCtor({ orientation: 'p', unit: 'pt', format: 'a4' });
+                var marginX = 36;
+                var y = 36;
+                var pageWidth = doc.internal.pageSize.getWidth();
+                var contentWidth = pageWidth - (marginX * 2);
+                var pageHeight = doc.internal.pageSize.getHeight();
+                var lineH = 15;
+
+                var COLORS = {
+                    brand: [21, 107, 63],
+                    brandDark: [15, 78, 46],
+                    brandLight: [236, 247, 241],
+                    headerLight: [244, 248, 246],
+                    text: [34, 44, 57],
+                    muted: [100, 116, 139],
+                    border: [210, 221, 214],
+                    white: [255, 255, 255]
+                };
+
+                function ensureSpace(heightNeeded) {
+                    if (y + heightNeeded <= pageHeight - 52) return;
+                    doc.addPage();
+                    y = 36;
+                }
+
+                function setTextColor(rgb) {
+                    doc.setTextColor(rgb[0], rgb[1], rgb[2]);
+                }
+
+                function drawSectionTitle(text) {
+                    ensureSpace(28);
+                    doc.setFillColor(COLORS.brandLight[0], COLORS.brandLight[1], COLORS.brandLight[2]);
+                    doc.setDrawColor(COLORS.border[0], COLORS.border[1], COLORS.border[2]);
+                    doc.roundedRect(marginX, y - 2, contentWidth, 24, 4, 4, 'FD');
+                    doc.setFont('helvetica', 'bold');
+                    doc.setFontSize(11);
+                    setTextColor(COLORS.brandDark);
+                    doc.text(String(text || ''), marginX + 10, y + 14);
+                    y += 30;
+                    setTextColor(COLORS.text);
+                }
+
+                function keyValue(left, right, valueBold) {
+                    ensureSpace(lineH + 2);
+                    doc.setFont('helvetica', 'normal');
+                    doc.setFontSize(10.5);
+                    setTextColor(COLORS.muted);
+                    doc.text(String(left || ''), marginX, y);
+                    doc.setFont('helvetica', valueBold ? 'bold' : 'normal');
+                    setTextColor(COLORS.text);
+                    doc.text(String(right || ''), marginX + 180, y);
+                    y += lineH;
+                }
+
+                function moneyValue(value) {
+                    return money(value || 0);
+                }
+
+                function drawInfoCard(x, width, title, rows) {
+                    var innerY = y;
+                    var titleHeight = 26;
+                    var cardPadding = 10;
+                    var valueStartX = x + 90;
+                    var maxValueWidth = width - 100;
+                    var rowMeta = (rows || []).map(function (row) {
+                        var valueLines = doc.splitTextToSize(String((row && row.value) || '-'), maxValueWidth);
+                        var linesCount = Math.max(valueLines.length, 1);
+                        var rowHeight = Math.max(15, (linesCount * 11) + 2);
+                        return { valueLines: valueLines, rowHeight: rowHeight };
+                    });
+
+                    var rowsHeight = rowMeta.reduce(function (sum, item) {
+                        return sum + item.rowHeight;
+                    }, 0);
+
+                    var cardHeight = titleHeight + cardPadding + rowsHeight + 8;
+
+                    ensureSpace(cardHeight + 8);
+                    innerY = y;
+
+                    doc.setFillColor(COLORS.white[0], COLORS.white[1], COLORS.white[2]);
+                    doc.setDrawColor(COLORS.border[0], COLORS.border[1], COLORS.border[2]);
+                    doc.roundedRect(x, innerY, width, cardHeight, 6, 6, 'FD');
+
+                    doc.setFillColor(COLORS.headerLight[0], COLORS.headerLight[1], COLORS.headerLight[2]);
+                    doc.roundedRect(x, innerY, width, titleHeight, 6, 6, 'F');
+
+                    doc.setFont('helvetica', 'bold');
+                    doc.setFontSize(10.5);
+                    setTextColor(COLORS.brandDark);
+                    doc.text(String(title || ''), x + 10, innerY + 16);
+
+                    var rowY = innerY + titleHeight + 12;
+                    rows.forEach(function (row, idx) {
+                        var label = row.label || '';
+                        var value = row.value || '-';
+                        var meta = rowMeta[idx];
+                        var valueLines = meta.valueLines;
+                        doc.setFont('helvetica', 'normal');
+                        doc.setFontSize(9.8);
+                        setTextColor(COLORS.muted);
+                        doc.text(label, x + 10, rowY);
+
+                        doc.setFont('helvetica', 'bold');
+                        setTextColor(COLORS.text);
+                        doc.text(valueLines.length ? valueLines : [String(value)], valueStartX, rowY);
+                        rowY += meta.rowHeight;
+                    });
+
+                    setTextColor(COLORS.text);
+                    return cardHeight;
+                }
+
+                function extractIncludedRows() {
+                    var rows = [];
+                    includedChoices.forEach(function (category) {
+                        var selections = includedChoiceSelections[String(category.categoryId)] || [];
+                        var requiredQuantity = Number(category.requiredQuantity) || 1;
+                        for (var index = 0; index < requiredQuantity; index++) {
+                            var selectedId = String(selections[index] || '');
+                            var selectedMenu = (category.menus || []).find(function (menu) {
+                                return String(menu.id) === selectedId;
+                            });
+                            rows.push({
+                                c1: category.categoryName || '-',
+                                c2: selectedMenu ? selectedMenu.name : 'Not selected',
+                                c3: selectedMenu ? 'Included' : 'Pending'
+                            });
+                        }
+                    });
+                    return rows;
+                }
+
+                function extractExtraRows() {
+                    return extraRows.filter(function (row) {
+                        return (state.extraItems[row.key] || 0) > 0;
+                    }).map(function (row) {
+                        var qty = state.extraItems[row.key] || 0;
+                        return {
+                            c1: row.dish,
+                            c2: String(qty) + ' ' + row.unit,
+                            c3: moneyValue(qty * row.price)
+                        };
+                    });
+                }
+
+                function extractAddonRows() {
+                    return addonRows.filter(function (row) {
+                        return (state.addons[row.key] || 0) > 0;
+                    }).map(function (row) {
+                        var qty = state.addons[row.key] || 0;
+                        return {
+                            c1: row.name,
+                            c2: String(qty) + ' ' + row.unit,
+                            c3: moneyValue(qty * row.price)
+                        };
+                    });
+                }
+
+                function extractUtensilRows() {
+                    return utensilRows.filter(function (row) {
+                        return (state.utensils[row.name] || 0) > 0;
+                    }).map(function (row) {
+                        var qty = state.utensils[row.name] || 0;
+                        return {
+                            c1: row.name,
+                            c2: String(qty) + ' pcs',
+                            c3: moneyValue(qty * row.price)
+                        };
+                    });
+                }
+
+                function drawSimpleTable(title, col1, col2, col3, rows) {
+                    drawSectionTitle(title);
+                    rows = rows || [];
+
+                    var col1X = marginX + 8;
+                    var col2X = marginX + (contentWidth * 0.48);
+                    var col3X = marginX + contentWidth - 8;
+                    var col1Width = (contentWidth * 0.45) - 12;
+                    var col2Width = (contentWidth * 0.30) - 12;
+                    var col3Width = (contentWidth * 0.25) - 12;
+
+                    ensureSpace(28);
+                    doc.setFillColor(COLORS.headerLight[0], COLORS.headerLight[1], COLORS.headerLight[2]);
+                    doc.setDrawColor(COLORS.border[0], COLORS.border[1], COLORS.border[2]);
+                    doc.rect(marginX, y - 12, contentWidth, 22, 'FD');
+                    doc.setFont('helvetica', 'bold');
+                    doc.setFontSize(10);
+                    setTextColor(COLORS.brandDark);
+                    doc.text(col1, col1X, y + 2);
+                    doc.text(col2, col2X, y + 2);
+                    doc.text(col3, col3X, y + 2, { align: 'right' });
+                    y += 18;
+                    setTextColor(COLORS.text);
+
+                    if (!rows.length) {
+                        ensureSpace(20);
+                        doc.setFont('helvetica', 'normal');
+                        doc.setFontSize(10);
+                        doc.text('No records.', marginX + 8, y + 2);
+                        y += 16;
+                        return;
+                    }
+
+                    rows.forEach(function (row, index) {
+                        var c1Lines = doc.splitTextToSize(String(row.c1 || '-'), col1Width);
+                        var c2Lines = doc.splitTextToSize(String(row.c2 || '-'), col2Width);
+                        var c3Lines = doc.splitTextToSize(String(row.c3 || '-'), col3Width);
+                        var rowLineCount = Math.max(c1Lines.length, c2Lines.length, c3Lines.length, 1);
+                        var rowHeight = (rowLineCount * 11) + 6;
+
+                        ensureSpace(rowHeight + 6);
+                        if (index % 2 === 1) {
+                            doc.setFillColor(250, 252, 251);
+                            doc.rect(marginX, y - 10, contentWidth, rowHeight, 'F');
+                        }
+
+                        doc.setFont('helvetica', 'normal');
+                        doc.setFontSize(10);
+                        doc.text(c1Lines.length ? c1Lines : ['-'], col1X, y + 2);
+                        doc.text(c2Lines.length ? c2Lines : ['-'], col2X, y + 2);
+                        doc.text(c3Lines.length ? c3Lines : ['-'], col3X, y + 2, { align: 'right' });
+
+                        doc.setDrawColor(COLORS.border[0], COLORS.border[1], COLORS.border[2]);
+                        doc.line(marginX, y + rowHeight - 9, marginX + contentWidth, y + rowHeight - 9);
+                        y += rowHeight;
+                    });
+                }
+
+                var organizationName = organizationInfo.name ?? organizationInfo.Name ?? 'Gayatri Catering';
+                var organizationUen = organizationInfo.uen ?? organizationInfo.UEN ?? '-';
+                var organizationEmail = organizationInfo.email ?? organizationInfo.Email ?? '-';
+                var organizationHotline = organizationInfo.hotline ?? organizationInfo.Hotline ?? '-';
+                var organizationWhatsapp = organizationInfo.whatsapp ?? organizationInfo.Whatsapp ?? '-';
+                var generatedDate = new Date();
+                var invoiceRef = 'INV-' + (orderId || 'NEW') + '-' + generatedDate.getFullYear();
+                var payableNow = grandTotal();
+                var amountWithoutDeposit = packageBase() + extraTotal() + addonTotal() + utensilTotal() + gstTotal();
+
+                ensureSpace(82);
+                doc.setFillColor(COLORS.brand[0], COLORS.brand[1], COLORS.brand[2]);
+                doc.rect(marginX, y, contentWidth, 72, 'F');
+
+                var logoElement = document.querySelector('#orderReviewReport .review-logo');
+                if (logoElement && logoElement.complete && logoElement.naturalWidth > 0) {
+                    try {
+                        doc.addImage(logoElement, 'JPEG', marginX + 10, y + 8, 120, 56);
+                    } catch (_e) {
+                        // Keep PDF generation resilient when logo cannot be embedded.
+                    }
+                }
+
+                doc.setFont('helvetica', 'bold');
+                doc.setFontSize(17);
+                setTextColor(COLORS.white);
+                doc.text(String(organizationName), marginX + contentWidth - 14, y + 24, { align: 'right' });
+
+                doc.setFont('helvetica', 'normal');
+                doc.setFontSize(10);
+                doc.text('UEN: ' + organizationUen, marginX + contentWidth - 14, y + 39, { align: 'right' });
+                doc.text('Email: ' + organizationEmail, marginX + contentWidth - 14, y + 53, { align: 'right' });
+
+                doc.setFillColor(COLORS.white[0], COLORS.white[1], COLORS.white[2]);
+                doc.roundedRect(marginX + contentWidth - 190, y + 20, 176, 44, 4, 4, 'F');
+                doc.setFont('helvetica', 'bold');
+                doc.setFontSize(10);
+                setTextColor(COLORS.brandDark);
+                doc.text('ORDER REVIEW', marginX + contentWidth - 102, y + 33, { align: 'center' });
+                doc.setFontSize(9.3);
+                doc.text('Reference: ' + invoiceRef, marginX + contentWidth - 102, y + 47, { align: 'center' });
+                doc.setFont('helvetica', 'normal');
+                doc.setFontSize(8.6);
+                doc.text('Status: Awaiting Settlement', marginX + contentWidth - 102, y + 59, { align: 'center' });
+
+                doc.setFont('helvetica', 'normal');
+                doc.setFontSize(9.5);
+                setTextColor(COLORS.white);
+                doc.text('Order ID: ' + (orderId || '-'), marginX + contentWidth - 202, y + 40);
+                doc.text('Date: ' + generatedDate.toLocaleDateString('en-SG'), marginX + contentWidth - 202, y + 54);
+                doc.text('Hotline: ' + organizationHotline + ' | WhatsApp: ' + organizationWhatsapp, marginX + contentWidth - 14, y + 68, { align: 'right' });
+
+                y += 86;
+                setTextColor(COLORS.text);
+
+                var leftRows = [
+                    { label: 'Customer', value: state.details.company || '-' },
+                    { label: 'Contact', value: state.details.contact || '-' },
+                    { label: 'Email', value: state.details.email || '-' },
+                    { label: 'Mobile', value: state.details.mobile || '-' },
+                    { label: 'Address', value: buildDeliveryAddress() || '-' }
+                ];
+
+                var rightRows = [
+                    { label: 'Event Type', value: state.eventName || '-' },
+                    { label: 'Event Date', value: state.details.eventDate || '-' },
+                    { label: 'Meal Period', value: state.details.mealPeriod || '-' },
+                    { label: 'Pax', value: String(state.pax || 0) },
+                    { label: 'Generated', value: new Date().toLocaleString('en-SG') }
+                ];
+
+                var cardGap = 12;
+                var cardWidth = (contentWidth - cardGap) / 2;
+                var leftCardHeight = drawInfoCard(marginX, cardWidth, 'Customer Details', leftRows);
+                var rightCardHeight = drawInfoCard(marginX + cardWidth + cardGap, cardWidth, 'Event Details', rightRows);
+                y += Math.max(leftCardHeight, rightCardHeight) + 10;
+
+                drawSimpleTable('Included Package Choices', 'Category', 'Dish', 'Status', extractIncludedRows());
+                drawSimpleTable('Additional Menu Items', 'Item', 'Qty/Unit', 'Amount', extractExtraRows());
+                drawSimpleTable('Add-ons', 'Add-on', 'Qty/Unit', 'Amount', extractAddonRows());
+                drawSimpleTable('Utensils', 'Item', 'Qty', 'Amount', extractUtensilRows());
+
+                drawSectionTitle('Payment Summary');
+                keyValue('Package Base', moneyValue(packageBase()), true);
+                keyValue('Additional Menu', moneyValue(extraTotal()), true);
+                keyValue('Add-ons', moneyValue(addonTotal()), true);
+                keyValue('Utensils / Setup', moneyValue(utensilTotal()), true);
+                keyValue('GST', moneyValue(gstTotal()), true);
+                keyValue('Refundable Deposit', moneyValue(depositTotal()), true);
+
+                ensureSpace(86);
+                doc.setFillColor(248, 251, 249);
+                doc.setDrawColor(COLORS.border[0], COLORS.border[1], COLORS.border[2]);
+                doc.roundedRect(marginX, y + 2, contentWidth, 76, 5, 5, 'FD');
+
+                doc.setFont('helvetica', 'bold');
+                doc.setFontSize(11);
+                setTextColor(COLORS.brandDark);
+                doc.text('Amount Before Deposit', marginX + 10, y + 22);
+                doc.text(moneyValue(amountWithoutDeposit), marginX + contentWidth - 10, y + 22, { align: 'right' });
+
+                doc.setDrawColor(COLORS.border[0], COLORS.border[1], COLORS.border[2]);
+                doc.line(marginX + 10, y + 30, marginX + contentWidth - 10, y + 30);
+
+                doc.setFillColor(COLORS.brandLight[0], COLORS.brandLight[1], COLORS.brandLight[2]);
+                doc.setDrawColor(COLORS.brand[0], COLORS.brand[1], COLORS.brand[2]);
+                doc.roundedRect(marginX + 10, y + 36, contentWidth - 20, 30, 5, 5, 'FD');
+                doc.setFont('helvetica', 'bold');
+                doc.setFontSize(13);
+                setTextColor(COLORS.brandDark);
+                doc.text('Grand Total Payable', marginX + 20, y + 55);
+                doc.text(moneyValue(payableNow), marginX + contentWidth - 20, y + 55, { align: 'right' });
+                y += 88;
+
+                var totalPages = doc.internal.getNumberOfPages();
+                for (var pageIndex = 1; pageIndex <= totalPages; pageIndex++) {
+                    doc.setPage(pageIndex);
+
+                    doc.setFont('helvetica', 'bold');
+                    doc.setFontSize(54);
+                    setTextColor([244, 247, 246]);
+                    doc.text('GAYATRI', pageWidth / 2, pageHeight / 2, { align: 'center', angle: 32 });
+
+                    doc.setDrawColor(COLORS.border[0], COLORS.border[1], COLORS.border[2]);
+                    doc.line(marginX, pageHeight - 36, marginX + contentWidth, pageHeight - 36);
+
+                    doc.setFont('helvetica', 'normal');
+                    doc.setFontSize(9);
+                    setTextColor(COLORS.muted);
+                    doc.text('Thank you for choosing Gayatri Catering.', marginX, pageHeight - 22);
+                    doc.text('Page ' + pageIndex + ' of ' + totalPages, marginX + contentWidth, pageHeight - 22, { align: 'right' });
+                }
+
+                resolve(doc.output('blob'));
+            } catch (err) {
+                reject(err);
+            }
+        });
+    }
+
+    function sendOrderReviewEmail(orderId) {
+        var toEmail = String(state.details.email || '').trim();
+        if (!toEmail) {
+            showToast('Email is required in Event Details to send order PDF.', 3500, { type: 'warning', title: 'Email missing' });
+            return;
+        }
+
+        generateOrderReviewPdfBlob(orderId).then(function (pdfBlob) {
+            var formData = new FormData();
+            formData.append('ToEmail', toEmail);
+            formData.append('Subject', 'Order Confirmation - ' + (state.eventName || 'Event') + ' - ' + (orderId || '-'));
+            formData.append('Body', buildOrderEmailBody(orderId));
+            formData.append('Attachment', new File([pdfBlob], 'Order-' + (orderId || 'Details') + '.pdf', { type: 'application/pdf' }));
+
+            $.ajax({
+                url: '/Common/SendEmail',
+                type: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function () {
+                    showToast('Order details PDF sent to email successfully.', 3500, { type: 'success', title: 'Email sent' });
+                    setTimeout(function () {
+                        resetOrderForNew();
+                        showToast('Ready for next order.', 2200, { type: 'success', title: 'Create new order' });
+                    }, 400);
+                },
+                error: function (xhr) {
+                    showToast(xhr.responseJSON?.Message || 'Payment confirmed, but email sending failed.', 4000, { type: 'warning', title: 'Email failed' });
+                }
+            });
+        }).catch(function () {
+            showToast('Payment confirmed, but PDF generation failed.', 3500, { type: 'warning', title: 'PDF failed' });
+        });
+    }
+
+    function buildOrderEmailBody(orderId) {
+        var organizationName = String(organizationInfo.name ?? organizationInfo.Name ?? 'Gayatri Restaurant Pte Ltd');
+        var organizationUen = String(organizationInfo.uen ?? organizationInfo.UEN ?? '-');
+        var organizationAddress = String(organizationInfo.address ?? organizationInfo.Address ?? '-');
+        var organizationEmail = String(organizationInfo.email ?? organizationInfo.Email ?? '-');
+        var organizationHotline = String(organizationInfo.hotline ?? organizationInfo.Hotline ?? '-');
+        var organizationWhatsapp = String(organizationInfo.whatsapp ?? organizationInfo.Whatsapp ?? '-');
+        var gstPercent = (gstRate * 100).toFixed(0) + '%';
+
+        return '' +
+            '<div style="font-family:Segoe UI,Arial,sans-serif;background:#f4f7f5;margin:0;padding:16px;color:#183028">' +
+            '<div style="max-width:760px;margin:0 auto;background:#ffffff;border:1px solid #d9e6de;border-radius:10px;overflow:hidden">' +
+            '<div style="background:#156b3f;color:#ffffff;padding:16px 18px">' +
+            '<div style="font-size:26px;font-weight:800;line-height:1.2">' + escapeHtml(organizationName) + '</div>' +
+            '<div style="margin-top:6px;font-size:13px;opacity:.95">UEN: ' + escapeHtml(organizationUen) + '</div>' +
+            '<div style="margin-top:4px;font-size:13px;opacity:.95">Hotline: ' + escapeHtml(organizationHotline) + ' | WhatsApp: ' + escapeHtml(organizationWhatsapp) + '</div>' +
+            '<div style="margin-top:4px;font-size:13px;opacity:.95">Email: ' + escapeHtml(organizationEmail) + '</div>' +
+            '</div>' +
+
+            '<div style="padding:18px">' +
+            '<div style="font-size:15px">Dear ' + escapeHtml(state.details.contact || state.details.company || 'Customer') + ',</div>' +
+            '<div style="margin-top:10px;font-size:14px;line-height:1.6;color:#2f4f41">Thank you for confirming your payment with <strong>' + escapeHtml(organizationName) + '</strong>. Your order is received and the detailed PDF is attached for your records.</div>' +
+
+            '<table style="width:100%;border-collapse:collapse;margin-top:16px;font-size:13px">' +
+            '<tr>' +
+            '<td style="width:50%;padding:12px;border:1px solid #e1ece5;background:#f8fcfa;vertical-align:top">' +
+            '<div style="font-weight:700;color:#156b3f;margin-bottom:6px">Order Snapshot</div>' +
+            '<div><strong>Order ID:</strong> ' + escapeHtml(String(orderId || '-')) + '</div>' +
+            '<div><strong>Event:</strong> ' + escapeHtml(state.eventName || '-') + '</div>' +
+            '<div><strong>Event Date:</strong> ' + escapeHtml(state.details.eventDate || '-') + '</div>' +
+            '<div><strong>Meal Period:</strong> ' + escapeHtml(state.details.mealPeriod || '-') + '</div>' +
+            '<div><strong>Pax:</strong> ' + escapeHtml(String(state.pax || 0)) + '</div>' +
+            '</td>' +
+            '<td style="width:50%;padding:12px;border:1px solid #e1ece5;background:#f8fcfa;vertical-align:top">' +
+            '<div style="font-weight:700;color:#156b3f;margin-bottom:6px">Customer Snapshot</div>' +
+            '<div><strong>Name:</strong> ' + escapeHtml(state.details.company || '-') + '</div>' +
+            '<div><strong>Contact:</strong> ' + escapeHtml(state.details.contact || '-') + '</div>' +
+            '<div><strong>Mobile:</strong> ' + escapeHtml(state.details.mobile || '-') + '</div>' +
+            '<div><strong>Email:</strong> ' + escapeHtml(state.details.email || '-') + '</div>' +
+            '<div><strong>Address:</strong> ' + escapeHtml(buildDeliveryAddress() || '-') + '</div>' +
+            '</td>' +
+            '</tr>' +
+            '</table>' +
+
+            '<table style="width:100%;border-collapse:collapse;margin-top:14px;font-size:13px">' +
+            '<tr><td colspan="2" style="padding:10px 12px;border:1px solid #dce9e1;background:#edf6f0;font-weight:700;color:#156b3f">Payment Summary</td></tr>' +
+            '<tr><td style="padding:8px 12px;border:1px solid #e6efe9">Package Base</td><td style="padding:8px 12px;border:1px solid #e6efe9;text-align:right">' + money(packageBase()) + '</td></tr>' +
+            '<tr><td style="padding:8px 12px;border:1px solid #e6efe9">Additional Menu</td><td style="padding:8px 12px;border:1px solid #e6efe9;text-align:right">' + money(extraTotal()) + '</td></tr>' +
+            '<tr><td style="padding:8px 12px;border:1px solid #e6efe9">Add-ons</td><td style="padding:8px 12px;border:1px solid #e6efe9;text-align:right">' + money(addonTotal()) + '</td></tr>' +
+            '<tr><td style="padding:8px 12px;border:1px solid #e6efe9">Utensils / Setup</td><td style="padding:8px 12px;border:1px solid #e6efe9;text-align:right">' + money(utensilTotal()) + '</td></tr>' +
+            '<tr><td style="padding:8px 12px;border:1px solid #e6efe9">GST (' + escapeHtml(gstPercent) + ')</td><td style="padding:8px 12px;border:1px solid #e6efe9;text-align:right">' + money(gstTotal()) + '</td></tr>' +
+            '<tr><td style="padding:8px 12px;border:1px solid #e6efe9">Refundable Deposit</td><td style="padding:8px 12px;border:1px solid #e6efe9;text-align:right">' + money(depositTotal()) + '</td></tr>' +
+            '<tr><td style="padding:10px 12px;border:1px solid #d1e2d8;background:#edf6f0;font-size:15px;font-weight:800">Grand Total Payable</td><td style="padding:10px 12px;border:1px solid #d1e2d8;background:#edf6f0;text-align:right;font-size:15px;font-weight:800">' + money(grandTotal()) + '</td></tr>' +
+            '</table>' +
+
+            '<div style="margin-top:14px;padding:12px;border-left:3px solid #f59e0b;background:#fffbeb;color:#6b4e16;font-size:12.5px">Please keep this email and attached PDF for reference. For support or order changes, contact us via hotline/WhatsApp and mention your Order ID.</div>' +
+            '</div>' +
+
+            '<div style="padding:12px 18px;border-top:1px solid #e6efe9;background:#fafcfb;font-size:12px;color:#557064">' +
+            '<div><strong>' + escapeHtml(organizationName) + '</strong></div>' +
+            '<div>' + escapeHtml(organizationAddress) + '</div>' +
+            '<div>Email: ' + escapeHtml(organizationEmail) + ' | Hotline: ' + escapeHtml(organizationHotline) + ' | WhatsApp: ' + escapeHtml(organizationWhatsapp) + '</div>' +
+            '</div>' +
+            '</div>' +
+            '</div>';
     }
 
     function loadUpiAndOpenPayment(orderId) {
@@ -962,21 +1469,59 @@ $(function () {
             return;
         }
         $.ajax({
-            url: '/Admin/Settings/get',
+            url: '/Customer/Organization/gst',
             type: 'GET',
-            success: function (rows) {
-                var data = Array.isArray(rows) && rows.length ? rows[0] : {};
-                var settingsUpi = String(data.upiId ?? data.UPIId ?? '').trim();
+            success: function (data) {
+                var settingsUpi = String(data?.upiId ?? data?.UPIId ?? '').trim();
                 if (!settingsUpi) {
                     showToast('UPI Id is not configured. Please contact support.', 4000, { type: 'error', title: 'Payment unavailable' });
                     return;
                 }
+                organizationInfo = Object.assign({}, organizationInfo || {}, data || {});
                 openPaymentModal(orderId, settingsUpi);
             },
             error: function () {
                 showToast('Unable to load UPI Id for payment.', 4000, { type: 'error', title: 'Payment unavailable' });
             }
         });
+    }
+
+    function resetOrderForNew() {
+        closePaymentModal();
+        currentStep = 1;
+        state.step1View = 'packages';
+        state.selectedEvent = '';
+        state.eventName = '';
+        state.eventMinPax = 0;
+        state.selectedPackage = '';
+        state.packageName = '-';
+        state.packagePrice = 0;
+        state.pax = 0;
+        state.extraItems = {};
+        state.addons = {};
+        state.utensils = {};
+        state.details = {
+            company: '',
+            contact: '',
+            email: '',
+            mobile: '',
+            eventDate: '',
+            mealPeriodId: '',
+            mealPeriod: '',
+            postal: '',
+            addressLine1: '',
+            notes: ''
+        };
+        includedChoices = [];
+        includedChoiceSelections = {};
+        renderStep();
+
+        setTimeout(function () {
+            var $eventType = $('#eventType');
+            if ($eventType.length) {
+                $eventType.trigger('focus');
+            }
+        }, 60);
     }
 
     $(document).on('click', '.wizard-step', function () {
@@ -1014,6 +1559,7 @@ $(function () {
 
     $('#summarySubmitBtn').on('click', function (e) {
         e.preventDefault();
+        e.stopPropagation();
         submitOrder();
     });
 
@@ -1021,9 +1567,13 @@ $(function () {
         closePaymentModal();
     });
 
-    $('#btnPaymentDone').on('click', function () {
+    $('#btnPaymentDone').on('click', function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        var orderId = parseInt($(this).data('order-id'), 10) || 0;
         closePaymentModal();
         showToast('Payment confirmed. Thank you!', 3000, { type: 'success', title: 'Payment confirmed' });
+        sendOrderReviewEmail(orderId);
     });
 
     $('#paymentModal').on('click', function (e) {
@@ -1033,22 +1583,7 @@ $(function () {
     });
 
     $('#btnResetOrder').on('click', function () {
-        closePaymentModal();
-        currentStep = 1;
-        state.step1View = 'packages';
-        state.selectedEvent = '';
-        state.eventName = '';
-        state.eventMinPax = 0;
-        state.selectedPackage = '';
-        state.packageName = '-';
-        state.packagePrice = 0;
-        state.pax = 0;
-        state.extraItems = {};
-        state.addons = {};
-        state.utensils = {};
-        includedChoices = [];
-        includedChoiceSelections = {};
-        renderStep();
+        resetOrderForNew();
     });
 
     $(document).on('click', '#btnChangePackage', function () {
@@ -1066,12 +1601,12 @@ $(function () {
         state.selectedPackage = '';
         state.packageName = '-';
         state.packagePrice = 0;
-        state.pax = Math.max(parseInt(state.pax, 10) || 0, state.eventMinPax);
+        state.pax = state.eventMinPax || 0;
         packages = [];
         includedChoices = [];
         includedChoiceSelections = {};
         if (state.selectedEvent) loadOrderPackages(state.selectedEvent);
-        else renderStep();
+        else renderStep(false);
     });
 
     $(document).on('input', '#eventPaxCount', function () {
@@ -1210,7 +1745,7 @@ $(function () {
             { key: 'mobile', input: '#detailMobile', error: '#detailMobileError', message: 'Mobile / WhatsApp is required' },
             { key: 'eventDate', input: '#detailDate', error: '#detailDateError', message: 'Event Date is required' },
             { key: 'mealPeriodId', input: '#detailPeriod', error: '#detailPeriodError', message: 'Meal Period is required' },
-            { key: 'addressLine1', input: '#detailAddressLine1', error: '#detailAddressLine1Error', message: 'Address Line 1 is required' }
+            { key: 'addressLine1', input: '#detailAddressLine1', error: '#detailAddressLine1Error', message: 'Address is required' }
         ];
 
         if ($('#detailCompany').length) {
@@ -1341,7 +1876,7 @@ $(function () {
 
         qty = Math.max(qty, 0);
         if (qty > 0) state.utensils[name] = qty; else delete state.utensils[name];
-        renderStep();
+        renderStep(false);
     });
 
     $(document).on('click', '#suggestUtensilsBtn', function () {
@@ -1349,12 +1884,12 @@ $(function () {
         utensilRows.forEach(function (row) {
             state.utensils[row.name] = calculateUtensilSuggestedQty(row);
         });
-        renderStep();
+        renderStep(false);
     });
 
     $(document).on('click', '#clearUtensilsBtn', function () {
         state.utensils = {};
-        renderStep();
+        renderStep(false);
     });
 
     function updateEventDetails() {
