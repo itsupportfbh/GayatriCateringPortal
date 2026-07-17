@@ -4,6 +4,9 @@ $(function () {
     var organizationInfo = {};
     var currentStep = 1;
     var state = {
+        selectedEvent: '',
+        eventName: '',
+        eventMinPax: 0,
         pax: 0,
         selectedPackage: '',
         packageName: '-',
@@ -22,18 +25,12 @@ $(function () {
             mealPeriod: '',
             postal: '',
             addressLine1: '',
-            addressLine2: '',
-            cityId: '',
-            city: '',
-            stateId: '',
-            state: '',
-            countryId: '',
-            country: '',
             notes: ''
         }
     };
 
     var packages = [];
+    var events = [];
 
     function loadOrganizationGst() {
         return $.ajax({
@@ -61,16 +58,38 @@ $(function () {
         });
     }
 
-    function loadOrderPackages() {
+    function loadOrderEvents() {
         $.ajax({
-            url: '/Customer/Packages/get',
+            url: '/Customer/Order/events',
             type: 'GET',
             success: function (rows) {
-                renderOrderPackages(rows || []);
+                events = (Array.isArray(rows) ? rows : []).map(function (item) {
+                    return {
+                        id: String(item.id ?? item.Id ?? ''),
+                        name: item.name ?? item.Name ?? 'Event',
+                        minPax: Number(item.minPax ?? item.MinPax ?? 0)
+                    };
+                }).filter(function (item) { return item.id; });
+                renderStep();
             },
             error: function () {
+                events = [];
+                renderStep();
+                showToast('Unable to load events.', 3000, { type: 'error', title: 'Event load failed' });
+            }
+        });
+    }
+
+    function loadOrderPackages(eventId) {
+        packages = [];
+        renderStep();
+        $.ajax({
+            url: '/Customer/Order/events/' + encodeURIComponent(eventId) + '/packages',
+            type: 'GET',
+            success: function (rows) { renderOrderPackages(rows || []); },
+            error: function () {
                 renderOrderPackages([]);
-                showToast('Unable to load packages.', 3000, { type: 'error', title: 'Package load failed' });
+                showToast('Unable to load packages for this event.', 3000, { type: 'error', title: 'Package load failed' });
             }
         });
     }
@@ -108,7 +127,6 @@ $(function () {
                 id: String(item.id ?? item.Id ?? ''),
                 name: item.name ?? item.Name ?? 'Package',
                 price: Number(item.price ?? item.Price ?? 0),
-                min: Number(item.minPersons ?? item.MinPersons ?? 0),
                 desc: item.description ?? item.Description ?? ''
             };
         }).filter(function (item) {
@@ -137,7 +155,9 @@ $(function () {
     var utensilsLoaded = false;
 
     function money(value) {
-        return 'S$' + value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        var amount = Number(value);
+        if (!Number.isFinite(amount)) amount = 0;
+        return 'S$' + amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     }
 
     function escapeHtml(value) {
@@ -182,11 +202,12 @@ $(function () {
     }
 
     function updateSummary() {
+        $('#summaryEvent').text(state.eventName || '-');
         $('#summaryPkg').text(state.packageName);
         $('#summaryPax').text(state.pax);
         $('#summaryBase').text(money(packageBase()));
-        $('#summaryAdditional').text(money(extraTotal()));
-        $('#summaryAddons').text(money(addonTotal()));
+        $('#summaryAdditional').text(money(extraTotal() || 0));
+        $('#summaryAddons').text(money(addonTotal() || 0));
         $('#summaryUtensils').text(money(utensilTotal()));
         $('#summaryGst').text(money(gstTotal()));
         $('#summaryDeposit').text(money(depositTotal()));
@@ -236,12 +257,20 @@ $(function () {
         var html = '';
 
         if (state.step1View === 'packages') {
+            var eventOptions = events.map(function (item) {
+                return '<option value="' + item.id + '"' + (item.id === state.selectedEvent ? ' selected' : '') + '>' + escapeHtml(item.name) + '</option>';
+            }).join('');
             html = '<div class="card order-card">' +
-                '<div class="section-label">All Package Types</div>' +
-                '<div class="muted" style="font-size:13px;margin-bottom:12px">Select one package to continue to Step 1 form.</div>' +
-                (packages.length
+                '<div class="section-label">Select Event</div>' +
+                '<div class="order-fields" style="margin-bottom:18px"><div><label>Event Type</label><select id="eventType"><option value="">-- Select Event --</option>' + eventOptions + '</select></div>' +
+                '<div><label>No. of Pax</label><input type="number" id="eventPaxCount" min="' + state.eventMinPax + '" value="' + (state.selectedEvent ? state.pax : '') + '"' + (state.selectedEvent ? '' : ' disabled') + '></div></div>' +
+                '<div class="section-label">Available Packages</div>' +
+                '<div class="muted" style="font-size:13px;margin-bottom:12px">Select an event first, then choose one of its configured packages.</div>' +
+                (!state.selectedEvent
+                    ? '<div class="muted">Please select an event to view packages.</div>'
+                    : packages.length
                     ? '<div class="pkg-grid">' + packages.map(renderPackageCard).join('') + '</div>'
-                    : '<div class="muted">No active packages are available right now.</div>') +
+                    : '<div class="muted">No packages are configured for this event.</div>') +
                 '</div>';
             showOrderLoader(false);
             $('#orderStepContent').html(html);
@@ -252,7 +281,8 @@ $(function () {
             '<div class="section-label">Step 1 - Select Indian Package</div>' +
             '<div class="actions" style="justify-content:flex-end;margin-bottom:10px"><button class="btn btn-light btn-sm" id="btnChangePackage">Change Package</button></div>' +
             '<div class="order-fields">' +
-            '<div><label>No. of Pax</label><input type="number" id="paxCount" min="1" value="' + state.pax + '"></div>' +
+            '<div><label>Event Type</label><input type="text" value="' + escapeHtml(state.eventName) + '" readonly></div>' +
+            '<div><label>No. of Pax</label><input type="number" id="paxCount" min="' + state.eventMinPax + '" value="' + state.pax + '"></div>' +
             '<div><label>Package Type</label><input type="text" value="' + escapeHtml(state.packageName) + ' - S$' + state.packagePrice.toFixed(2) + '/pax" readonly></div>' +
             '<div><label>GST</label><input type="text" value="' + (gstRate * 100).toFixed(0) + '% GST" readonly></div>' +
             '</div>' +
@@ -274,17 +304,48 @@ $(function () {
         var requiredQuantity = Number(category.requiredQuantity) || 1;
         var categoryId = String(category.categoryId);
         var selections = includedChoiceSelections[categoryId] || [];
-        var options = (category.menus || []).map(function (menu) {
-            return '<option value="' + menu.id + '">' + escapeHtml(menu.name) + '</option>';
-        }).join('');
-
         return '<div class="choice-block"><div class="choice-header"><div class="choice-title">' + escapeHtml(category.categoryName) + '</div><div class="choice-title">Required: choose ' + requiredQuantity + '</div></div>' +
             Array.from({ length: requiredQuantity }, function (_, index) {
-                var selectedId = selections[index] || '';
-                var selectedOptions = options.replace('value="' + selectedId + '"', 'value="' + selectedId + '" selected');
+                var selectedId = String(selections[index] || '');
+                var selectedInOtherChoices = selections.filter(function (_, selectionIndex) {
+                    return selectionIndex !== index;
+                }).map(String);
+                var selectedOptions = (category.menus || []).filter(function (menu) {
+                    return selectedInOtherChoices.indexOf(String(menu.id)) === -1;
+                }).map(function (menu) {
+                    var menuId = String(menu.id);
+                    return '<option value="' + menuId + '"' + (menuId === selectedId ? ' selected' : '') + '>' + escapeHtml(menu.name) + '</option>';
+                }).join('');
                 var placeholder = category.menusLoading ? 'Loading menus...' : (category.menus || []).length ? 'Select menu' : 'No menus available';
                 return '<div class="form-group"><label>Choice ' + (index + 1) + '</label><select class="included-menu-select" data-category-id="' + categoryId + '" data-choice-index="' + index + '"' + ((category.menus || []).length ? '' : ' disabled') + '><option value="">' + placeholder + '</option>' + selectedOptions + '</select></div>';
             }).join('') + '</div>';
+    }
+
+    function refreshCategoryChoiceDropdowns(categoryId) {
+        categoryId = String(categoryId);
+        var category = includedChoices.find(function (item) {
+            return String(item.categoryId) === categoryId;
+        });
+        if (!category) return;
+
+        var selections = includedChoiceSelections[categoryId] || [];
+        $('.included-menu-select[data-category-id="' + categoryId + '"]').each(function () {
+            var $select = $(this);
+            var choiceIndex = Number($select.data('choice-index'));
+            var selectedId = String(selections[choiceIndex] || '');
+            var selectedInOtherChoices = selections.filter(function (_, index) {
+                return index !== choiceIndex;
+            }).map(String);
+
+            $select.empty().append($('<option></option>').val('').text('Select menu'));
+            (category.menus || []).forEach(function (menu) {
+                var menuId = String(menu.id);
+                if (selectedInOtherChoices.indexOf(menuId) === -1) {
+                    $select.append($('<option></option>').val(menuId).text(menu.name));
+                }
+            });
+            $select.val(selectedId);
+        });
     }
 
     function loadPackageCategories(packageId) {
@@ -354,7 +415,6 @@ $(function () {
         return '<div class="pkg-card ' + (selected ? 'selected' : '') + '" data-package-id="' + pkg.id + '">' +
             '<div class="pkg-name">' + escapeHtml(pkg.name) + '</div>' +
             '<div class="pkg-price">S$' + pkg.price.toFixed(2) + '<span>/pax</span></div>' +
-            '<div class="pkg-min">Min ' + pkg.min + ' pax</div>' +
             '<div class="pkg-desc" role="button" tabindex="0" aria-expanded="false" title="Click to show full description">' + escapeHtml(pkg.desc) + '</div>' +
             '<button class="btn ' + (selected ? 'btn-orange' : 'btn-primary') + ' select-package-btn">' + (selected ? 'Selected' : 'Select Package') + '</button>' +
             '</div>';
@@ -491,108 +551,16 @@ $(function () {
             '<div class="form-group"><label>Event Date <span class="field-required">*</span></label><input id="detailDate" class="form-control" type="date" value="' + d.eventDate + '"><div class="field-error hidden" id="detailDateError"></div></div>' +
             '<div class="form-group"><label>Meal Period <span class="field-required">*</span></label><select id="detailPeriod" class="form-control"' + (mealPeriods.length ? '' : ' disabled') + '><option value="">' + mealPeriodPlaceholder + '</option>' + mealPeriodOptions + '</select><div class="field-error hidden" id="detailPeriodError"></div></div>' +
             '<div class="form-group event-address-field"><label for="detailAddressLine1">Address Line 1 <span class="field-required">*</span></label><input type="text" class="form-control" id="detailAddressLine1" name="AddressLine1" autocomplete="address-line1" placeholder="Enter address line 1" value="' + escapeHtml(d.addressLine1 || '') + '"><div class="field-error hidden" id="detailAddressLine1Error"></div></div>' +
-            '<div class="form-group event-address-field"><label for="detailAddressLine2">Address Line 2</label><input type="text" id="detailAddressLine2" name="AddressLine2" autocomplete="address-line2" placeholder="Enter address line 2 (optional)" value="' + escapeHtml(d.addressLine2 || '') + '"></div>' +
-            '<div class="form-group"><label>Country <span class="field-required">*</span></label><select id="detailCountry" class="form-control"><option value="">--Select Country--</option></select><div class="field-error hidden" id="detailCountryError"></div></div>' +
-            '<div class="form-group"><label>State <span class="field-required">*</span></label><select id="detailState" class="form-control" disabled><option value="">--Select State--</option></select><div class="field-error hidden" id="detailStateError"></div></div>' +
-            '<div class="form-group"><label>City <span class="field-required">*</span></label><select id="detailCity" class="form-control" disabled><option value="">--Select City--</option></select><div class="field-error hidden" id="detailCityError"></div></div>' +
             '<div class="form-group"><label>Postal Code </label><input id="detailPostal" value="' + d.postal + '"></div>' +
             '</div><div class="form-group"><label>Notes</label><textarea id="detailNotes" rows="3">' + d.notes + '</textarea></div></div>';
         showOrderLoader(false);
         $('#orderStepContent').html(html);
-        loadEventCountries(d.countryId, d.stateId, d.cityId);
-    }
-
-    function loadEventCountries(selectedCountryId, selectedStateId, selectedCityId) {
-        return $.ajax({
-            url: '/Common/GetCountry',
-            type: 'GET',
-            dataType: 'json',
-            success: function (rows) {
-                var list = Array.isArray(rows) ? rows : [];
-                var html = '<option value="0">--Select Country--</option>';
-                for (var i = 0; i < list.length; i++) {
-                    var row = list[i] || {};
-                    html += '<option value="' + row.id + '">' + escapeHtml(row.name || '') + '</option>';
-                }
-                $('#detailCountry').html(html);
-                if (selectedCountryId) $('#detailCountry').val(selectedCountryId.toString());
-
-                $('#detailCountry').off('change.location').on('change.location', function () {
-                    var countryId = parseInt($(this).val(), 10) || 0;
-                    $('#detailState').prop('disabled', true).html('<option value="0">--Select State--</option>');
-                    $('#detailCity').prop('disabled', true).html('<option value="0">--Select City--</option>');
-                    updateEventDetails();
-                    if (countryId > 0) loadEventStates(countryId);
-                });
-
-                if (selectedCountryId) loadEventStates(selectedCountryId, selectedStateId, selectedCityId);
-            },
-            error: function () {
-                $('#detailCountry').html('<option value="0">--Select Country--</option>');
-                showToast('Unable to load countries.', 3000, { type: 'error', title: 'Load failed' });
-            }
-        });
-    }
-
-    function loadEventStates(countryId, selectedStateId, selectedCityId) {
-        if (!countryId) return $.Deferred().resolve().promise();
-        return $.ajax({
-            url: '/Common/GetStateByCountryId?countryId=' + parseInt(countryId, 10),
-            type: 'GET',
-            dataType: 'json',
-            success: function (rows) {
-                var list = Array.isArray(rows) ? rows : [];
-                var html = '<option value="0">--Select State--</option>';
-                for (var i = 0; i < list.length; i++) {
-                    var row = list[i] || {};
-                    html += '<option value="' + row.id + '">' + escapeHtml(row.name || '') + '</option>';
-                }
-                $('#detailState').prop('disabled', false).html(html);
-                if (selectedStateId) $('#detailState').val(selectedStateId.toString());
-
-                $('#detailState').off('change.location').on('change.location', function () {
-                    var stateId = parseInt($(this).val(), 10) || 0;
-                    $('#detailCity').prop('disabled', true).html('<option value="0">--Select City--</option>');
-                    updateEventDetails();
-                    if (stateId > 0) loadEventCities(stateId);
-                });
-
-                if (selectedStateId) loadEventCities(selectedStateId, selectedCityId);
-            },
-            error: function () {
-                $('#detailState').prop('disabled', true).html('<option value="0">--Select State--</option>');
-                showToast('Unable to load states.', 3000, { type: 'error', title: 'Load failed' });
-            }
-        });
-    }
-
-    function loadEventCities(stateId, selectedCityId) {
-        if (!stateId) return $.Deferred().resolve().promise();
-        return $.ajax({
-            url: '/Common/GetCityByStateId?stateId=' + parseInt(stateId, 10),
-            type: 'GET',
-            dataType: 'json',
-            success: function (rows) {
-                var list = Array.isArray(rows) ? rows : [];
-                var html = '<option value="0">--Select City--</option>';
-                for (var i = 0; i < list.length; i++) {
-                    var row = list[i] || {};
-                    html += '<option value="' + row.id + '">' + escapeHtml(row.name || '') + '</option>';
-                }
-                $('#detailCity').prop('disabled', false).html(html);
-                if (selectedCityId) $('#detailCity').val(selectedCityId.toString());
-            },
-            error: function () {
-                $('#detailCity').prop('disabled', true).html('<option value="0">--Select City--</option>');
-                showToast('Unable to load cities.', 3000, { type: 'error', title: 'Load failed' });
-            }
-        });
     }
 
     function loadMealPeriods() {
         mealPeriodsLoading = true;
         $.ajax({
-            url: '/Admin/MealPeriods/getAll',
+            url: '/Customer/Order/meal-periods',
             type: 'GET',
             success: function (rows) {
                 mealPeriods = (Array.isArray(rows) ? rows : []).filter(function (item) {
@@ -612,7 +580,8 @@ $(function () {
             },
             error: function (xhr) {
                 mealPeriods = [];
-                showToast(xhr.responseJSON?.message || 'Unable to load meal periods.', 3000, { type: 'error', title: 'Load failed' });
+                var message = xhr.responseJSON?.detail || xhr.responseJSON?.message || 'Unable to load meal periods.';
+                showToast(message, 4000, { type: 'error', title: 'Meal period load failed' });
             },
             complete: function () {
                 mealPeriodsLoading = false;
@@ -626,14 +595,14 @@ $(function () {
         if (!utensilsLoaded && !utensilsLoading) {
             loadOrderUtensils();
         }
-        var html = '<div class="card order-card"><div class="section-label">Step 5 - Utensils, Equipment and Payment</div><div class="muted" style="font-size:13px;margin-bottom:16px">Utensil quantity can be auto-suggested from admin/kitchen configuration, then adjusted manually by Sales/Admin/Kitchen Admin.</div><div class="actions" style="margin-bottom:14px"><button class="btn btn-primary" id="suggestUtensilsBtn">Use Suggested Qty</button><button class="btn btn-light" id="clearUtensilsBtn">Clear Utensils</button></div><div class="data-table-card"><table class="item-table"><thead><tr><th>Item</th><th>Rule</th><th>Suggested</th><th>Qty</th><th>Price</th><th>Deposit</th><th>Amount</th></tr></thead><tbody>' +
+        var html = '<div class="card order-card"><div class="section-label">Step 5 - Utensils, Equipment and Payment</div><div class="muted" style="font-size:13px;margin-bottom:16px">Utensil quantity can be auto-suggested from admin/kitchen configuration, then adjusted manually by Sales/Admin/Kitchen Admin.</div><div class="actions" style="margin-bottom:14px"><button class="btn btn-primary" id="suggestUtensilsBtn">Use Suggested Qty</button><button class="btn btn-light" id="clearUtensilsBtn">Clear Utensils</button></div><div class="data-table-card"><table class="item-table"><thead><tr><th>Item</th><th>Suggested</th><th>Qty</th><th>Price</th><th>Deposit</th><th>Amount</th></tr></thead><tbody>' +
             (utensilsLoading
-                ? '<tr><td colspan="7" class="muted">Loading utensils...</td></tr>'
+                ? '<tr><td colspan="6" class="muted">Loading utensils...</td></tr>'
                 : utensilRows.map(function (row) {
                 row.suggested = calculateUtensilSuggestedQty(row);
                 var qty = state.utensils[row.name] || 0;
-                return '<tr class="' + (qty > 0 ? 'selected-row' : '') + '"><td><strong>' + row.name + '</strong><div class="muted">' + row.unit + '</div></td><td>' + row.ruleLabel + '</td><td>' + row.suggested + '</td><td><input class="qty-input utensil-qty" data-id="' + row.id + '" data-name="' + row.name + '" type="number" min="0" max="' + row.suggested + '" step="1" value="' + qty + '"></td><td class="price-cell">' + money(row.price) + '</td><td>' + money(row.deposit) + '</td><td class="amount-cell">' + money(qty * row.price) + '</td></tr>';
-            }).join('') + (utensilRows.length ? '' : '<tr><td colspan="7" class="muted">No utensils available.</td></tr>')) + '</tbody></table></div></div>';
+                return '<tr class="' + (qty > 0 ? 'selected-row' : '') + '"><td><strong>' + row.name + '</strong><div class="muted">' + row.unit + '</div></td><td>' + row.suggested + '</td><td><input class="qty-input utensil-qty" data-id="' + row.id + '" data-name="' + row.name + '" type="number" min="0" max="' + row.suggested + '" step="1" value="' + qty + '"></td><td class="price-cell">' + money(row.price) + '</td><td>' + money(row.deposit) + '</td><td class="amount-cell">' + money(qty * row.price) + '</td></tr>';
+            }).join('') + (utensilRows.length ? '' : '<tr><td colspan="6" class="muted">No utensils available.</td></tr>')) + '</tbody></table></div></div>';
         showOrderLoader(false);
         $('#orderStepContent').html(html);
     }
@@ -700,7 +669,7 @@ $(function () {
       
         utensilsLoading = true;
         $.ajax({
-            url: '/Admin/Utensils/get',
+            url: '/Customer/Order/utensils',
             type: 'GET',
             dataType: 'json',
             success: function (rows) {
@@ -732,9 +701,10 @@ $(function () {
                     return item.id && item.name;
                 });
             },
-            error: function () {
+            error: function (xhr) {
                 utensilRows = [];
-                showToast('Unable to load utensils.', 3000, { type: 'error', title: 'Load failed' });
+                var response = xhr && xhr.responseJSON ? xhr.responseJSON : {};
+                showToast(response.detail || response.message || 'Unable to load utensils.', 3000, { type: 'error', title: 'Load failed' });
             },
             complete: function () {
                 utensilsLoading = false;
@@ -781,7 +751,7 @@ $(function () {
             return (state.utensils[row.name] || 0) > 0;
         }).map(function (row) {
             var qty = state.utensils[row.name] || 0;
-            return '<tr><td>' + escapeHtml(row.name) + '</td><td>' + escapeHtml(row.ruleLabel) + '</td><td>' + qty +
+            return '<tr><td>' + escapeHtml(row.name) + '</td><td>' + qty +
                 '</td><td>' + money(row.price) + '</td><td>' + money(row.deposit) + '</td><td>' + money(qty * row.price) + '</td></tr>';
         }).join('');
 
@@ -794,12 +764,12 @@ $(function () {
         var html = '<div class="review-sheet report-review" id="orderReviewReport">' +
             '<div class="review-top"><div class="review-brand"><img class="review-logo" src="/images/logo.jpg" alt="' + escapeHtml(organizationName) + ' logo"><div><div class="review-title">' + escapeHtml(organizationName) + '</div><div class="review-company-details">UEN: ' + escapeHtml(organizationUen) + '<br>Email: ' + escapeHtml(organizationEmail) + '<br>Hotline: ' + escapeHtml(organizationHotline) + ' &nbsp;|&nbsp; WhatsApp: ' + escapeHtml(organizationWhatsapp) + '</div></div></div><div class="review-line"><strong>Quotation Request</strong><br>Date: ' + new Date().toLocaleDateString('en-SG') + '<br>Status: Draft</div></div>' +
             '<div class="review-split"><div><strong>Customer</strong><div>Name : ' + escapeHtml(state.details.company || '-') + '</div><div>Contact: ' + escapeHtml(state.details.contact || '-') + '</div><div>Email: ' + escapeHtml(state.details.email || '-') + '</div><div>Mobile: ' + escapeHtml(state.details.mobile || '-') + '</div></div>' +
-            '<div><strong>Event</strong><div>Date: ' + escapeHtml(state.details.eventDate || '-') + '</div><div>Meal Period: ' + escapeHtml(state.details.mealPeriod || '-') + '</div><div>Pax: ' + state.pax + '</div><div>Address: ' + escapeHtml(buildDeliveryAddress() || '-') + '</div><div>Notes: ' + escapeHtml(state.details.notes || '-') + '</div></div></div>' +
+            '<div><strong>Event</strong><div>Type: ' + escapeHtml(state.eventName || '-') + '</div><div>Date: ' + escapeHtml(state.details.eventDate || '-') + '</div><div>Meal Period: ' + escapeHtml(state.details.mealPeriod || '-') + '</div><div>Pax: ' + state.pax + '</div><div>Address: ' + escapeHtml(buildDeliveryAddress() || '-') + '</div><div>Notes: ' + escapeHtml(state.details.notes || '-') + '</div></div></div>' +
             '<section class="review-section"><div class="review-table-title">Package Details</div><div class="review-table-wrap"><table class="item-table review-table"><thead><tr><th>Package</th><th>Rate</th><th>Pax</th><th>Amount</th></tr></thead><tbody><tr><td>' + escapeHtml(state.packageName) + '</td><td>' + money(state.packagePrice) + '/pax</td><td>' + state.pax + '</td><td>' + money(packageBase()) + '</td></tr></tbody></table></div></section>' +
             '<section class="review-section"><div class="review-table-title">Included Package Dish Choices</div><div class="review-table-wrap"><table class="item-table review-table"><thead><tr><th>Category</th><th>Dish</th><th>Included Qty</th><th>Unit</th><th>Status</th></tr></thead><tbody>' + (includedRows.join('') || '<tr><td colspan="5" class="muted">No package dishes selected.</td></tr>') + '</tbody></table></div></section>' +
             '<section class="review-section"><div class="review-table-title">Additional Chargeable Menu Items</div><div class="review-table-wrap"><table class="item-table review-table"><thead><tr><th>Item</th><th>Type</th><th>Qty</th><th>Unit</th><th>Unit Price</th><th>Amount</th></tr></thead><tbody>' + (extraReviewRows || '<tr><td colspan="6" class="muted">No additional menu items selected.</td></tr>') + '</tbody></table></div></section>' +
             '<section class="review-section"><div class="review-table-title">Add-ons</div><div class="review-table-wrap"><table class="item-table review-table"><thead><tr><th>Add-on</th><th>Unit</th><th>Qty</th><th>Price</th><th>Amount</th></tr></thead><tbody>' + (addonReviewRows || '<tr><td colspan="5" class="muted">No add-ons selected.</td></tr>') + '</tbody></table></div></section>' +
-            '<section class="review-section"><div class="review-table-title">Utensils / Equipment</div><div class="review-table-wrap"><table class="item-table review-table"><thead><tr><th>Item</th><th>Rule</th><th>Qty</th><th>Rental</th><th>Deposit</th><th>Amount</th></tr></thead><tbody>' + (utensilReviewRows || '<tr><td colspan="6" class="muted">No utensils selected.</td></tr>') + '</tbody></table></div></section>' +
+            '<section class="review-section"><div class="review-table-title">Utensils / Equipment</div><div class="review-table-wrap"><table class="item-table review-table"><thead><tr><th>Item</th><th>Qty</th><th>Rental</th><th>Deposit</th><th>Amount</th></tr></thead><tbody>' + (utensilReviewRows || '<tr><td colspan="5" class="muted">No utensils selected.</td></tr>') + '</tbody></table></div></section>' +
             '<section class="review-section review-payment-section"><div class="review-table-title">Payment Summary</div><div class="review-table-wrap"><table class="item-table review-table review-payment-table"><tbody><tr><td>Package Base</td><td>' + money(packageBase()) + '</td></tr><tr><td>Additional Menu</td><td>' + money(extraTotal()) + '</td></tr><tr><td>Add-ons</td><td>' + money(addonTotal()) + '</td></tr><tr><td>Utensils / Setup</td><td>' + money(utensilTotal()) + '</td></tr><tr><td>GST (' + (gstRate * 100).toFixed(0) + '%)</td><td>' + money(gstTotal()) + '</td></tr><tr><td>Refundable Deposit</td><td>' + money(depositTotal()) + '</td></tr><tr class="review-grand-total"><td>Total</td><td>' + money(grandTotal()) + '</td></tr></tbody></table></div></section></div>';
         showOrderLoader(false);
         $('#orderStepContent').html(html);
@@ -812,7 +782,7 @@ $(function () {
     }
 
     function buildDeliveryAddress() {
-        return [state.details.addressLine1, state.details.addressLine2, state.details.city, state.details.state, state.details.country, state.details.postal]
+        return [state.details.addressLine1, state.details.postal]
             .filter(function (part) { return part && part.trim(); })
             .join(', ');
     }
@@ -915,11 +885,7 @@ $(function () {
                 name: customerName,
                 mobileNo: customerMobile,
                 emailId: state.details.email || null,
-                addressLine1: state.details.addressLine1 || null,
-                addressLine2: state.details.addressLine2 || null,
-                cityId: parseInt(state.details.cityId, 10) || 0,
-                stateId: parseInt(state.details.stateId, 10) || 0,
-                countryId: parseInt(state.details.countryId, 10) || 0,
+                address: buildDeliveryAddress() || null,
                 pincode: state.details.postal || null,
                 remarks: state.details.notes || null,
                 isActive: true,
@@ -930,10 +896,6 @@ $(function () {
                 eventStartDate: state.details.eventDate || null,
                 eventEndDate: null,
                 addressLine1: state.details.addressLine1 || null,
-                addressLine2: state.details.addressLine2 || null,
-                city: parseInt(state.details.cityId, 10) || null,
-                state: parseInt(state.details.stateId, 10) || null,
-                country: parseInt(state.details.countryId, 10) || null,
                 notes: state.details.notes || null,
                 mealPeriodId: parseInt(state.details.mealPeriodId, 10) || null,
                 isActive: true,
@@ -1026,7 +988,9 @@ $(function () {
         renderStep();
     });
 
-    $('#summaryNextBtn').on('click', function () {
+    $('#summaryNextBtn').on('click', function (e) {
+        e.preventDefault();
+        e.stopPropagation();
         if (!canMoveToStep(currentStep + 1, true)) {
             return;
         }
@@ -1043,11 +1007,13 @@ $(function () {
         }
     });
 
-    $('#summaryQuoteBtn').on('click', function () {
+    $('#summaryQuoteBtn').on('click', function (e) {
+        e.preventDefault();
         showToast('Quotation request sent successfully.', 2600, { type: 'success', title: 'Quotation sent' });
     });
 
-    $('#summarySubmitBtn').on('click', function () {
+    $('#summarySubmitBtn').on('click', function (e) {
+        e.preventDefault();
         submitOrder();
     });
 
@@ -1070,6 +1036,9 @@ $(function () {
         closePaymentModal();
         currentStep = 1;
         state.step1View = 'packages';
+        state.selectedEvent = '';
+        state.eventName = '';
+        state.eventMinPax = 0;
         state.selectedPackage = '';
         state.packageName = '-';
         state.packagePrice = 0;
@@ -1088,8 +1057,54 @@ $(function () {
         renderStep();
     });
 
+    $(document).on('change', '#eventType', function () {
+        var eventId = String($(this).val() || '');
+        var selectedEvent = events.find(function (item) { return item.id === eventId; });
+        state.selectedEvent = selectedEvent ? selectedEvent.id : '';
+        state.eventName = selectedEvent ? selectedEvent.name : '';
+        state.eventMinPax = selectedEvent ? selectedEvent.minPax : 0;
+        state.selectedPackage = '';
+        state.packageName = '-';
+        state.packagePrice = 0;
+        state.pax = Math.max(parseInt(state.pax, 10) || 0, state.eventMinPax);
+        packages = [];
+        includedChoices = [];
+        includedChoiceSelections = {};
+        if (state.selectedEvent) loadOrderPackages(state.selectedEvent);
+        else renderStep();
+    });
+
+    $(document).on('input', '#eventPaxCount', function () {
+        var enteredPax = parseInt($(this).val(), 10) || 0;
+        if (enteredPax >= state.eventMinPax) {
+            state.pax = enteredPax;
+            updateSummary();
+        }
+    });
+
+    $(document).on('change', '#eventPaxCount', function () {
+        var enteredPax = parseInt($(this).val(), 10) || 0;
+        if (enteredPax < state.eventMinPax) {
+            enteredPax = state.eventMinPax;
+            $(this).val(enteredPax);
+            showToast('Pax cannot be less than the event minimum of ' + state.eventMinPax + '.', 2500, {
+                type: 'warning',
+                title: 'Minimum pax'
+            });
+        }
+        state.pax = enteredPax;
+        updateSummary();
+    });
+
     $(document).on('change', '#paxCount', function () {
-        state.pax = parseInt($(this).val(), 10) || 0;
+        var enteredPax = parseInt($(this).val(), 10) || 0;
+        if (enteredPax < state.eventMinPax) {
+            enteredPax = state.eventMinPax;
+            showToast('Pax cannot be less than the event minimum of ' + state.eventMinPax + '.', 2500, {
+                type: 'warning', title: 'Minimum pax'
+            });
+        }
+        state.pax = enteredPax;
         renderStep();
     });
 
@@ -1126,7 +1141,7 @@ $(function () {
         state.selectedPackage = pkg.id;
         state.packageName = pkg.name;
         state.packagePrice = pkg.price;
-        state.pax = pkg.min;
+        state.pax = Math.max(parseInt(state.pax, 10) || 0, state.eventMinPax);
         state.step1View = 'form';
         currentStep = 1;
         includedChoiceSelections = {};
@@ -1146,6 +1161,10 @@ $(function () {
     }
 
     function validateStep1(showFeedback) {
+        if (!state.selectedEvent) {
+            if (showFeedback) showToast('Select an event to continue.', 3000, { type: 'error', title: 'Validation' });
+            return false;
+        }
         if (state.step1View === 'packages' || !state.selectedPackage) {
             if (showFeedback) {
                 showToast('Select a package to continue.', 3000, { type: 'error', title: 'Validation' });
@@ -1156,6 +1175,13 @@ $(function () {
         if ((parseInt(state.pax, 10) || 0) <= 0) {
             if (showFeedback) {
                 showToast('Enter a valid pax count.', 3000, { type: 'error', title: 'Validation' });
+            }
+            return false;
+        }
+
+        if ((parseInt(state.pax, 10) || 0) < state.eventMinPax) {
+            if (showFeedback) {
+                showToast('Minimum pax for ' + state.eventName + ' is ' + state.eventMinPax + '.', 3000, { type: 'error', title: 'Validation' });
             }
             return false;
         }
@@ -1184,10 +1210,7 @@ $(function () {
             { key: 'mobile', input: '#detailMobile', error: '#detailMobileError', message: 'Mobile / WhatsApp is required' },
             { key: 'eventDate', input: '#detailDate', error: '#detailDateError', message: 'Event Date is required' },
             { key: 'mealPeriodId', input: '#detailPeriod', error: '#detailPeriodError', message: 'Meal Period is required' },
-            { key: 'addressLine1', input: '#detailAddressLine1', error: '#detailAddressLine1Error', message: 'Address Line 1 is required' },
-            { key: 'countryId', input: '#detailCountry', error: '#detailCountryError', message: 'Country is required' },
-            { key: 'stateId', input: '#detailState', error: '#detailStateError', message: 'State is required' },
-            { key: 'cityId', input: '#detailCity', error: '#detailCityError', message: 'City is required' }
+            { key: 'addressLine1', input: '#detailAddressLine1', error: '#detailAddressLine1Error', message: 'Address Line 1 is required' }
         ];
 
         if ($('#detailCompany').length) {
@@ -1262,6 +1285,7 @@ $(function () {
         var choiceIndex = Number($(this).data('choice-index'));
         includedChoiceSelections[categoryId] = includedChoiceSelections[categoryId] || [];
         includedChoiceSelections[categoryId][choiceIndex] = String($(this).val() || '');
+        refreshCategoryChoiceDropdowns(categoryId);
     });
 
     $(document).on('change', '.extra-check', function () {
@@ -1335,9 +1359,6 @@ $(function () {
 
     function updateEventDetails() {
         var selectedMealPeriod = $('#detailPeriod option:selected');
-        var cityId = parseInt($('#detailCity').val(), 10) || 0;
-        var stateId = parseInt($('#detailState').val(), 10) || 0;
-        var countryId = parseInt($('#detailCountry').val(), 10) || 0;
         state.details = {
             company: $('#detailCompany').val(),
             contact: $('#detailContact').val(),
@@ -1348,18 +1369,11 @@ $(function () {
             mealPeriod: selectedMealPeriod.val() ? selectedMealPeriod.text() : '',
             postal: $('#detailPostal').val(),
             addressLine1: $('#detailAddressLine1').val(),
-            addressLine2: $('#detailAddressLine2').val(),
-            cityId: cityId || '',
-            city: cityId ? $('#detailCity option:selected').text() : '',
-            stateId: stateId || '',
-            state: stateId ? $('#detailState option:selected').text() : '',
-            countryId: countryId || '',
-            country: countryId ? $('#detailCountry option:selected').text() : '',
             notes: $('#detailNotes').val()
         };
     }
 
-    $(document).on('input change', '#detailCompany, #detailContact, #detailEmail, #detailMobile, #detailDate, #detailPeriod, #detailPostal, #detailAddressLine1, #detailAddressLine2, #detailCity, #detailState, #detailCountry, #detailNotes', function () {
+    $(document).on('input change', '#detailCompany, #detailContact, #detailEmail, #detailMobile, #detailDate, #detailPeriod, #detailPostal, #detailAddressLine1, #detailNotes', function () {
         var id = this.id;
         if (id) {
             clearFieldError('#' + id, '#' + id + 'Error');
@@ -1369,5 +1383,5 @@ $(function () {
 
     showOrderLoader(true);
     loadOrganizationGst();
-    loadOrderPackages();
+    loadOrderEvents();
 });

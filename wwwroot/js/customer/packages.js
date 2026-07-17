@@ -22,7 +22,6 @@ function renderPackages(packages) {
     } else {
         html = packages.map(function (item) {
             var price = parseFloat(item.price || item.Price || 0) || 0;
-            var minPax = item.minPersons || item.MinPersons || '30';
             var description = item.packageDescription || item.PackageDescription || item.packageType || item.PackageType || 'A catering package with event setup options.';
             var packageName = item.packageName || item.PackageName || 'Package';
             var isActive = item.isActive === '1' || item.isActive === 'true' || item.isActive === true || item.IsActive === '1' || item.IsActive === 'true' || item.IsActive === true;
@@ -32,8 +31,7 @@ function renderPackages(packages) {
             return '<div class="preset-card' + (isActive ? '' : ' muted') + '">' +
                 '<div class="preset-name">' + packageName + '</div>' +
                 '<div class="preset-price">S$' + price.toFixed(2) + ' <span>/pax</span></div>' +
-                '<ul class="preset-items"><li>' + description + '</li>' +
-                '<li>Min ' + minPax + ' pax</li></ul>' +
+                '<ul class="preset-items"><li>' + description + '</li></ul>' +
                 '<a href="/Customer/Order" class="btn ' + buttonClass + ' btn-sm">' + buttonText + '</a>' +
                 '</div>';
         }).join('');

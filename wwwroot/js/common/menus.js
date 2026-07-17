@@ -1,74 +1,186 @@
 // Simple jQuery menu loader to match the project's style
 $(document).ready(function () {
-    if (!$('#sidebarDynamic').length) return;
+    var bootCompleted = false;
 
-    var roleId = 0;
-    if (typeof window.getCurrentRoleId === 'function') {
-        roleId = parseInt(window.getCurrentRoleId() || '0', 10) || 0;
+    function getRoleId() {
+        if (typeof window.getCurrentRoleId === 'function') {
+            return parseInt(window.getCurrentRoleId() || '0', 10) || 0;
+        }
+        return 0;
     }
 
-    $.ajax({
-        url: '/Common/menus?roleId=' + encodeURIComponent(roleId),
-        type: 'GET',
-        dataType: 'json',
-        success: function (groups) {
+    function getMenuCacheKey(roleId) {
+        return 'gcp_admin_menus_role_' + roleId;
+    }
 
-            console.debug('menus: received', groups);
-            var page = $('body').attr('data-page') || '';
-            var html = '';
-            if (Array.isArray(groups) && groups.length) {
-                for (var gi = 0; gi < groups.length; gi++) {
-                    var g = groups[gi];
-                    var groupName = g.name || g.Name || '';
-                    html += '<div class="sidebar-section">' + groupName + '</div>';
-                    var menus = g.menus || g.Menus || [];
-                   
-                    for (var i = 0; i < menus.length; i++) {
-                        var m = menus[i];
-                        var route = m.route || '#';
-                        var name = m.name || '';
-                        var icon = m.menuIcon|| '';
-                        var entityNo = m.entityNo || m.EntityNo || 0;
-                        var active = false;
-                        if (page && route && route.toLowerCase().indexOf(page.toLowerCase()) !== -1) active = true;
-                        if (!active && route && window.location.pathname.toLowerCase() === route.toLowerCase()) active = true;
-                        html += '<a class="sidebar-item' + (active ? ' active' : '') + '" href="' + route + '" data-entity-no="' + entityNo + '" data-menu-name="' + name + '"><span class="icon">' + icon + '</span> ' + name + '</a>';
-                    }
-                }
-            }
-            if (!html) {
-                html = '<div class="sidebar-section">Menu</div><div class="sidebar-item">No menu items found</div>';
-            }
-            $('#sidebarDynamic').html(html);
-
-            $('#sidebarDynamic .sidebar-item').off('click.menucontext').on('click.menucontext', function () {
-                var entityNo = parseInt($(this).data('entity-no') || '0', 10) || 0;
-                var route = $(this).attr('href') || '';
-                var menuName = $(this).data('menu-name') || '';
-                if (entityNo > 0 && window.storeCurrentMenuContext) {
-                    window.storeCurrentMenuContext(entityNo, route, menuName);
-                    if (window.applyPermissionVisibility) {
-                        window.applyPermissionVisibility(document);
-                    }
-                }
-            });
-
-            var $active = $('#sidebarDynamic .sidebar-item.active').first();
-            if ($active.length && window.storeCurrentMenuContext) {
-                var activeEntityNo = parseInt($active.data('entity-no') || '0', 10) || 0;
-                var activeRoute = $active.attr('href') || '';
-                var activeName = $active.data('menu-name') || '';
-                if (activeEntityNo > 0) {
-                    window.storeCurrentMenuContext(activeEntityNo, activeRoute, activeName);
-                    if (window.applyPermissionVisibility) {
-                        window.applyPermissionVisibility(document);
-                    }
-                }
-            }
-        },
-        error: function (err) {
-            console.error('Unable to load menus', err);
-            $('#sidebarDynamic').text('Menu load failed');
+    function cacheMenuGroups(roleId, groups) {
+        if (!roleId) return;
+        try {
+            var payload = {
+                ts: Date.now(),
+                groups: Array.isArray(groups) ? groups : []
+            };
+            sessionStorage.setItem(getMenuCacheKey(roleId), JSON.stringify(payload));
+        } catch (e) {
+            // Ignore cache failures (quota/private mode), menu still works via API.
         }
+    }
+
+    function readCachedMenuGroups(roleId) {
+        if (!roleId) return null;
+        try {
+            var raw = sessionStorage.getItem(getMenuCacheKey(roleId));
+            if (!raw) return null;
+            var parsed = JSON.parse(raw);
+            if (!parsed || !Array.isArray(parsed.groups)) return null;
+            return parsed.groups;
+        } catch (e) {
+            return null;
+        }
+    }
+
+    function bindSidebarMenuContext() {
+        $('#sidebarDynamic .sidebar-item').off('click.menucontext').on('click.menucontext', function () {
+            var entityNo = parseInt($(this).data('entity-no') || '0', 10) || 0;
+            var route = $(this).attr('href') || '';
+            var menuName = $(this).data('menu-name') || '';
+            if (entityNo > 0 && window.storeCurrentMenuContext) {
+                window.storeCurrentMenuContext(entityNo, route, menuName);
+                if (window.applyPermissionVisibility) {
+                    window.applyPermissionVisibility(document);
+                }
+            }
+        });
+
+        var $active = $('#sidebarDynamic .sidebar-item.active').first();
+        if ($active.length && window.storeCurrentMenuContext) {
+            var activeEntityNo = parseInt($active.data('entity-no') || '0', 10) || 0;
+            var activeRoute = $active.attr('href') || '';
+            var activeName = $active.data('menu-name') || '';
+            if (activeEntityNo > 0) {
+                window.storeCurrentMenuContext(activeEntityNo, activeRoute, activeName);
+                if (window.applyPermissionVisibility) {
+                    window.applyPermissionVisibility(document);
+                }
+            }
+        }
+    }
+
+    function renderSidebar(groups) {
+        function normalizePath(path) {
+            var value = String(path || '').trim();
+            if (!value) return '';
+            value = value.split('?')[0].split('#')[0];
+            if (value.length > 1 && value.charAt(value.length - 1) === '/') {
+                value = value.substring(0, value.length - 1);
+            }
+            return value.toLowerCase();
+        }
+
+        var currentPath = normalizePath(window.location.pathname || '/');
+        var html = '';
+
+        if (Array.isArray(groups) && groups.length) {
+            for (var gi = 0; gi < groups.length; gi++) {
+                var g = groups[gi] || {};
+                var groupName = g.name || g.Name || '';
+                html += '<div class="sidebar-section">' + groupName + '</div>';
+                var menus = g.menus || g.Menus || [];
+
+                for (var i = 0; i < menus.length; i++) {
+                    var m = menus[i] || {};
+                    var route = m.route || '#';
+                    var name = m.name || '';
+                    var icon = m.menuIcon || '';
+                    var entityNo = m.entityNo || m.EntityNo || 0;
+                    var routePath = normalizePath(route);
+                    var active = !!(routePath && (currentPath === routePath || currentPath.indexOf(routePath + '/') === 0));
+
+                    html += '<a class="sidebar-item' + (active ? ' active' : '') + '" href="' + route + '" data-entity-no="' + entityNo + '" data-menu-name="' + name + '"><span class="icon">' + icon + '</span> ' + name + '</a>';
+                }
+            }
+        }
+
+        if (!html) {
+            html = '<div class="sidebar-section">Menu</div><div class="sidebar-item">No menu items found</div>';
+        }
+
+        $('#sidebarDynamic').html(html);
+        bindSidebarMenuContext();
+    }
+
+    function fetchMenus(roleId, onSuccess, onError) {
+        $.ajax({
+            url: '/Common/menus?roleId=' + encodeURIComponent(roleId),
+            type: 'GET',
+            dataType: 'json',
+            success: function (groups) {
+                if (typeof onSuccess === 'function') {
+                    onSuccess(groups);
+                }
+            },
+            error: function (err) {
+                if (typeof onError === 'function') {
+                    onError(err);
+                }
+            }
+        });
+    }
+
+    function completeAppBoot() {
+        if (bootCompleted) {
+            return;
+        }
+
+        bootCompleted = true;
+        var $loader = $('#appBootLoader');
+        if (!$loader.length) {
+            return;
+        }
+
+        $loader.addClass('is-hiding');
+        setTimeout(function () {
+            $loader.addClass('hidden');
+        }, 280);
+    }
+
+    var bootFallbackTimer = setTimeout(function () {
+        completeAppBoot();
+    }, 8000);
+
+    if (!$('#sidebarDynamic').length) {
+        clearTimeout(bootFallbackTimer);
+        completeAppBoot();
+        return;
+    }
+
+    var roleId = getRoleId();
+    var cachedGroups = readCachedMenuGroups(roleId);
+
+    if (cachedGroups && cachedGroups.length) {
+        renderSidebar(cachedGroups);
+        clearTimeout(bootFallbackTimer);
+        completeAppBoot();
+
+        fetchMenus(roleId, function (groups) {
+            renderSidebar(groups);
+            cacheMenuGroups(roleId, groups);
+        }, function () {
+            // Keep cached menu on refresh failure.
+        });
+
+        return;
+    }
+
+    fetchMenus(roleId, function (groups) {
+        renderSidebar(groups);
+        cacheMenuGroups(roleId, groups);
+        clearTimeout(bootFallbackTimer);
+        completeAppBoot();
+    }, function (err) {
+        console.error('Unable to load menus', err);
+        $('#sidebarDynamic').text('Menu load failed');
+        clearTimeout(bootFallbackTimer);
+        completeAppBoot();
     });
 });

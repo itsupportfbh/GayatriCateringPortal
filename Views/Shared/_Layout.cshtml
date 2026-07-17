@@ -46,6 +46,18 @@
         </div>
     </nav>
 
+    @if (ViewData["Mode"]?.ToString() == "admin")
+    {
+        <div id="appBootLoader" class="app-boot-loader">
+            <div class="app-boot-card">
+                <img class="app-boot-logo" src="~/images/logo.jpg" alt="Gayatri">
+                <div class="app-boot-title">Loading Workspace</div>
+                <div class="app-boot-subtitle">Preparing menu and permissions...</div>
+                <div class="spinner"></div>
+            </div>
+        </div>
+    }
+
     <div class="portal-wrap">
         @if (ViewData["Mode"]?.ToString() == "admin")
         {

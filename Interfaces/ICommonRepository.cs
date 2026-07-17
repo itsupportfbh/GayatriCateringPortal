@@ -10,6 +10,7 @@ namespace GayatriCateringPortal.Interfaces
         List<MenuGroup> GetMenuGroups(int roleId);
         List<EntityMaster> GetEntityMaster();
         List<RolePermissionItem> GetRolePermissionsByRoleId(int roleId);
+        RolePermissionItem GetMenuRights(int roleId, int entityNo);
         int CreateRolePermission(List<CreateRolePermissionRequest> requests);
         List<Country> GetCountry();
         List<State> GetStateByCountryId(int countryId);

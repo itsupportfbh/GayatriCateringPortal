@@ -11,20 +11,35 @@ namespace GayatriCateringPortal.Repositories.Customer
         private readonly IPackageItemsRepository _packageItems;
         private readonly IFoodMenuCategoryRepository _categories;
         private readonly IFoodMenuRepository _menus;
+        private readonly IEventDetailsRepository _eventDetails;
 
         public PackageRepository(
             IPackagesRepository packages,
             IPackageItemsRepository packageItems,
             IFoodMenuCategoryRepository categories,
-            IFoodMenuRepository menus)
+            IFoodMenuRepository menus,
+            IEventDetailsRepository eventDetails)
         {
             _packages = packages;
             _packageItems = packageItems;
             _categories = categories;
             _menus = menus;
+            _eventDetails = eventDetails;
         }
 
         public List<Packages> GetAll() => _packages.GetAll();
+
+        public List<Packages> GetByEventId(int eventId)
+        {
+            if (eventId <= 0) return new List<Packages>();
+            var packageIds = _eventDetails.GetByEventId(eventId)
+                .Where(item => item.IsActive && !item.IsDeleted)
+                .Select(item => item.PackageId)
+                .ToHashSet();
+            return _packages.GetAll()
+                .Where(item => packageIds.Contains(item.Id) && item.IsActive && !item.IsDeleted)
+                .ToList();
+        }
 
         public Packages? GetById(int id) => _packages.GetById(id);
 

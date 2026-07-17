@@ -29,117 +29,6 @@ function applyUsersFilter(searchText) {
     renderUsersList(filtered);
 }
 
-function loadCountries(selectedCountryId) {
-    return $.ajax({
-        url: '/Common/GetCountry',
-        type: 'GET',
-        dataType: 'json',
-        success: function (rows) {
-            var list = Array.isArray(rows) ? rows : [];
-            var html = '<option value="0">Select country</option>';
-
-            for (var i = 0; i < list.length; i++) {
-                var row = list[i] || {};
-          
-                html += '<option value="' + row.id + '">' + (row.name || '') + '</option>';
-            }
-
-            $('#userCountry').html(html);
-
-            if (selectedCountryId) {
-                $('#userCountry').val(selectedCountryId.toString());
-            }
-
-            $('#userCountry').off('change.location').on('change.location', function () {
-                var countryId = parseInt($(this).val(), 10) || 0;
-                $('#userState').html('<option value="0">Select state</option>');
-                $('#userCity').html('<option value="0">Select city</option>');
-                if (countryId > 0) {
-                    loadStatesByCountryId(countryId);
-                }
-            });
-        },
-        error: function () {
-            $('#userCountry').html('<option value="0">Select country</option>');
-            showToast('Unable to load countries.', 3000, { type: 'error', title: 'Load failed' });
-        }
-    });
-}
-
-function loadStatesByCountryId(countryId, selectedStateId) {
-    if (!countryId) {
-        $('#userState').html('<option value="0">Select state</option>');
-        $('#userCity').html('<option value="0">Select city</option>');
-        return $.Deferred().resolve().promise();
-    }
-
-    return $.ajax({
-        url: '/Common/GetStateByCountryId?countryId=' + parseInt(countryId, 10),
-        type: 'GET',
-        dataType: 'json',
-        success: function (rows) {
-            var list = Array.isArray(rows) ? rows : [];
-            var html = '<option value="0">Select state</option>';
-
-            for (var i = 0; i < list.length; i++) {
-                var row = list[i] || {};
-              
-                html += '<option value="' + row.id + '">' + (row.name || '') + '</option>';
-            }
-
-            $('#userState').html(html);
-
-            if (selectedStateId) {
-                $('#userState').val(selectedStateId.toString());
-            }
-
-            $('#userState').off('change.location').on('change.location', function () {
-                var stateId = parseInt($(this).val(), 10) || 0;
-                $('#userCity').html('<option value="0">Select city</option>');
-                if (stateId > 0) {
-                    loadCitiesByStateId(stateId);
-                }
-            });
-        },
-        error: function () {
-            $('#userState').html('<option value="0">Select state</option>');
-            showToast('Unable to load states.', 3000, { type: 'error', title: 'Load failed' });
-        }
-    });
-}
-
-function loadCitiesByStateId(stateId, selectedCityId) {
-    if (!stateId) {
-        $('#userCity').html('<option value="0">Select city</option>');
-        return $.Deferred().resolve().promise();
-    }
-
-    return $.ajax({
-        url: '/Common/GetCityByStateId?stateId=' + parseInt(stateId, 10),
-        type: 'GET',
-        dataType: 'json',
-        success: function (rows) {
-            var list = Array.isArray(rows) ? rows : [];
-            var html = '<option value="0">Select city</option>';
-
-            for (var i = 0; i < list.length; i++) {
-                var row = list[i] || {};
-               
-                html += '<option value="' + row.id + '">' + (row.name || '') + '</option>';
-            }
-
-            $('#userCity').html(html);
-
-            if (selectedCityId) {
-                $('#userCity').val(selectedCityId.toString());
-            }
-        },
-        error: function () {
-            $('#userCity').html('<option value="0">Select city</option>');
-            showToast('Unable to load cities.', 3000, { type: 'error', title: 'Load failed' });
-        }
-    });
-}
 
 function initUserRolesDropdown() {
     var $roles = $('#userRoles');
@@ -315,13 +204,6 @@ function bindUserImageUpload() {
     });
 }
 
-function toDateInputValue(dateValue) {
-    if (!dateValue) return '';
-    var date = new Date(dateValue);
-    if (isNaN(date.getTime())) return '';
-    return date.toISOString().split('T')[0];
-}
-
 function buildUserImageUrl(imageValue) {
     if (!imageValue) return '';
 
@@ -333,24 +215,6 @@ function buildUserImageUrl(imageValue) {
     }
 
     return '/FileUpload/User/' + value;
-}
-
-function calculateAgeFromDateValue(dateValue) {
-    var normalized = toDateInputValue(dateValue);
-    if (!normalized) return '';
-
-    var dob = new Date(normalized + 'T00:00:00');
-    if (isNaN(dob.getTime())) return '';
-
-    var today = new Date();
-    var age = today.getFullYear() - dob.getFullYear();
-    var monthDiff = today.getMonth() - dob.getMonth();
-
-    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < dob.getDate())) {
-        age--;
-    }
-
-    return age >= 0 ? age : '';
 }
 
 function getCurrentUserImageUrl() {
@@ -380,37 +244,12 @@ function viewCurrentUserImage() {
     openUserImageInNewTab(getCurrentUserImageUrl());
 }
 
-function syncUserAgeFromDob() {
-    var age = calculateAgeFromDateValue($('#userDob').val());
-    $('#userAge').val(age === '' ? '' : String(age));
-}
-
-function bindDobAgeAutoCalc() {
-    $('#userAge').prop('disabled', true);
-    $('#userDob').off('change.userage input.userage').on('change.userage input.userage', syncUserAgeFromDob);
-}
-
-function setUserDobValue(dateValue) {
-    var val = toDateInputValue(dateValue);
-    var dobInput = document.getElementById('userDob');
-
-    if (dobInput && dobInput._flatpickr) {
-        if (val) dobInput._flatpickr.setDate(val, true, 'Y-m-d');
-        else dobInput._flatpickr.clear();
-    } else {
-        $('#userDob').val(val);
-    }
-
-    syncUserAgeFromDob();
-}
-
 function closeUsersModal() {
     $('#usersModal').addClass('hidden');
 }
 
 function openUsersModal() {
     bindUserImageUpload();
-    bindDobAgeAutoCalc();
     loadUserRolesOptions([]);
 
     clearUsersForm();
@@ -420,8 +259,6 @@ function openUsersModal() {
     initUserField('#userCode', '#userCodeError');
     initUserField('#userName', '#userNameError');
     initUserField('#userEmail', '#userEmailError');
-
-    loadCountries();
 
     setActionButtonLabel('#saveUserBtn', 'Save');
 }
@@ -541,14 +378,9 @@ function clearUsersForm(keepId) {
     $('#userEmail').val('');
     $('#userContact').val('');
     $('#userRemarks').val('');
-    $('#userCountry').html('<option value="0">--Select Country--</option>');
-    $('#userState').html('<option value="0">--Select State--</option>');
-    $('#userCity').html('<option value="0">--Select City--</option>');
     $('#userPostalCode').val('');
-    $('#userAge').val('');
     $('#userGender').val('');
-    $('#userAddress1').val('');
-    $('#userAddress2').val('');
+    $('#userAddress').val('');
     $('#userImage').val('');
     $('#userImageFile').val('');
     $('#userIsActive').val('true');
@@ -557,7 +389,6 @@ function clearUsersForm(keepId) {
     $('#userIsAdmin').prop('checked', false);
     loadUserRolesOptions([]);
     clearRolesError();
-    setUserDobValue('');
     clearUserError('#userCode', '#userCodeError');
     clearUserError('#userName', '#userNameError');
     clearUserError('#userEmail', '#userEmailError');
@@ -565,7 +396,6 @@ function clearUsersForm(keepId) {
 
 function editUser(id) {
     bindUserImageUpload();
-    bindDobAgeAutoCalc();
 
     $('#users-title').html('Edit User');
 
@@ -585,27 +415,9 @@ function editUser(id) {
             $('#userContact').val(user.contactNo || '');
             $('#userRemarks').val(user.remarks || '');
 
-            var selectedCountryId = parseInt(user.country, 10) || 0;
-            var selectedStateId = parseInt(user.state, 10) || 0;
-            var selectedCityId = parseInt(user.city, 10) || 0;
-
-            $('#userState').html('<option value="0">--Select State--</option>');
-            $('#userCity').html('<option value="0">--Select City--</option>');
-
-            loadCountries(selectedCountryId).done(function () {
-                if (!selectedCountryId) return;
-
-                loadStatesByCountryId(selectedCountryId, selectedStateId).done(function () {
-                    if (!selectedStateId) return;
-                    loadCitiesByStateId(selectedStateId, selectedCityId);
-                });
-            });
-
             $('#userPostalCode').val(user.postalCode || '');
-            setUserDobValue(user.dob);
             $('#userGender').val(user.gender || '');
-            $('#userAddress1').val(user.address1 || '');
-            $('#userAddress2').val(user.address2 || '');
+            $('#userAddress').val(user.address || '');
 
             var imageValue = user.Image || user.image || '';
             $('#userImage').val(imageValue);
@@ -647,7 +459,6 @@ function validateUserForm() {
     var code = $('#userCode').val().toString().trim();
     var name = $('#userName').val().toString().trim();
     var email = $('#userEmail').val().toString().trim();
-    var userId = $('#userId').val();
 
     if (!code) {
         setUserError('#userCode', '#userCodeError', 'Code is required');
@@ -691,14 +502,14 @@ function isValidEmail(email) {
 }
 
 function saveUser() {
+    var userId = $('#userId').val();
+    var isUpdate = userId && parseInt(userId, 10) > 0;
     if (!validateUserForm()) {
         return;
     }
 
     setButtonBusy('#saveUserBtn', true, 'Saving...');
 
-    var userId = $('#userId').val();
-    var isUpdate = userId && parseInt(userId) > 0;
     var isActive = isUpdate ? ($('#userIsActive').val() === 'true') : true;
     var selectedRoles = getSelectedUserRoleIds();
     var user = {
@@ -708,15 +519,9 @@ function saveUser() {
         Email: $('#userEmail').val().trim(),
         ContactNo: $('#userContact').val() || '',
         Remarks: $('#userRemarks').val() || '',
-        Country: parseInt($('#userCountry').val(), 10) || null,
-        State: parseInt($('#userState').val(), 10) || null,
-        City: parseInt($('#userCity').val(), 10) || null,
         PostalCode: parseInt($('#userPostalCode').val(), 10) || null,
-        DOB: $('#userDob').val() || null,
-        Age: parseInt($('#userAge').val(), 10) || null,
         Gender: parseInt($('#userGender').val(), 10) || null,
-        Address1: $('#userAddress1').val() || '',
-        Address2: $('#userAddress2').val() || '',
+        Address: $('#userAddress').val() || '',
         Image: $('#userImage').val() || '',
         IsAdmin: $('#userIsAdmin').prop('checked'),
         IsActive: isActive,

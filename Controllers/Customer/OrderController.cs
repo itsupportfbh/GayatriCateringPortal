@@ -1,5 +1,6 @@
 ﻿using GayatriCateringPortal.Interfaces;
 using GayatriCateringPortal.Models;
+using GayatriCateringPortal.Interfaces.Customer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Net.Http.Headers;
@@ -15,13 +16,90 @@ namespace GayatriCateringPortal.Controllers.Customer
         private readonly IAddOnRepository _addOns;
         private readonly IConfiguration _configuration;
         private readonly IHttpClientFactory _httpClientFactory;
+        private readonly IEventMasterRepository _events;
+        private readonly IPackageRepository _packages;
+        private readonly IMealPeriodsRepository _mealPeriods;
+        private readonly IUtensilsRepository _utensils;
 
-        public OrderController(IOrdersRepository orders, IAddOnRepository addOns, IConfiguration configuration, IHttpClientFactory httpClientFactory)
+        public OrderController(IOrdersRepository orders, IAddOnRepository addOns, IConfiguration configuration,
+            IHttpClientFactory httpClientFactory, IEventMasterRepository events,
+            IPackageRepository packages, IMealPeriodsRepository mealPeriods,
+            IUtensilsRepository utensils)
         {
             _orders = orders;
             _addOns = addOns;
             _configuration = configuration;
             _httpClientFactory = httpClientFactory;
+            _events = events;
+            _packages = packages;
+            _mealPeriods = mealPeriods;
+            _utensils = utensils;
+        }
+
+        [HttpGet("events")]
+        public IActionResult GetEvents() => Ok(_events.GetAll()
+            .Where(item => item.IsActive && item.IsDeleted != true)
+            .OrderBy(item => item.Name));
+
+        [HttpGet("events/{eventId:int}/packages")]
+        public IActionResult GetEventPackages(int eventId)
+        {
+            if (eventId <= 0) return BadRequest(new { message = "A valid event is required." });
+            return Ok(_packages.GetByEventId(eventId));
+        }
+
+        [HttpGet("meal-periods")]
+        public IActionResult GetMealPeriods()
+        {
+            try
+            {
+                var items = _mealPeriods.GetAll()
+                    .Where(item => item.IsActive && item.IsDeleted != true)
+                    .OrderBy(item => item.DisplayOrder)
+                    .Select(item => new
+                    {
+                        id = item.Id,
+                        mealPeriodName = item.MealPeriodName,
+                        displayOrder = item.DisplayOrder
+                    })
+                    .ToList();
+                return Ok(items);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Unable to load meal periods.", detail = ex.Message });
+            }
+        }
+
+        [HttpGet("utensils")]
+        public IActionResult GetUtensils()
+        {
+            try
+            {
+                var items = _utensils.GetAll()
+                    .Where(item => item.IsActive && !item.IsDeleted)
+                    .OrderBy(item => item.UtensilName)
+                    .Select(item => new
+                    {
+                        id = item.Id,
+                        utensilName = item.UtensilName,
+                        ruleType = item.RuleType,
+                        ruleOperator = item.RuleOperator,
+                        ruleValue = item.RuleValue,
+                        rulePercentage = item.RulePercentage,
+                        minimumQty = item.MinimumQty,
+                        ruleDescription = item.RuleDescription,
+                        price = item.Price,
+                        depositAmount = item.DepositAmount
+                    })
+                    .ToList();
+
+                return Ok(items);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Unable to load utensils.", detail = ex.Message });
+            }
         }
 
         [HttpGet("")]

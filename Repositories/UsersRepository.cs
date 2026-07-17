@@ -107,13 +107,7 @@ public class UsersRepository : IUsersRepository
                     cmd.Parameters.Add(DataFactory.CreateParameter("@CreatedBy", item.CreatedBy ?? (object)DBNull.Value));
                     cmd.Parameters.Add(DataFactory.CreateParameter("@Image", item.Image ?? (object)DBNull.Value));
                     cmd.Parameters.Add(DataFactory.CreateParameter("@Gender", item.Gender ?? (object)DBNull.Value));
-                    cmd.Parameters.Add(DataFactory.CreateParameter("@DOB", item.DOB ?? (object)DBNull.Value));
-                    cmd.Parameters.Add(DataFactory.CreateParameter("@Age", item.Age ?? (object)DBNull.Value));
-                    cmd.Parameters.Add(DataFactory.CreateParameter("@Address1", item.Address1 ?? (object)DBNull.Value));
-                    cmd.Parameters.Add(DataFactory.CreateParameter("@Address2", item.Address2 ?? (object)DBNull.Value));
-                    cmd.Parameters.Add(DataFactory.CreateParameter("@Country", item.Country ?? (object)DBNull.Value));
-                    cmd.Parameters.Add(DataFactory.CreateParameter("@State", item.State ?? (object)DBNull.Value));
-                    cmd.Parameters.Add(DataFactory.CreateParameter("@City", item.City ?? (object)DBNull.Value));
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@Address", item.Address ?? (object)DBNull.Value));
                     cmd.Parameters.Add(DataFactory.CreateParameter("@PostalCode", item.PostalCode ?? (object)DBNull.Value));
 
                     var result = DataFactory.ExecuteScalar(cmd);
@@ -164,13 +158,7 @@ public class UsersRepository : IUsersRepository
                     cmd.Parameters.Add(DataFactory.CreateParameter("@UpdatedBy", item.UpdatedBy ?? (object)DBNull.Value));
                     cmd.Parameters.Add(DataFactory.CreateParameter("@Image", item.Image ?? (object)DBNull.Value));
                     cmd.Parameters.Add(DataFactory.CreateParameter("@Gender", item.Gender ?? (object)DBNull.Value));
-                    cmd.Parameters.Add(DataFactory.CreateParameter("@DOB", item.DOB ?? (object)DBNull.Value));
-                    cmd.Parameters.Add(DataFactory.CreateParameter("@Age", item.Age ?? (object)DBNull.Value));
-                    cmd.Parameters.Add(DataFactory.CreateParameter("@Address1", item.Address1 ?? (object)DBNull.Value));
-                    cmd.Parameters.Add(DataFactory.CreateParameter("@Address2", item.Address2 ?? (object)DBNull.Value));
-                    cmd.Parameters.Add(DataFactory.CreateParameter("@Country", item.Country ?? (object)DBNull.Value));
-                    cmd.Parameters.Add(DataFactory.CreateParameter("@State", item.State ?? (object)DBNull.Value));
-                    cmd.Parameters.Add(DataFactory.CreateParameter("@City", item.City ?? (object)DBNull.Value));
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@Address", item.Address ?? (object)DBNull.Value));
                     cmd.Parameters.Add(DataFactory.CreateParameter("@PostalCode", item.PostalCode ?? (object)DBNull.Value));
 
                     var result = DataFactory.ExecuteScalar(cmd);
@@ -306,20 +294,8 @@ public class UsersRepository : IUsersRepository
                     item.Image = Convert.ToString(reader["Image"]);
                 if (reader["Gender"] != DBNull.Value)
                     item.Gender = Convert.ToInt32(reader["Gender"]);
-                if (reader["DOB"] != DBNull.Value)
-                    item.DOB = Convert.ToDateTime(reader["DOB"]);
-                if (reader["Age"] != DBNull.Value)
-                    item.Age = Convert.ToInt32(reader["Age"]);
-                if (reader["Address1"] != DBNull.Value)
-                    item.Address1 = Convert.ToString(reader["Address1"]);
-                if (reader["Address2"] != DBNull.Value)
-                    item.Address2 = Convert.ToString(reader["Address2"]);
-                if (reader["Country"] != DBNull.Value)
-                    item.Country = Convert.ToInt32(reader["Country"]);
-                if (reader["State"] != DBNull.Value)
-                    item.State = Convert.ToInt32(reader["State"]);
-                if (reader["City"] != DBNull.Value)
-                    item.City = Convert.ToInt32(reader["City"]);
+                if (HasColumn(reader, "Address") && reader["Address"] != DBNull.Value)
+                    item.Address = Convert.ToString(reader["Address"]);
                 if (reader["PostalCode"] != DBNull.Value)
                     item.PostalCode = Convert.ToInt32(reader["PostalCode"]);
 
@@ -336,6 +312,18 @@ public class UsersRepository : IUsersRepository
         }
 
         return list;
+    }
+
+    private static bool HasColumn(IDataReader reader, string columnName)
+    {
+        try
+        {
+            return reader.GetOrdinal(columnName) >= 0;
+        }
+        catch (IndexOutOfRangeException)
+        {
+            return false;
+        }
     }
     #endregion
 }

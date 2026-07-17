@@ -9,8 +9,6 @@ namespace GayatriCateringPortal.Models
         public string? PackageDescription { get; set; }
         public string? PackageType { get; set; }
         public decimal Price { get; set; }
-        public int MinPersons { get; set; }
-        public int? MaxPersons { get; set; }
         public bool IsActive { get; set; }
         public int CreatedBy { get; set; }
         public DateTime CreatedDate { get; set; }

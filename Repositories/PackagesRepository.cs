@@ -33,8 +33,6 @@ public class PackagesRepository : IPackagesRepository
                             Name = reader["Name"] != DBNull.Value ? Convert.ToString(reader["Name"]) ?? string.Empty : string.Empty,
                             Description = reader["Description"] != DBNull.Value ? Convert.ToString(reader["Description"]) : null,
                             Price = reader["Price"] != DBNull.Value ? Convert.ToDecimal(reader["Price"]) : 0,
-                            MinPersons = reader["MinPersons"] != DBNull.Value ? Convert.ToInt32(reader["MinPersons"]) : 0,
-                            MaxPersons = reader["MaxPersons"] != DBNull.Value ? Convert.ToInt32(reader["MaxPersons"]) : null,
                             IsActive = reader["IsActive"] != DBNull.Value && Convert.ToBoolean(reader["IsActive"]),
                             CreatedBy = reader["CreatedBy"] != DBNull.Value ? Convert.ToInt32(reader["CreatedBy"]) : 0,
                             CreatedDate = reader["CreatedDate"] != DBNull.Value ? Convert.ToDateTime(reader["CreatedDate"]) : DateTime.MinValue,
@@ -84,8 +82,6 @@ public class PackagesRepository : IPackagesRepository
                             Name = reader["Name"] != DBNull.Value ? Convert.ToString(reader["Name"]) ?? string.Empty : string.Empty,
                             Description = reader["Description"] != DBNull.Value ? Convert.ToString(reader["Description"]) : null,
                             Price = reader["Price"] != DBNull.Value ? Convert.ToDecimal(reader["Price"]) : 0,
-                            MinPersons = reader["MinPersons"] != DBNull.Value ? Convert.ToInt32(reader["MinPersons"]) : 0,
-                            MaxPersons = reader["MaxPersons"] != DBNull.Value ? Convert.ToInt32(reader["MaxPersons"]) : null,
                             IsActive = reader["IsActive"] != DBNull.Value && Convert.ToBoolean(reader["IsActive"]),
                             CreatedBy = reader["CreatedBy"] != DBNull.Value ? Convert.ToInt32(reader["CreatedBy"]) : 0,
                             CreatedDate = reader["CreatedDate"] != DBNull.Value ? Convert.ToDateTime(reader["CreatedDate"]) : DateTime.MinValue,
@@ -129,8 +125,6 @@ public class PackagesRepository : IPackagesRepository
                     cmd.Parameters.Add(DataFactory.CreateParameter("@Name", item.Name));
                     cmd.Parameters.Add(DataFactory.CreateParameter("@Description", item.Description ?? string.Empty));
                     cmd.Parameters.Add(DataFactory.CreateParameter("@Price", item.Price));
-                    cmd.Parameters.Add(DataFactory.CreateParameter("@MinPersons", item.MinPersons));
-                    cmd.Parameters.Add(DataFactory.CreateParameter("@MaxPersons", item.MaxPersons ?? (object)DBNull.Value));
                     cmd.Parameters.Add(DataFactory.CreateParameter("@IsActive", item.IsActive));
                     cmd.Parameters.Add(DataFactory.CreateParameter("@CreatedBy", item.CreatedBy));
                     cmd.Parameters.Add(DataFactory.CreateParameter("@IsDeleted", item.IsDeleted));
@@ -177,8 +171,6 @@ public class PackagesRepository : IPackagesRepository
                     cmd.Parameters.Add(DataFactory.CreateParameter("@Name", item.Name));
                     cmd.Parameters.Add(DataFactory.CreateParameter("@Description", item.Description ?? string.Empty));
                     cmd.Parameters.Add(DataFactory.CreateParameter("@Price", item.Price));
-                    cmd.Parameters.Add(DataFactory.CreateParameter("@MinPersons", item.MinPersons));
-                    cmd.Parameters.Add(DataFactory.CreateParameter("@MaxPersons", item.MaxPersons ?? (object)DBNull.Value));
                     cmd.Parameters.Add(DataFactory.CreateParameter("@IsActive", item.IsActive));
                     cmd.Parameters.Add(DataFactory.CreateParameter("@UpdatedBy", item.UpdatedBy ?? (object)DBNull.Value));
                     cmd.Parameters.Add(DataFactory.CreateParameter("@IsDeleted", item.IsDeleted));

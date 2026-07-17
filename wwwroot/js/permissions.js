@@ -1,4 +1,7 @@
 (function () {
+    var currentMenuRights = null;
+    var loadedRightsKey = '';
+
     function toInt(value) {
         var parsed = parseInt(value, 10);
         return isNaN(parsed) ? 0 : parsed;
@@ -18,19 +21,14 @@
         return toInt(sessionStorage.getItem('gcCurrentEntityNo') || '0');
     }
 
-    function getStoredPermissions() {
-        try {
-            var raw = sessionStorage.getItem('gcRolePermissions') || '[]';
-            var parsed = JSON.parse(raw);
-            return Array.isArray(parsed) ? parsed : [];
-        } catch (e) {
-            return [];
-        }
-    }
-
     function storeCurrentMenuContext(entityNo, route, menuName) {
+        var updated = false;
         if (entityNo && entityNo > 0) {
-            sessionStorage.setItem('gcCurrentEntityNo', String(entityNo));
+            var nextEntityNo = String(entityNo);
+            if (sessionStorage.getItem('gcCurrentEntityNo') !== nextEntityNo) {
+                sessionStorage.setItem('gcCurrentEntityNo', nextEntityNo);
+                updated = true;
+            }
         }
         if (route) {
             sessionStorage.setItem('gcCurrentMenuRoute', route);
@@ -38,27 +36,48 @@
         if (menuName) {
             sessionStorage.setItem('gcCurrentMenuName', menuName);
         }
+
+        if (updated) {
+            loadedRightsKey = '';
+            loadCurrentMenuRights();
+        }
     }
 
     function findPermissionsForCurrentEntity() {
-        var entityNo = getCurrentEntityNo();
-        if (!entityNo) return null;
+        return currentMenuRights;
+    }
 
-        var permissions = getStoredPermissions();
-        for (var i = 0; i < permissions.length; i++) {
-            var item = permissions[i] || {};
-            var itemEntityNo = toInt(item.entityNo || item.EntityNo || 0);
-            if (itemEntityNo === entityNo) {
-                return item;
+    function setElementVisibility($elements, isVisible) {
+        if (!$elements || !$elements.length) return;
+
+        $elements.each(function () {
+            if (isVisible) {
+                this.style.removeProperty('display');
+                this.removeAttribute('data-permission-hidden');
+            } else {
+                this.style.setProperty('display', 'none', 'important');
+                this.setAttribute('data-permission-hidden', '1');
             }
-        }
+        });
+    }
 
-        return null;
+    function notifyMenuRightsChanged() {
+        try {
+            document.dispatchEvent(new CustomEvent('gc:menu-rights-loaded', {
+                detail: {
+                    entityNo: getCurrentEntityNo(),
+                    roleId: getCurrentRoleId(),
+                    rights: currentMenuRights
+                }
+            }));
+        } catch (e) {
+            // Ignore event dispatch issues in older browsers.
+        }
     }
 
     function hideIfNeeded(root, permission, selectors) {
         if (selectors && selectors.length) {
-            $(root).find(selectors.join(', ')).toggle(!!permission);
+            setElementVisibility($(root).find(selectors.join(', ')), !!permission);
         }
     }
 
@@ -76,8 +95,43 @@
             var aria = ($el.attr('aria-label') || '').toLowerCase();
 
             if (typeof matcher === 'function' && matcher({ text: text, id: id, cls: cls, onclick: onclick, title: title, aria: aria })) {
-                $el.toggle(!!permission);
+                setElementVisibility($el, !!permission);
             }
+        });
+    }
+
+    function inferModalSavePermission($button) {
+        var $modal = $button.closest('.modal-overlay, .modal-box, .modal-content');
+        if (!$modal.length) {
+            return '';
+        }
+
+        var titleText = $.trim($modal.find('.modal-title, [id$="-title"], [id="modal-title"]').first().text()).toLowerCase();
+        var buttonText = $.trim($button.text()).toLowerCase();
+
+        if (titleText.indexOf('edit') > -1 || titleText.indexOf('update') > -1 || buttonText.indexOf('update') === 0) {
+            return 'edit';
+        }
+
+        if (titleText.indexOf('create') > -1 || titleText.indexOf('add') > -1 || titleText.indexOf('new') > -1 || buttonText.indexOf('save') === 0) {
+            return 'create';
+        }
+
+        return '';
+    }
+
+    function applyModalSaveVisibility(root, canCreate, canEdit) {
+        var $root = root ? $(root) : $(document);
+        var $buttons = $root.find('.modal-overlay button, .modal-box button, .modal-content button');
+
+        $buttons.each(function () {
+            var $button = $(this);
+            var permissionType = inferModalSavePermission($button);
+            if (!permissionType) {
+                return;
+            }
+
+            setElementVisibility($button, permissionType === 'edit' ? canEdit : canCreate);
         });
     }
 
@@ -98,7 +152,8 @@
             '.btn-create',
             '[data-permission="create"]',
             '[id^="btnAdd"]',
-            '[id*="Add"]'
+            'button[id*="Add"]',
+            'a.btn[id*="Add"]'
         ]);
 
         toggleByHeuristic($root, canCreate, function (v) {
@@ -175,21 +230,68 @@
             return v.text === 'print' || v.text.indexOf('print ') === 0 || v.id.indexOf('print') > -1 || v.cls.indexOf('btn-print') > -1 || v.title.indexOf('print') > -1 || v.aria.indexOf('print') > -1;
         });
 
+        applyModalSaveVisibility($root, canCreate, canEdit);
+
     }
 
-    function loadCurrentRolePermissions() {
+
+    function loadCurrentMenuRights() {
         var roleId = getCurrentRoleId();
-        if (!roleId) return $.Deferred().resolve().promise();
+        var entityNo = getCurrentEntityNo();
+
+        if (!roleId || !entityNo) {
+            currentMenuRights = null;
+            applyPermissionVisibility(document);
+            notifyMenuRightsChanged();
+            return $.Deferred().resolve().promise();
+        }
+
+        var nextKey = roleId + ':' + entityNo;
+        if (loadedRightsKey === nextKey && currentMenuRights) {
+            applyPermissionVisibility(document);
+            notifyMenuRightsChanged();
+            return $.Deferred().resolve().promise();
+        }
 
         return $.ajax({
-            url: '/Common/GetRolePermissionsByRoleId?roleId=' + encodeURIComponent(roleId),
+            url: '/Common/GetMenuRights?roleId=' + encodeURIComponent(roleId) + '&entityNo=' + encodeURIComponent(entityNo),
             type: 'GET',
             dataType: 'json',
-            success: function (rows) {
-                sessionStorage.setItem('gcRolePermissions', JSON.stringify(Array.isArray(rows) ? rows : []));
+            success: function (rights) {
+                currentMenuRights = rights || null;
+                loadedRightsKey = nextKey;
                 applyPermissionVisibility(document);
+                notifyMenuRightsChanged();
+            },
+            error: function () {
+                currentMenuRights = null;
+                loadedRightsKey = '';
+                applyPermissionVisibility(document);
+                notifyMenuRightsChanged();
             }
         });
+    }
+
+    function getCurrentMenuRights() {
+        return currentMenuRights;
+    }
+
+    function getMenuPermissionFlag(rights, permissionName) {
+        if (!rights) return false;
+
+        var name = String(permissionName || '').toLowerCase();
+        if (name === 'create') return !!(rights.create || rights.Create);
+        if (name === 'edit') return !!(rights.edit || rights.Edit);
+        if (name === 'delete') return !!(rights.delete || rights.Delete);
+        if (name === 'activeinactive') return !!(rights.activeInActive || rights.ActiveInActive || rights.activeInactive || rights.ActiveInactive);
+        if (name === 'download') return !!(rights.download || rights.Download);
+        if (name === 'print') return !!(rights.print || rights.Print);
+        if (name === 'view') return !!(rights.view || rights.View);
+        return false;
+    }
+
+    function hasCurrentMenuPermission(permissionName) {
+        return getMenuPermissionFlag(currentMenuRights, permissionName);
     }
 
     function redirectAfterLogin(context) {
@@ -212,90 +314,20 @@
             return;
         }
 
-        $.ajax({
-            url: '/Common/menus?roleId=' + encodeURIComponent(userRoleId),
-            type: 'GET',
-            dataType: 'json',
-            success: function (groups) {
-                var menuGroups = Array.isArray(groups) ? groups : [];
+        sessionStorage.removeItem('gcCurrentEntityNo');
+        sessionStorage.removeItem('gcCurrentMenuRoute');
+        sessionStorage.removeItem('gcCurrentMenuName');
+        currentMenuRights = null;
+        loadedRightsKey = '';
 
-                $.ajax({
-                    url: '/Common/GetRolePermissionsByRoleId?roleId=' + encodeURIComponent(userRoleId),
-                    type: 'GET',
-                    dataType: 'json',
-                    success: function (permissions) {
-                        var permissionRows = Array.isArray(permissions) ? permissions : [];
-                        sessionStorage.setItem('gcRolePermissions', JSON.stringify(permissionRows));
-
-                        var route = '';
-                        var entityNo = 0;
-                        var menuName = '';
-
-                        if (Array.isArray(menuGroups) && Array.isArray(permissionRows)) {
-                            for (var gi = 0; gi < menuGroups.length && !route; gi++) {
-                                var menus = menuGroups[gi] && (menuGroups[gi].menus || menuGroups[gi].Menus) || [];
-                                for (var mi = 0; mi < menus.length; mi++) {
-                                    var menu = menus[mi] || {};
-                                    var menuEntityNo = toInt(menu.entityNo || menu.EntityNo || 0);
-                                    var routeValue = (menu.route || menu.Route || '').trim();
-                                    var menuPermission = null;
-
-                                    for (var pi = 0; pi < permissionRows.length; pi++) {
-                                        var permission = permissionRows[pi] || {};
-                                        if (toInt(permission.entityNo || permission.EntityNo || 0) === menuEntityNo) {
-                                            menuPermission = permission;
-                                            break;
-                                        }
-                                    }
-
-                                    var canView = !!(menuPermission && (menuPermission.view || menuPermission.View));
-                                    if (routeValue && canView) {
-                                        route = routeValue;
-                                        entityNo = menuEntityNo;
-                                        menuName = menu.name || menu.Name || '';
-                                        break;
-                                    }
-                                }
-                            }
-                        }
-
-                        if (!route && Array.isArray(menuGroups)) {
-                            for (var gi2 = 0; gi2 < menuGroups.length && !route; gi2++) {
-                                var menus2 = menuGroups[gi2] && (menuGroups[gi2].menus || menuGroups[gi2].Menus) || [];
-                                for (var mi2 = 0; mi2 < menus2.length; mi2++) {
-                                    var menu2 = menus2[mi2] || {};
-                                    route = (menu2.route || menu2.Route || '').trim();
-                                    entityNo = toInt(menu2.entityNo || menu2.EntityNo || 0);
-                                    menuName = menu2.name || menu2.Name || '';
-                                    if (route) break;
-                                }
-                            }
-                        }
-
-                        if (!route) {
-                            route = '/Customer/Home';
-                        }
-
-                        if (route.indexOf('/Admin') === 0) {
-                            storeCurrentMenuContext(entityNo, route, menuName);
-                        }
-
-                        window.location.href = route;
-                    },
-                    error: function () {
-                        window.location.href = '/Customer/Home';
-                    }
-                });
-            },
-            error: function () {
-                window.location.href = '/Customer/Home';
-            }
-        });
+        var roleLabel = (context && context.roleLabel ? String(context.roleLabel) : '').toLowerCase();
+        var targetRoute = roleLabel.indexOf('customer') > -1 ? '/Customer/Home' : '/Admin/Dashboard';
+        window.location.href = targetRoute;
     }
 
     function bootstrapPermissions() {
-        loadCurrentRolePermissions();
         applyPermissionVisibility(document);
+        loadCurrentMenuRights();
     }
 
     document.addEventListener('DOMContentLoaded', bootstrapPermissions);
@@ -316,7 +348,10 @@
     window.getCurrentRoleId = getCurrentRoleId;
     window.getCurrentEntityNo = getCurrentEntityNo;
     window.storeCurrentMenuContext = storeCurrentMenuContext;
-    window.loadCurrentRolePermissions = loadCurrentRolePermissions;
+    window.loadCurrentMenuRights = loadCurrentMenuRights;
+    window.getCurrentMenuRights = getCurrentMenuRights;
+    window.getMenuPermissionFlag = getMenuPermissionFlag;
+    window.hasCurrentMenuPermission = hasCurrentMenuPermission;
     window.applyPermissionVisibility = applyPermissionVisibility;
     window.redirectAfterLogin = redirectAfterLogin;
 })();

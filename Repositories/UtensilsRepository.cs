@@ -32,13 +32,13 @@ public class UtensilsRepository : IUtensilsRepository
             }
             return list ?? new List<UtensilMaster>();
         }
-        catch (SqlException)
+        catch (SqlException ex)
         {
-            throw new Exception("Database error");
+            throw new Exception("Database error while loading utensils: " + ex.Message, ex);
         }
         catch (Exception ex)
         {
-            throw new Exception(ex.StackTrace);
+            throw new Exception("Unable to load utensils: " + ex.Message, ex);
         }
         finally
         {
@@ -101,7 +101,7 @@ public class UtensilsRepository : IUtensilsRepository
                     cmd.Parameters.Add(DataFactory.CreateParameter("@IsActive", item.IsActive));
                     cmd.Parameters.Add(DataFactory.CreateParameter("@IsDeleted", item.IsDeleted));
                     cmd.Parameters.Add(DataFactory.CreateParameter("@CreatedBy", item.CreatedBy));
-                    cmd.Parameters.Add(DataFactory.CreateParameter("@CreatedDate", item.CreatedDate));
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@CreatedDate", DateTime.TryParse(item.CreatedDate, out var createdDate) ? createdDate : (object?)DBNull.Value));
 
                     var result = DataFactory.ExecuteScalar(cmd);
                     if (result != null)
@@ -147,9 +147,9 @@ public class UtensilsRepository : IUtensilsRepository
                     cmd.Parameters.Add(DataFactory.CreateParameter("@IsActive", item.IsActive));
                     cmd.Parameters.Add(DataFactory.CreateParameter("@IsDeleted", item.IsDeleted));
                     cmd.Parameters.Add(DataFactory.CreateParameter("@CreatedBy", item.CreatedBy));
-                    cmd.Parameters.Add(DataFactory.CreateParameter("@CreatedDate", item.CreatedDate));
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@CreatedDate", DateTime.TryParse(item.CreatedDate, out var createdDate) ? createdDate : (object?)DBNull.Value));
                     cmd.Parameters.Add(DataFactory.CreateParameter("@UpdatedBy", item.UpdatedBy));
-                    cmd.Parameters.Add(DataFactory.CreateParameter("@UpdatedDate", item.UpdatedDate));
+                    cmd.Parameters.Add(DataFactory.CreateParameter("@UpdatedDate", DateTime.TryParse(item.UpdatedDate, out var updatedDate) ? updatedDate : (object?)DBNull.Value));
 
                     var result = DataFactory.ExecuteScalar(cmd);
                     if (result != null)
@@ -249,52 +249,45 @@ public class UtensilsRepository : IUtensilsRepository
         var list = new List<UtensilMaster>();
         try
         {
+            var columns = Enumerable.Range(0, reader.FieldCount)
+                .Select(reader.GetName)
+                .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+            object? Value(string column) =>
+                columns.Contains(column) && reader[column] != DBNull.Value ? reader[column] : null;
+
             while (reader.Read())
             {
-                var item = new UtensilMaster();
-                if (reader["Id"] != DBNull.Value)
-                    item.Id = Convert.ToInt32(reader["Id"])!;
-                if (reader["UtensilName"] != DBNull.Value)
-                    item.UtensilName = Convert.ToString(reader["UtensilName"])!;
-                if (reader["RuleType"] != DBNull.Value)
-                    item.RuleType = Convert.ToString(reader["RuleType"]) ?? string.Empty;
-                if (reader["RuleOperator"] != DBNull.Value)
-                    item.RuleOperator = Convert.ToString(reader["RuleOperator"]) ?? string.Empty;
-                if (reader["RuleValue"] != DBNull.Value)
-                    item.RuleValue = Convert.ToDecimal(reader["RuleValue"]);
-                if (reader["RulePercentage"] != DBNull.Value)
-                    item.RulePercentage = Convert.ToDecimal(reader["RulePercentage"]);
-                if (reader["MinimumQty"] != DBNull.Value)
-                    item.MinimumQty = Convert.ToInt32(reader["MinimumQty"]);
-                if (reader["RuleDescription"] != DBNull.Value)
-                    item.RuleDescription = Convert.ToString(reader["RuleDescription"]);
-                if (reader["Price"] != DBNull.Value)
-                    item.Price = Convert.ToDecimal(reader["Price"]);
-                if (reader["DepositAmount"] != DBNull.Value)
-                    item.DepositAmount = Convert.ToDecimal(reader["DepositAmount"]);                
-                if (reader["IsActive"] != DBNull.Value)
-                    item.IsActive = Convert.ToBoolean(reader["IsActive"]);
-                if (reader["IsDeleted"] != DBNull.Value)
-                    item.IsDeleted = Convert.ToBoolean(reader["IsDeleted"]);
-                if (reader["CreatedBy"] != DBNull.Value)
-                    item.CreatedBy = Convert.ToInt32(reader["CreatedBy"]);
-                if (reader["CreatedDate"] != DBNull.Value)
-                    item.CreatedDate = Convert.ToDateTime(reader["CreatedDate"]);
-                if (reader["UpdatedBy"] != DBNull.Value)
-                    item.UpdatedBy = Convert.ToInt32(reader["UpdatedBy"]);
-                if (reader["UpdatedDate"] != DBNull.Value)
-                    item.UpdatedDate = Convert.ToDateTime(reader["UpdatedDate"]);
+                var item = new UtensilMaster
+                {
+                    Id = Value("Id") is { } id ? Convert.ToInt32(id) : 0,
+                    UtensilName = Convert.ToString(Value("UtensilName")) ?? string.Empty,
+                    RuleType = Convert.ToString(Value("RuleType")) ?? "PAX",
+                    RuleOperator = Convert.ToString(Value("RuleOperator")) ?? "SAME",
+                    RuleValue = Value("RuleValue") is { } ruleValue ? Convert.ToDecimal(ruleValue) : 0,
+                    RulePercentage = Value("RulePercentage") is { } percentage ? Convert.ToDecimal(percentage) : 0,
+                    MinimumQty = Value("MinimumQty") is { } minimumQty ? Convert.ToInt32(minimumQty) : 0,
+                    RuleDescription = Convert.ToString(Value("RuleDescription")),
+                    Price = Value("Price") is { } price ? Convert.ToDecimal(price) : 0,
+                    DepositAmount = Value("DepositAmount") is { } deposit ? Convert.ToDecimal(deposit) : 0,
+                    IsActive = Value("IsActive") is not { } active || Convert.ToBoolean(active),
+                    IsDeleted = Value("IsDeleted") is { } deleted && Convert.ToBoolean(deleted),
+                    CreatedBy = Value("CreatedBy") is { } createdBy ? Convert.ToInt32(createdBy) : 0,
+                    CreatedDate = Convert.ToString(Value("CreatedDate")) ?? string.Empty,
+                    UpdatedBy = Value("UpdatedBy") is { } updatedBy ? Convert.ToInt32(updatedBy) : 0,
+                    UpdatedDate = Convert.ToString(Value("UpdatedDate"))
+                };
 
                 list.Add(item);
             }
         }
-        catch (SqlException)
+        catch (SqlException ex)
         {
-            throw new Exception("Database error");
+            throw new Exception("Database error while reading utensils: " + ex.Message, ex);
         }
         catch (Exception ex)
         {
-            throw new Exception(ex.StackTrace);
+            throw new Exception("Unable to read utensils: " + ex.Message, ex);
         }
 
         return list;
