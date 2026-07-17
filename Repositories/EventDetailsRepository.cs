@@ -18,17 +18,20 @@ public class EventDetailsRepository : IEventDetailsRepository
         var list = new List<EventDetails>();
         while (reader.Read())
         {
+            var isDeleted = reader["IsDeleted"] != DBNull.Value && Convert.ToBoolean(reader["IsDeleted"]);
+            if (isDeleted) continue;
+
             list.Add(new EventDetails
             {
-                Id = Convert.ToInt32(reader["Id"]),
-                PackageId = Convert.ToInt32(reader["PackageId"]),
-                EventId = Convert.ToInt32(reader["EventId"]),
-                CreatedBy = Convert.ToInt32(reader["CreatedBy"]),
-                CreatedDate = Convert.ToDateTime(reader["CreatedDate"]),
+                Id = reader["Id"] == DBNull.Value ? 0 : Convert.ToInt32(reader["Id"]),
+                PackageId = reader["PackageId"] == DBNull.Value ? 0 : Convert.ToInt32(reader["PackageId"]),
+                EventId = reader["EventId"] == DBNull.Value ? eventId : Convert.ToInt32(reader["EventId"]),
+                CreatedBy = reader["CreatedBy"] == DBNull.Value ? 0 : Convert.ToInt32(reader["CreatedBy"]),
+                CreatedDate = reader["CreatedDate"] == DBNull.Value ? DateTime.MinValue : Convert.ToDateTime(reader["CreatedDate"]),
                 UpdatedBy = reader["UpdatedBy"] == DBNull.Value ? null : Convert.ToInt32(reader["UpdatedBy"]),
                 UpdatedDate = reader["UpdatedDate"] == DBNull.Value ? null : Convert.ToDateTime(reader["UpdatedDate"]),
-                IsActive = Convert.ToBoolean(reader["IsActive"]),
-                IsDeleted = Convert.ToBoolean(reader["IsDeleted"])
+                IsActive = reader["IsActive"] == DBNull.Value || Convert.ToBoolean(reader["IsActive"]),
+                IsDeleted = false
             });
         }
         return list;
