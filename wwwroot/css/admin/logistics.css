@@ -39,29 +39,3 @@
         .delivery-tab.active:hover {
             background: #0f5b38;
         }
-
-
-
-.logistics-toolbar {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 20px;
-    width: 100%;
-}
-
-.left-toolbar {
-    display: flex;
-    gap: 10px;
-    align-items: center;
-}
-
-.right-toolbar {
-    display: flex;
-    gap: 12px;
-    align-items: center;
-}
-
-.tbl-search {
-    width: 320px;
-}

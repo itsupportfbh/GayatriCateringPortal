@@ -50,7 +50,7 @@ function loadDelivered() {
 function showlogiLoader(show) {
     var $panel = $('.pageloaderpanel');
     if ($panel.length) {
-        $('#commsListPanel .table-wrap').toggleClass('hidden', show);
+        $('#LogiListPanel .table-wrap').toggleClass('hidden', show);
         $panel.toggleClass('hidden', !show);
         return;
     }

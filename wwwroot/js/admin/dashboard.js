@@ -18,7 +18,7 @@ function money(value) {
 
 function renderDashboard(orders) {
 
-    var html = '<table class="tbl"><thead><tr><th>Order</th><th>Customer</th><th>Package</th><th>Date</th><th>Pax</th><th>Status</th><th>Payment</th><th class="num">Amount</th><th>Actions</th></tr></thead><tbody>';
+    var html = '<table class="tbl"><thead><tr><th class="sortable">Order</th><th class="sortable">Customer</th><th class="sortable">Package</th><th class="sortable">Date</th><th class="sortable">Pax</th><th class="sortable">Status</th><th class="sortable">Payment</th><th class="sortable">Amount</th><th>Actions</th></tr></thead><tbody>';
     orders.forEach(function (o) {
 
         html += '<tr>' +
