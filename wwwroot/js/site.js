@@ -1,7 +1,7 @@
 // ===== SHARED UTILITIES =====
 
 function showToast(msg, duration, options) {
-    // options: { confirm: boolean, yesText: string, noText: string, onYes: fn, onNo: fn, type: 'success'|'error'|'info'|'warning', title: string }
+    // options: { confirm: boolean, center: boolean, yesText: string, noText: string, onYes: fn, onNo: fn, type: 'success'|'error'|'info'|'warning', title: string }
     var container = document.getElementById('toast');
     if (!container) return;
 
@@ -96,6 +96,7 @@ function showToast(msg, duration, options) {
 
     var item = document.createElement('div');
     item.className = 'toast-item' + (type ? ' toast-item-' + type : '');
+    if (options && options.center) item.classList.add('toast-item-centered');
 
     var row = document.createElement('div');
     row.className = 'toast-row';
@@ -475,6 +476,8 @@ function initRichDatePickers(root) {
     dateInputs.forEach(function (input) {
         input.setAttribute('data-gc-date-init', 'true');
         var currentValue = input.value;
+        var minimumDateValue = input.getAttribute('min') || null;
+        var advanceBookingDays = Math.max(0, Number(input.getAttribute('data-advance-booking-days')) || 0);
 
         // Switch to text so the custom picker UI is always used instead of browser-native popup.
         input.type = 'text';
@@ -483,13 +486,42 @@ function initRichDatePickers(root) {
             dateFormat: 'Y-m-d',
             altInput: true,
             altFormat: 'd-m-Y',
+            minDate: minimumDateValue,
             allowInput: false,
             clickOpens: true,
             disableMobile: true,
             monthSelectorType: 'static',
             prevArrow: '<span aria-hidden="true">&#8249;</span>',
             nextArrow: '<span aria-hidden="true">&#8250;</span>',
-            defaultDate: currentValue || null
+            defaultDate: currentValue || null,
+            onDayCreate: function (_dObj, _dStr, _fp, dayElem) {
+                if (!minimumDateValue || !dayElem.dateObj) return;
+
+                var minimumDate = new Date(minimumDateValue + 'T00:00:00');
+                if (dayElem.dateObj >= minimumDate) return;
+
+                dayElem.style.pointerEvents = 'auto';
+                dayElem.style.cursor = 'not-allowed';
+                dayElem.addEventListener('click', function (event) {
+                    event.preventDefault();
+                    event.stopImmediatePropagation();
+
+                    var minimumDateParts = minimumDateValue.split('-');
+                    var minimumDateText = minimumDateParts.length === 3
+                        ? minimumDateParts[2] + '-' + minimumDateParts[1] + '-' + minimumDateParts[0]
+                        : minimumDateValue;
+                    var reason = 'This event requires at least ' + advanceBookingDays +
+                        ' day' + (advanceBookingDays === 1 ? '' : 's') +
+                        ' advance booking. Please select ' + minimumDateText + ' or later.';
+                    if (typeof window.showToast === 'function') {
+                        window.showToast(reason, 4200, {
+                            type: 'warning',
+                            title: 'Date not available',
+                            center: true
+                        });
+                    }
+                }, true);
+            }
         });
 
         if (input._flatpickr && input._flatpickr.altInput) {
