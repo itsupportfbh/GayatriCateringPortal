@@ -10,35 +10,24 @@ namespace GayatriCateringPortal.Repositories
     {
         public List<FoodMenu> GetAll()
         {
-            List<FoodMenu> list = new List<FoodMenu>();
-            IDbConnection? conn = null;
-            IDbCommand? cmd = null;
-            IDataReader? reader = null;
+            var list = new List<FoodMenu>();
             try
             {
-                using (conn = DataFactory.CreateConnection())
-                {
-                    conn.Open();
-                    using (cmd = DataFactory.CreateCommand("GetFoodMenu", conn))
-                    {
-                        ((SqlCommand)cmd).CommandType = CommandType.StoredProcedure;
-                        reader = DataFactory.ExecuteReader(cmd);
-                        list = this.List(reader);
-                    }
-                }
-                return list;
+                using var conn = DataFactory.CreateConnection();
+                conn.Open();
+                using var cmd = DataFactory.CreateCommand("SELECT * FROM FoodMenu WHERE IsDeleted = 0 ORDER BY Name", conn);
+                ((SqlCommand)cmd).CommandType = CommandType.Text;
+                using var reader = DataFactory.ExecuteReader(cmd);
+                list = this.List(reader);
+                return list ?? new List<FoodMenu>();
             }
             catch (SqlException)
             {
-                throw new Exception("Database error");
+                return new List<FoodMenu>();
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                throw new Exception(ex.StackTrace);
-            }
-            finally
-            {
-                if (conn != null && conn.State != ConnectionState.Closed) conn.Close();
+                return new List<FoodMenu>();
             }
         }
 

@@ -1249,6 +1249,7 @@ $(function () {
         var toEmail = String(state.details.email || '').trim();
         if (!toEmail) {
             showToast('Email is required in Event Details to send invoice.', 3500, { type: 'warning', title: 'Email missing' });
+            showOrderLoader(false);
             finishSubmitFlow();
             return;
         }
@@ -1268,13 +1269,14 @@ $(function () {
             success: function () {
                 showToast('Invoice sent to email successfully.', 3500, { type: 'success', title: 'Email sent' });
                 setTimeout(function () {
+                    showOrderLoader(false);
                     finishSubmitFlow();
-                    resetOrderForNew();
-                    showToast('Ready for next order.', 2200, { type: 'success', title: 'Create new order' });
+                    window.location.href = '/Customer/Home';
                 }, 400);
             },
             error: function (xhr) {
                 showToast(xhr.responseJSON?.Message || 'Payment confirmed, but invoice email failed.', 4000, { type: 'warning', title: 'Email failed' });
+                showOrderLoader(false);
                 finishSubmitFlow();
             }
         });
@@ -1394,6 +1396,7 @@ $(function () {
         var orderId = parseInt($(this).data('order-id'), 10) || 0;
         closePaymentModal();
         showToast('Payment confirmed. Thank you!', 3000, { type: 'success', title: 'Payment confirmed' });
+        showOrderLoader(true);
         sendOrderReviewEmail(orderId);
     });
 
