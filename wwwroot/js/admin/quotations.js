@@ -44,12 +44,13 @@ function renderLogisList(rows) {
             <td>${item.createdDate}</td>
             <td>${item.pax}</td>
             <td>
-                <span class="badge bg-warning">
+                <span class="badge-pill badge-pill--success">
                     Quotation
                 </span>
             </td>
-            <td>${item.paidAmount}</td>            
+            <td><span class="badge ${item.paymentStatus} "> ${item.paymentStatus} </span><div class="muted"> ${money(item.paidAmount)}</div></td>
             <td>${item.totalAmount}</td>
+            <td><div class="actions"><a href="/Admin/Orders" class="btn btn-light btn-xs">View</a><button class="btn btn-primary btn-xs">Email</button><a class="btn btn-orange btn-xs" target="_blank" href="https://wa.me/65' + o.phone + '">WA</a></div></td>
         </tr>`;
     });
 
@@ -57,4 +58,12 @@ function renderLogisList(rows) {
     if (typeof renderDataTable === 'function') {
         renderDataTable('quotationsTable');
     }
+}
+
+function money(value) {
+    value = Number(value) || 0;
+    return 'S$' + value.toLocaleString(undefined, {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+    });
 }
