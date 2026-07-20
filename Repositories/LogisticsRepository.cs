@@ -22,7 +22,7 @@ public class LogisticsRepository : ILogisticsRepository
             using (conn = DataFactory.CreateConnection())
             {
                 conn.Open();
-                using (cmd = DataFactory.CreateCommand("dbo.GetOrders", conn))
+                using (cmd = DataFactory.CreateCommand("GetOrders", conn))
                 {
                     ((SqlCommand)cmd).CommandType = CommandType.StoredProcedure;
                     cmd.Parameters.Add(DataFactory.CreateParameter("@FromDate", fromDate.HasValue ? (object)fromDate.Value.Date : DBNull.Value));
@@ -365,7 +365,7 @@ public class LogisticsRepository : ILogisticsRepository
                 if (reader["Id"] != DBNull.Value)
                     item.Id = Convert.ToInt32(reader["Id"])!;
                 if (reader["OrderDate"] != DBNull.Value)
-                    item.CreatedDate = Convert.ToDateTime(reader["OrderDate"]);
+                    item.OrderDate = Convert.ToDateTime(reader["OrderDate"]);
                 if (reader["OrderNumber"] != DBNull.Value)
                     item.OrderNumber = Convert.ToString(reader["OrderNumber"])!;
                 if (reader["Location"] != DBNull.Value)
@@ -373,7 +373,9 @@ public class LogisticsRepository : ILogisticsRepository
                 if (reader["DriverName"] != DBNull.Value)
                     item.DriverName = Convert.ToString(reader["DriverName"])!;
                 if (reader["Name"] != DBNull.Value)
-                    item.Status = Convert.ToString(reader["Name"]);               
+                    item.Status = Convert.ToString(reader["Name"]);
+                if (reader["CreatedDate"] != DBNull.Value)
+                    item.CreatedDate = Convert.ToDateTime(reader["CreatedDate"]);
 
                 listDeli.Add(item);
             }
