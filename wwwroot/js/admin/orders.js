@@ -169,7 +169,7 @@ $(function () {
             type: 'POST',
             success: function (response) {
                 if (response?.success) {
-                    if (window.showToast) showToast(response.message || 'Order status updated.', 3000, { type: 'success', title: 'Status updated' });
+                    if (window.showToast) showToast(response.message || 'Order status updated.');
                     loadOrders();
                 }
             },
