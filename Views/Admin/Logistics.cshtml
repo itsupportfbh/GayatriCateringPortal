@@ -11,6 +11,25 @@
             <div class="page-title">Logistics</div>
             <div class="page-subtitle">Dispatch and delivery tracking for all active orders</div>
         </div>
+        <div class="page-header-actions">
+            <div class="app-header-filter">
+                <div id="pendingsearch">
+                    <input type="text"
+                           id="pendingSearch"
+                           class="tbl-search"
+                           data-table="PendingTable"
+                           placeholder="Search Orders...">
+                </div>
+
+                <div id="deliverysearch" style="display:none;">
+                    <input type="text"
+                           id="DeliSearch"
+                           class="tbl-search"
+                           data-table="DeliveredTable"
+                           placeholder="Search Orders...">
+                </div>
+            </div>
+        </div>
     </div>
 
     <div class="logistics-toolbar">
@@ -24,32 +43,9 @@
                 ✅ Delivered
             </button>
         </div>
-
-        <div class="right-toolbar">
-            <div id="pendingsearch">
-                <input type="text"
-                       id="pendingSearch"
-                       class="tbl-search"
-                       data-table="PendingTable"
-                       placeholder="Search Orders...">
-            </div>
-
-            <div id="deliverysearch" style="display:none;">
-                <input type="text"
-                       id="DeliSearch"
-                       class="tbl-search"
-                       data-table="DeliveredTable"
-                       placeholder="Search Orders...">
-            </div>
-
-            <button class="btn btn-light">
-                <i class="fa fa-download"></i> Export
-            </button>
-        </div>
-
     </div>
 
-    <div id="commsListPanel" class="card">
+    <div id="LogiListPanel" class="card">
         <div class="panel-header">
             <div class="panel-title">Dispatch Board</div>
         </div>
@@ -67,7 +63,7 @@
                         <th class="sortable">Location</th>
                         <th class="sortable">Driver</th>
                         <th class="sortable">Status</th>
-                        <th >Action</th>
+                        <th>Action</th>
                     </tr>
                 </thead>
 
