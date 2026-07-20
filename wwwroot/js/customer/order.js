@@ -940,6 +940,29 @@ $(function () {
             return;
         }
 
+        function getFriendlySubmitMessage(xhr) {
+            var serverMessage = String(xhr && xhr.responseJSON && xhr.responseJSON.message ? xhr.responseJSON.message : '').trim();
+            var combined = (serverMessage + ' ' + String(xhr && xhr.responseText ? xhr.responseText : '')).toLowerCase();
+
+            if (!serverMessage) {
+                return 'Unable to submit order right now. Please try again in a moment.';
+            }
+
+            // Never expose SQL/SP/internal implementation errors to customers.
+            if (combined.indexOf('procedure or function') > -1 ||
+                combined.indexOf('sp_') > -1 ||
+                combined.indexOf('sql') > -1 ||
+                combined.indexOf('exception') > -1 ||
+                combined.indexOf('stack') > -1 ||
+                combined.indexOf('inner') > -1 ||
+                combined.indexOf('parameter') > -1 ||
+                combined.indexOf('argument') > -1) {
+                return 'Unable to submit order at the moment. Our team has been notified. Please try again shortly.';
+            }
+
+            return serverMessage;
+        }
+
         $.ajax({
             url: '/Customer/Order/save',
             type: 'POST',
@@ -955,7 +978,7 @@ $(function () {
                 }
             },
             error: function (xhr) {
-                showToast(xhr.responseJSON?.message || 'Error submitting order.', 4000, { type: 'error', title: 'Submit failed' });
+                showToast(getFriendlySubmitMessage(xhr), 4200, { type: 'error', title: 'Submit failed' });
             }
         });
     }
@@ -990,120 +1013,41 @@ $(function () {
             try {
                 var jsPDFCtor = window.jspdf.jsPDF;
                 var doc = new jsPDFCtor({ orientation: 'p', unit: 'pt', format: 'a4' });
-                var marginX = 36;
-                var y = 36;
+                var marginX = 14;
+                var y = 20;
                 var pageWidth = doc.internal.pageSize.getWidth();
-                var contentWidth = pageWidth - (marginX * 2);
                 var pageHeight = doc.internal.pageSize.getHeight();
-                var lineH = 15;
-
-                var COLORS = {
-                    brand: [21, 107, 63],
-                    brandDark: [15, 78, 46],
-                    brandLight: [236, 247, 241],
-                    headerLight: [244, 248, 246],
-                    text: [34, 44, 57],
-                    muted: [100, 116, 139],
-                    border: [210, 221, 214],
-                    white: [255, 255, 255]
-                };
+                var contentWidth = pageWidth - (marginX * 2);
+                var bottomReserved = 88;
 
                 function ensureSpace(heightNeeded) {
-                    if (y + heightNeeded <= pageHeight - 52) return;
+                    if (y + heightNeeded <= pageHeight - bottomReserved) return;
                     doc.addPage();
-                    y = 36;
+                    y = 20;
                 }
 
-                function setTextColor(rgb) {
-                    doc.setTextColor(rgb[0], rgb[1], rgb[2]);
+                function fmtDate(value) {
+                    var dt = value ? new Date(value) : new Date();
+                    if (isNaN(dt.getTime())) return '-';
+                    var day = String(dt.getDate()).padStart(2, '0');
+                    var month = dt.toLocaleString('en-US', { month: 'short' });
+                    var year = dt.getFullYear();
+                    return day + '-' + month + '-' + year;
                 }
 
-                function drawSectionTitle(text) {
-                    ensureSpace(28);
-                    doc.setFillColor(COLORS.brandLight[0], COLORS.brandLight[1], COLORS.brandLight[2]);
-                    doc.setDrawColor(COLORS.border[0], COLORS.border[1], COLORS.border[2]);
-                    doc.roundedRect(marginX, y - 2, contentWidth, 24, 4, 4, 'FD');
-                    doc.setFont('helvetica', 'bold');
-                    doc.setFontSize(11);
-                    setTextColor(COLORS.brandDark);
-                    doc.text(String(text || ''), marginX + 10, y + 14);
-                    y += 30;
-                    setTextColor(COLORS.text);
-                }
-
-                function keyValue(left, right, valueBold) {
-                    ensureSpace(lineH + 2);
-                    doc.setFont('helvetica', 'normal');
-                    doc.setFontSize(10.5);
-                    setTextColor(COLORS.muted);
-                    doc.text(String(left || ''), marginX, y);
-                    doc.setFont('helvetica', valueBold ? 'bold' : 'normal');
-                    setTextColor(COLORS.text);
-                    doc.text(String(right || ''), marginX + 180, y);
-                    y += lineH;
+                function fmtTime(value) {
+                    if (!value) return '-';
+                    var dt = new Date(value);
+                    if (isNaN(dt.getTime())) return '-';
+                    return dt.toLocaleTimeString('en-SG', { hour: '2-digit', minute: '2-digit', hour12: true }).toLowerCase();
                 }
 
                 function moneyValue(value) {
                     return money(value || 0);
                 }
 
-                function drawInfoCard(x, width, title, rows) {
-                    var innerY = y;
-                    var titleHeight = 26;
-                    var cardPadding = 10;
-                    var valueStartX = x + 90;
-                    var maxValueWidth = width - 100;
-                    var rowMeta = (rows || []).map(function (row) {
-                        var valueLines = doc.splitTextToSize(String((row && row.value) || '-'), maxValueWidth);
-                        var linesCount = Math.max(valueLines.length, 1);
-                        var rowHeight = Math.max(15, (linesCount * 11) + 2);
-                        return { valueLines: valueLines, rowHeight: rowHeight };
-                    });
-
-                    var rowsHeight = rowMeta.reduce(function (sum, item) {
-                        return sum + item.rowHeight;
-                    }, 0);
-
-                    var cardHeight = titleHeight + cardPadding + rowsHeight + 8;
-
-                    ensureSpace(cardHeight + 8);
-                    innerY = y;
-
-                    doc.setFillColor(COLORS.white[0], COLORS.white[1], COLORS.white[2]);
-                    doc.setDrawColor(COLORS.border[0], COLORS.border[1], COLORS.border[2]);
-                    doc.roundedRect(x, innerY, width, cardHeight, 6, 6, 'FD');
-
-                    doc.setFillColor(COLORS.headerLight[0], COLORS.headerLight[1], COLORS.headerLight[2]);
-                    doc.roundedRect(x, innerY, width, titleHeight, 6, 6, 'F');
-
-                    doc.setFont('helvetica', 'bold');
-                    doc.setFontSize(10.5);
-                    setTextColor(COLORS.brandDark);
-                    doc.text(String(title || ''), x + 10, innerY + 16);
-
-                    var rowY = innerY + titleHeight + 12;
-                    rows.forEach(function (row, idx) {
-                        var label = row.label || '';
-                        var value = row.value || '-';
-                        var meta = rowMeta[idx];
-                        var valueLines = meta.valueLines;
-                        doc.setFont('helvetica', 'normal');
-                        doc.setFontSize(9.8);
-                        setTextColor(COLORS.muted);
-                        doc.text(label, x + 10, rowY);
-
-                        doc.setFont('helvetica', 'bold');
-                        setTextColor(COLORS.text);
-                        doc.text(valueLines.length ? valueLines : [String(value)], valueStartX, rowY);
-                        rowY += meta.rowHeight;
-                    });
-
-                    setTextColor(COLORS.text);
-                    return cardHeight;
-                }
-
-                function extractIncludedRows() {
-                    var rows = [];
+                function selectedIncludedDishes() {
+                    var list = [];
                     includedChoices.forEach(function (category) {
                         var selections = includedChoiceSelections[String(category.categoryId)] || [];
                         var requiredQuantity = Number(category.requiredQuantity) || 1;
@@ -1112,14 +1056,12 @@ $(function () {
                             var selectedMenu = (category.menus || []).find(function (menu) {
                                 return String(menu.id) === selectedId;
                             });
-                            rows.push({
-                                c1: category.categoryName || '-',
-                                c2: selectedMenu ? selectedMenu.name : 'Not selected',
-                                c3: selectedMenu ? 'Included' : 'Pending'
-                            });
+                            if (selectedMenu && selectedMenu.name) {
+                                list.push(selectedMenu.name);
+                            }
                         }
                     });
-                    return rows;
+                    return list;
                 }
 
                 function extractExtraRows() {
@@ -1128,9 +1070,10 @@ $(function () {
                     }).map(function (row) {
                         var qty = state.extraItems[row.key] || 0;
                         return {
-                            c1: row.dish,
-                            c2: String(qty) + ' ' + row.unit,
-                            c3: moneyValue(qty * row.price)
+                            descLines: [row.dish],
+                            qty: String(qty),
+                            unitPrice: moneyValue(row.price),
+                            total: moneyValue(qty * row.price)
                         };
                     });
                 }
@@ -1141,9 +1084,10 @@ $(function () {
                     }).map(function (row) {
                         var qty = state.addons[row.key] || 0;
                         return {
-                            c1: row.name,
-                            c2: String(qty) + ' ' + row.unit,
-                            c3: moneyValue(qty * row.price)
+                            descLines: [row.name],
+                            qty: String(qty) + ' ' + row.unit,
+                            unitPrice: moneyValue(row.price),
+                            total: moneyValue(qty * row.price)
                         };
                     });
                 }
@@ -1154,202 +1098,224 @@ $(function () {
                     }).map(function (row) {
                         var qty = state.utensils[row.name] || 0;
                         return {
-                            c1: row.name,
-                            c2: String(qty) + ' pcs',
-                            c3: moneyValue(qty * row.price)
+                            descLines: [row.name],
+                            qty: String(qty) + ' pcs',
+                            unitPrice: moneyValue(row.price),
+                            total: moneyValue(qty * row.price)
                         };
                     });
                 }
 
-                function drawSimpleTable(title, col1, col2, col3, rows) {
-                    drawSectionTitle(title);
-                    rows = rows || [];
-
-                    var col1X = marginX + 8;
-                    var col2X = marginX + (contentWidth * 0.48);
-                    var col3X = marginX + contentWidth - 8;
-                    var col1Width = (contentWidth * 0.45) - 12;
-                    var col2Width = (contentWidth * 0.30) - 12;
-                    var col3Width = (contentWidth * 0.25) - 12;
-
-                    ensureSpace(28);
-                    doc.setFillColor(COLORS.headerLight[0], COLORS.headerLight[1], COLORS.headerLight[2]);
-                    doc.setDrawColor(COLORS.border[0], COLORS.border[1], COLORS.border[2]);
-                    doc.rect(marginX, y - 12, contentWidth, 22, 'FD');
+                function drawTableHeader(tableTop, widths) {
                     doc.setFont('helvetica', 'bold');
                     doc.setFontSize(10);
-                    setTextColor(COLORS.brandDark);
-                    doc.text(col1, col1X, y + 2);
-                    doc.text(col2, col2X, y + 2);
-                    doc.text(col3, col3X, y + 2, { align: 'right' });
-                    y += 18;
-                    setTextColor(COLORS.text);
-
-                    if (!rows.length) {
-                        ensureSpace(20);
-                        doc.setFont('helvetica', 'normal');
-                        doc.setFontSize(10);
-                        doc.text('No records.', marginX + 8, y + 2);
-                        y += 16;
-                        return;
+                    doc.rect(marginX, tableTop, contentWidth, 20);
+                    var x = marginX;
+                    for (var i = 0; i < widths.length - 1; i++) {
+                        x += widths[i];
+                        doc.line(x, tableTop, x, tableTop + 20);
                     }
-
-                    rows.forEach(function (row, index) {
-                        var c1Lines = doc.splitTextToSize(String(row.c1 || '-'), col1Width);
-                        var c2Lines = doc.splitTextToSize(String(row.c2 || '-'), col2Width);
-                        var c3Lines = doc.splitTextToSize(String(row.c3 || '-'), col3Width);
-                        var rowLineCount = Math.max(c1Lines.length, c2Lines.length, c3Lines.length, 1);
-                        var rowHeight = (rowLineCount * 11) + 6;
-
-                        ensureSpace(rowHeight + 6);
-                        if (index % 2 === 1) {
-                            doc.setFillColor(250, 252, 251);
-                            doc.rect(marginX, y - 10, contentWidth, rowHeight, 'F');
-                        }
-
-                        doc.setFont('helvetica', 'normal');
-                        doc.setFontSize(10);
-                        doc.text(c1Lines.length ? c1Lines : ['-'], col1X, y + 2);
-                        doc.text(c2Lines.length ? c2Lines : ['-'], col2X, y + 2);
-                        doc.text(c3Lines.length ? c3Lines : ['-'], col3X, y + 2, { align: 'right' });
-
-                        doc.setDrawColor(COLORS.border[0], COLORS.border[1], COLORS.border[2]);
-                        doc.line(marginX, y + rowHeight - 9, marginX + contentWidth, y + rowHeight - 9);
-                        y += rowHeight;
-                    });
+                    doc.text('NO', marginX + (widths[0] / 2), tableTop + 13, { align: 'center' });
+                    doc.text('DESCRIPTION', marginX + widths[0] + (widths[1] / 2), tableTop + 13, { align: 'center' });
+                    doc.text('NO OF ITEMS', marginX + widths[0] + widths[1] + (widths[2] / 2), tableTop + 13, { align: 'center' });
+                    doc.text('UNIT PRICE', marginX + widths[0] + widths[1] + widths[2] + (widths[3] / 2), tableTop + 13, { align: 'center' });
+                    doc.text('TOTAL', marginX + widths[0] + widths[1] + widths[2] + widths[3] + (widths[4] / 2), tableTop + 13, { align: 'center' });
                 }
 
-                var organizationName = organizationInfo.name ?? organizationInfo.Name ?? 'Gayatri Catering';
-                var organizationUen = organizationInfo.uen ?? organizationInfo.UEN ?? '-';
-                var organizationEmail = organizationInfo.email ?? organizationInfo.Email ?? '-';
-                var organizationHotline = organizationInfo.hotline ?? organizationInfo.Hotline ?? '-';
-                var organizationWhatsapp = organizationInfo.whatsapp ?? organizationInfo.Whatsapp ?? '-';
+                var organizationName = String(organizationInfo.name ?? organizationInfo.Name ?? 'Gayatri Restaurant Pte Ltd');
+                var organizationUen = String(organizationInfo.uen ?? organizationInfo.UEN ?? '-');
+                var organizationEmail = String(organizationInfo.email ?? organizationInfo.Email ?? '-');
+                var organizationHotline = String(organizationInfo.hotline ?? organizationInfo.Hotline ?? '-');
+                var organizationAddress = String(organizationInfo.address ?? organizationInfo.Address ?? '-');
                 var generatedDate = new Date();
-                var invoiceRef = 'INV-' + (orderId || 'NEW') + '-' + generatedDate.getFullYear();
-                var payableNow = grandTotal();
-                var amountWithoutDeposit = packageBase() + extraTotal() + addonTotal() + utensilTotal() + gstTotal();
+                var invoiceNo = String(orderId || '-') + '/' + String(generatedDate.getFullYear()).slice(-2);
+                var locationText = buildDeliveryAddress() || 'Self-Collect';
+                var consumingText = String(state.details.mealPeriod || '-');
+                var packageDishLines = selectedIncludedDishes();
 
-                ensureSpace(82);
-                doc.setFillColor(COLORS.brand[0], COLORS.brand[1], COLORS.brand[2]);
-                doc.rect(marginX, y, contentWidth, 72, 'F');
+                var invoiceRows = [];
+                var packageDescLines = [state.packageName || 'Custom Package'];
+                packageDishLines.forEach(function (dish) {
+                    packageDescLines.push('- ' + dish);
+                });
+                invoiceRows.push({
+                    descLines: packageDescLines,
+                    qty: String(state.pax || 0),
+                    unitPrice: moneyValue(state.packagePrice || 0),
+                    total: moneyValue(packageBase())
+                });
+
+                extractExtraRows().forEach(function (row) { invoiceRows.push(row); });
+                extractAddonRows().forEach(function (row) { invoiceRows.push(row); });
+                extractUtensilRows().forEach(function (row) { invoiceRows.push(row); });
+
+                var widths = [34, 249, 70, 85, 85];
 
                 var logoElement = document.querySelector('#orderReviewReport .review-logo');
                 if (logoElement && logoElement.complete && logoElement.naturalWidth > 0) {
                     try {
-                        doc.addImage(logoElement, 'JPEG', marginX + 10, y + 8, 120, 56);
+                        doc.addImage(logoElement, 'JPEG', marginX + 2, y + 2, 124, 58);
                     } catch (_e) {
-                        // Keep PDF generation resilient when logo cannot be embedded.
+                        // Ignore logo embedding issues and continue invoice generation.
                     }
                 }
 
+                doc.setFont('helvetica', 'normal');
+                doc.setFontSize(12);
+                doc.text('Catering Hotline : ' + organizationHotline, marginX + 2, y + 74);
+
                 doc.setFont('helvetica', 'bold');
-                doc.setFontSize(17);
-                setTextColor(COLORS.white);
-                doc.text(String(organizationName), marginX + contentWidth - 14, y + 24, { align: 'right' });
+                doc.setFontSize(28);
+                doc.text('TAX INVOICE', pageWidth - marginX - 2, y + 15, { align: 'right' });
+                doc.setFont('helvetica', 'normal');
+                doc.setFontSize(12);
+                doc.text('GST Reg No. ' + organizationUen, pageWidth - marginX - 2, y + 32, { align: 'right' });
+                doc.setFont('helvetica', 'bold');
+                doc.setFontSize(14);
+                doc.text('INVOICE NO: ' + invoiceNo, pageWidth - marginX - 2, y + 52, { align: 'right' });
+                doc.setFont('helvetica', 'normal');
+                doc.setFontSize(11);
+                doc.text('Order Date: ' + fmtDate(generatedDate), pageWidth - marginX - 2, y + 69, { align: 'right' });
+
+                y += 102;
+                doc.setFont('helvetica', 'bold');
+                doc.setFontSize(14);
+                doc.text(state.details.company || 'Customer', marginX, y);
+                doc.text('Invoice/Function Date: ', pageWidth - marginX - 190, y);
+                doc.setFont('helvetica', 'bold');
+                doc.text(fmtDate(state.details.eventDate), pageWidth - marginX, y, { align: 'right' });
+
+                y += 20;
+                doc.text((state.details.addressLine1 || '-') , marginX, y);
+                doc.setFont('helvetica', 'normal');
+                doc.text('Departure Time: ', pageWidth - marginX - 190, y);
+                doc.setFont('helvetica', 'bold');
+                doc.text('-', pageWidth - marginX, y, { align: 'right' });
+
+                y += 20;
+                doc.text((state.details.postal || '-'), marginX, y);
+                doc.setFont('helvetica', 'normal');
+                doc.text('Consuming Time: ', pageWidth - marginX - 190, y);
+                doc.setFont('helvetica', 'bold');
+                doc.text(consumingText, pageWidth - marginX, y, { align: 'right' });
+
+                y += 20;
+                doc.setFont('helvetica', 'normal');
+                doc.text('Tel: ' + (state.details.mobile || '-'), marginX, y);
+                doc.text('Location: ', pageWidth - marginX - 190, y);
+                doc.setFont('helvetica', 'bold');
+                doc.text(locationText, pageWidth - marginX, y, { align: 'right' });
+
+                y += 18;
+                var tableTop = y;
+                drawTableHeader(tableTop, widths);
+                y = tableTop + 20;
 
                 doc.setFont('helvetica', 'normal');
                 doc.setFontSize(10);
-                doc.text('UEN: ' + organizationUen, marginX + contentWidth - 14, y + 39, { align: 'right' });
-                doc.text('Email: ' + organizationEmail, marginX + contentWidth - 14, y + 53, { align: 'right' });
 
-                doc.setFillColor(COLORS.white[0], COLORS.white[1], COLORS.white[2]);
-                doc.roundedRect(marginX + contentWidth - 190, y + 20, 176, 44, 4, 4, 'F');
+                invoiceRows.forEach(function (row, index) {
+                    var descLines = (row.descLines || []).slice();
+                    if (!descLines.length) descLines = ['-'];
+                    var descWrapped = [];
+                    descLines.forEach(function (line) {
+                        var wrapped = doc.splitTextToSize(String(line), widths[1] - 8);
+                        for (var i = 0; i < wrapped.length; i++) {
+                            descWrapped.push(wrapped[i]);
+                        }
+                    });
+
+                    var lineCount = Math.max(descWrapped.length, 1);
+                    var rowHeight = Math.max(22, 8 + (lineCount * 13));
+                    ensureSpace(rowHeight + 2);
+
+                    if (y + rowHeight > pageHeight - bottomReserved) {
+                        doc.addPage();
+                        y = 20;
+                        tableTop = y;
+                        drawTableHeader(tableTop, widths);
+                        y = tableTop + 20;
+                    }
+
+                    doc.rect(marginX, y, contentWidth, rowHeight);
+                    var lineX = marginX;
+                    for (var j = 0; j < widths.length - 1; j++) {
+                        lineX += widths[j];
+                        doc.line(lineX, y, lineX, y + rowHeight);
+                    }
+
+                    doc.text(String(index + 1), marginX + (widths[0] / 2), y + 14, { align: 'center' });
+                    doc.text(descWrapped, marginX + widths[0] + 4, y + 14);
+                    doc.text(String(row.qty || '-'), marginX + widths[0] + widths[1] + (widths[2] / 2), y + 14, { align: 'center' });
+                    doc.text(String(row.unitPrice || '-'), marginX + widths[0] + widths[1] + widths[2] + (widths[3] / 2), y + 14, { align: 'center' });
+                    doc.text(String(row.total || '-'), marginX + widths[0] + widths[1] + widths[2] + widths[3] + (widths[4] / 2), y + 14, { align: 'center' });
+
+                    y += rowHeight;
+                });
+
+                var subTotal = packageBase() + extraTotal() + addonTotal() + utensilTotal();
+                var gst = gstTotal();
+                var grand = grandTotal();
+
+                var summaryStartX = marginX + widths[0] + widths[1] + widths[2];
+                var summaryLabelWidth = widths[3];
+                var summaryValueWidth = widths[4];
+                var summaryRows = [
+                    { label: 'Sub total', value: moneyValue(subTotal), bold: true },
+                    { label: ((gstRate * 100).toFixed(0) || '0') + '% GST', value: moneyValue(gst), bold: false },
+                    { label: 'Grand Total', value: moneyValue(grand), bold: true },
+                    { label: 'Balance Remaining', value: moneyValue(grand), bold: true }
+                ];
+
+                summaryRows.forEach(function (row) {
+                    ensureSpace(22);
+                    doc.rect(summaryStartX, y, summaryLabelWidth + summaryValueWidth, 22);
+                    doc.line(summaryStartX + summaryLabelWidth, y, summaryStartX + summaryLabelWidth, y + 22);
+                    doc.setFont('helvetica', row.bold ? 'bold' : 'normal');
+                    doc.text(row.label, summaryStartX + summaryLabelWidth - 6, y + 15, { align: 'right' });
+                    doc.text(row.value, summaryStartX + summaryLabelWidth + summaryValueWidth - 6, y + 15, { align: 'right' });
+                    y += 22;
+                });
+
+                y += 12;
+                ensureSpace(170);
                 doc.setFont('helvetica', 'bold');
-                doc.setFontSize(10);
-                setTextColor(COLORS.brandDark);
-                doc.text('ORDER REVIEW', marginX + contentWidth - 102, y + 33, { align: 'center' });
-                doc.setFontSize(9.3);
-                doc.text('Reference: ' + invoiceRef, marginX + contentWidth - 102, y + 47, { align: 'center' });
-                doc.setFont('helvetica', 'normal');
-                doc.setFontSize(8.6);
-                doc.text('Status: Awaiting Settlement', marginX + contentWidth - 102, y + 59, { align: 'center' });
+                doc.setFontSize(12);
+                doc.text('Terms & Conditions:', marginX, y);
 
+                y += 20;
+                doc.setFont('helvetica', 'normal');
+                doc.setFontSize(11);
+                doc.text('Deposit paid is not refundable.', marginX, y);
+                y += 18;
+                doc.text('Cheque should be made payable to ' + (organizationName || 'GAYATRI RESTAURANT').toUpperCase(), marginX, y);
+                y += 18;
+                doc.text('For order support, contact Hotline: ' + organizationHotline + ' / Email: ' + organizationEmail, marginX, y);
+                y += 18;
+                doc.text('Food best consumed within 3 hours from consuming time.', marginX, y);
+
+                var signY = pageHeight - 120;
+                doc.line(marginX, signY, marginX + 120, signY);
+                doc.line(pageWidth - marginX - 120, signY, pageWidth - marginX, signY);
+                doc.setFont('helvetica', 'normal');
+                doc.text('Authorise Signature', marginX, signY + 15);
+                doc.text('Customer Signature', pageWidth - marginX, signY + 15, { align: 'right' });
+
+                doc.setFont('helvetica', 'bold');
+                doc.setFontSize(10.5);
+                doc.text(organizationName, pageWidth / 2, pageHeight - 58, { align: 'center' });
                 doc.setFont('helvetica', 'normal');
                 doc.setFontSize(9.5);
-                setTextColor(COLORS.white);
-                doc.text('Order ID: ' + (orderId || '-'), marginX + contentWidth - 202, y + 40);
-                doc.text('Date: ' + generatedDate.toLocaleDateString('en-SG'), marginX + contentWidth - 202, y + 54);
-                doc.text('Hotline: ' + organizationHotline + ' | WhatsApp: ' + organizationWhatsapp, marginX + contentWidth - 14, y + 68, { align: 'right' });
-
-                y += 86;
-                setTextColor(COLORS.text);
-
-                var leftRows = [
-                    { label: 'Customer', value: state.details.company || '-' },
-                    { label: 'Contact', value: state.details.contact || '-' },
-                    { label: 'Email', value: state.details.email || '-' },
-                    { label: 'Mobile', value: state.details.mobile || '-' },
-                    { label: 'Address', value: buildDeliveryAddress() || '-' }
-                ];
-
-                var rightRows = [
-                    { label: 'Event Type', value: state.eventName || '-' },
-                    { label: 'Event Date', value: state.details.eventDate || '-' },
-                    { label: 'Meal Period', value: state.details.mealPeriod || '-' },
-                    { label: 'Pax', value: String(state.pax || 0) },
-                    { label: 'Generated', value: new Date().toLocaleString('en-SG') }
-                ];
-
-                var cardGap = 12;
-                var cardWidth = (contentWidth - cardGap) / 2;
-                var leftCardHeight = drawInfoCard(marginX, cardWidth, 'Customer Details', leftRows);
-                var rightCardHeight = drawInfoCard(marginX + cardWidth + cardGap, cardWidth, 'Event Details', rightRows);
-                y += Math.max(leftCardHeight, rightCardHeight) + 10;
-
-                drawSimpleTable('Included Package Choices', 'Category', 'Dish', 'Status', extractIncludedRows());
-                drawSimpleTable('Additional Menu Items', 'Item', 'Qty/Unit', 'Amount', extractExtraRows());
-                drawSimpleTable('Add-ons', 'Add-on', 'Qty/Unit', 'Amount', extractAddonRows());
-                drawSimpleTable('Utensils', 'Item', 'Qty', 'Amount', extractUtensilRows());
-
-                drawSectionTitle('Payment Summary');
-                keyValue('Package Base', moneyValue(packageBase()), true);
-                keyValue('Additional Menu', moneyValue(extraTotal()), true);
-                keyValue('Add-ons', moneyValue(addonTotal()), true);
-                keyValue('Utensils / Setup', moneyValue(utensilTotal()), true);
-                keyValue('GST', moneyValue(gstTotal()), true);
-                keyValue('Refundable Deposit', moneyValue(depositTotal()), true);
-
-                ensureSpace(86);
-                doc.setFillColor(248, 251, 249);
-                doc.setDrawColor(COLORS.border[0], COLORS.border[1], COLORS.border[2]);
-                doc.roundedRect(marginX, y + 2, contentWidth, 76, 5, 5, 'FD');
-
-                doc.setFont('helvetica', 'bold');
-                doc.setFontSize(11);
-                setTextColor(COLORS.brandDark);
-                doc.text('Amount Before Deposit', marginX + 10, y + 22);
-                doc.text(moneyValue(amountWithoutDeposit), marginX + contentWidth - 10, y + 22, { align: 'right' });
-
-                doc.setDrawColor(COLORS.border[0], COLORS.border[1], COLORS.border[2]);
-                doc.line(marginX + 10, y + 30, marginX + contentWidth - 10, y + 30);
-
-                doc.setFillColor(COLORS.brandLight[0], COLORS.brandLight[1], COLORS.brandLight[2]);
-                doc.setDrawColor(COLORS.brand[0], COLORS.brand[1], COLORS.brand[2]);
-                doc.roundedRect(marginX + 10, y + 36, contentWidth - 20, 30, 5, 5, 'FD');
-                doc.setFont('helvetica', 'bold');
-                doc.setFontSize(13);
-                setTextColor(COLORS.brandDark);
-                doc.text('Grand Total Payable', marginX + 20, y + 55);
-                doc.text(moneyValue(payableNow), marginX + contentWidth - 20, y + 55, { align: 'right' });
-                y += 88;
+                doc.text(organizationAddress, pageWidth / 2, pageHeight - 44, { align: 'center' });
+                doc.text('Tel: ' + organizationHotline + '   Email: ' + organizationEmail, pageWidth / 2, pageHeight - 31, { align: 'center' });
+                doc.text('UEN: ' + organizationUen, pageWidth / 2, pageHeight - 18, { align: 'center' });
 
                 var totalPages = doc.internal.getNumberOfPages();
                 for (var pageIndex = 1; pageIndex <= totalPages; pageIndex++) {
                     doc.setPage(pageIndex);
-
-                    doc.setFont('helvetica', 'bold');
-                    doc.setFontSize(54);
-                    setTextColor([244, 247, 246]);
-                    doc.text('GAYATRI', pageWidth / 2, pageHeight / 2, { align: 'center', angle: 32 });
-
-                    doc.setDrawColor(COLORS.border[0], COLORS.border[1], COLORS.border[2]);
-                    doc.line(marginX, pageHeight - 36, marginX + contentWidth, pageHeight - 36);
-
                     doc.setFont('helvetica', 'normal');
-                    doc.setFontSize(9);
-                    setTextColor(COLORS.muted);
-                    doc.text('Thank you for choosing Gayatri Catering.', marginX, pageHeight - 22);
-                    doc.text('Page ' + pageIndex + ' of ' + totalPages, marginX + contentWidth, pageHeight - 22, { align: 'right' });
+                    doc.setFontSize(10);
+                    doc.text('page ' + pageIndex + ' / ' + totalPages, pageWidth - marginX, pageHeight - 6, { align: 'right' });
                 }
 
                 resolve(doc.output('blob'));
