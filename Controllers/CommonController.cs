@@ -329,7 +329,7 @@ namespace GayatriCateringPortal.Controllers
 
             if (reportId == 4)
             {
-                return BuildInvoicePdf(rows, logoImage);
+                //return BuildInvoicePdf(rows, logoImage);
                 return BuildInvoicePdf(rows, LoadInvoiceLogoData());
             }
 
