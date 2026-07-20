@@ -12,7 +12,6 @@ namespace GayatriCateringPortal.Models
         public string? CurrentValue { get; set; }
         public string? Suffix { get; set; }
         public string? OrgId { get; set; }
-        public string? BranchId { get; set; }
         public string? IsMaster { get; set; }
         public string? IsDeleted { get; set; }
         public string? IsActive { get; set; }

@@ -343,15 +343,14 @@ public class ReportsRepository : IReportsRepository
             throw new ArgumentException("Valid report is required.");
         }
 
-        if (request.RoleId <= 0)
-        {
-            throw new ArgumentException("Role is required.");
-        }
-
-        var definition = GetReportDefinition(request.RoleId, request.ReportId);
+        var definition = request.RoleId > 0
+            ? GetReportDefinition(request.RoleId, request.ReportId)
+            : GetReportDefinitionById(request.ReportId);
         if (definition == null)
         {
-            throw new KeyNotFoundException("Report definition not found or access denied.");
+            throw new KeyNotFoundException(request.RoleId > 0
+                ? "Report definition not found or access denied."
+                : "Report definition not found.");
         }
 
         var reportObject = ((IDictionary<string, object?>)ToDictionary(definition))["report"];
@@ -471,6 +470,107 @@ public class ReportsRepository : IReportsRepository
         finally
         {
             cmd?.Dispose();
+            if (conn != null && conn.State != ConnectionState.Closed) conn.Close();
+        }
+    }
+
+    private object? GetReportDefinitionById(int reportId)
+    {
+        if (reportId <= 0)
+        {
+            return null;
+        }
+
+        IDbConnection? conn = null;
+        IDbCommand? cmd = null;
+        IDataReader? reader = null;
+
+        try
+        {
+            conn = DataFactory.CreateConnection();
+            conn.Open();
+
+            cmd = DataFactory.CreateCommand(@"
+                SELECT TOP 1
+                    r.Id,
+                    r.CategoryId,
+                    c.Name AS CategoryName,
+                    r.ReportCode,
+                    r.ReportName,
+                    r.DisplayName,
+                    r.Description,
+                    r.StoredProcedure,
+                    r.TemplateName,
+                    r.TemplatePath,
+                    r.ReportType,
+                    r.ViewerType,
+                    r.PaperWidth,
+                    r.PaperHeight,
+                    r.Orientation,
+                    r.IsThermal,
+                    r.IsLandscape,
+                    r.Icon,
+                    CanView = CAST(1 AS BIT),
+                    CanPrint = CAST(1 AS BIT),
+                    ExportPdf = CAST(1 AS BIT),
+                    ExportExcel = CAST(0 AS BIT)
+                FROM dbo.ReportMaster r
+                INNER JOIN dbo.ReportCategory c ON c.Id = r.CategoryId
+                WHERE r.Id = @ReportId
+                  AND r.IsDeleted = 0
+                  AND r.IsActive = 1
+                  AND c.IsDeleted = 0
+                  AND c.IsActive = 1", conn);
+            ((SqlCommand)cmd).CommandType = CommandType.Text;
+            cmd.Parameters.Add(DataFactory.CreateParameter("@ReportId", reportId));
+
+            reader = DataFactory.ExecuteReader(cmd);
+            if (!reader.Read())
+            {
+                return null;
+            }
+
+            var templatePath = reader["TemplatePath"] != DBNull.Value ? Convert.ToString(reader["TemplatePath"]) : string.Empty;
+
+            return new
+            {
+                report = new
+                {
+                    id = reader["Id"] != DBNull.Value ? Convert.ToInt32(reader["Id"]) : 0,
+                    categoryId = reader["CategoryId"] != DBNull.Value ? Convert.ToInt32(reader["CategoryId"]) : 0,
+                    categoryName = reader["CategoryName"] != DBNull.Value ? Convert.ToString(reader["CategoryName"]) : string.Empty,
+                    reportCode = reader["ReportCode"] != DBNull.Value ? Convert.ToString(reader["ReportCode"]) : string.Empty,
+                    reportName = reader["ReportName"] != DBNull.Value ? Convert.ToString(reader["ReportName"]) : string.Empty,
+                    displayName = reader["DisplayName"] != DBNull.Value ? Convert.ToString(reader["DisplayName"]) : string.Empty,
+                    description = reader["Description"] != DBNull.Value ? Convert.ToString(reader["Description"]) : string.Empty,
+                    storedProcedure = reader["StoredProcedure"] != DBNull.Value ? Convert.ToString(reader["StoredProcedure"]) : string.Empty,
+                    templateName = reader["TemplateName"] != DBNull.Value ? Convert.ToString(reader["TemplateName"]) : string.Empty,
+                    templatePath,
+                    reportType = reader["ReportType"] != DBNull.Value ? Convert.ToString(reader["ReportType"]) : string.Empty,
+                    viewerType = reader["ViewerType"] != DBNull.Value ? Convert.ToString(reader["ViewerType"]) : string.Empty,
+                    paperWidth = reader["PaperWidth"] != DBNull.Value ? Convert.ToDecimal(reader["PaperWidth"]) : 0,
+                    paperHeight = reader["PaperHeight"] != DBNull.Value ? Convert.ToDecimal(reader["PaperHeight"]) : 0,
+                    orientation = reader["Orientation"] != DBNull.Value ? Convert.ToString(reader["Orientation"]) : string.Empty,
+                    isThermal = reader["IsThermal"] != DBNull.Value && Convert.ToBoolean(reader["IsThermal"]),
+                    isLandscape = reader["IsLandscape"] != DBNull.Value && Convert.ToBoolean(reader["IsLandscape"]),
+                    icon = reader["Icon"] != DBNull.Value ? Convert.ToString(reader["Icon"]) : string.Empty,
+                    canView = true,
+                    canPrint = true,
+                    exportPdf = true,
+                    exportExcel = false,
+                    templateExists = ReportLayoutAssetHelper.Exists(_environment, _configuration, templatePath),
+                    templateKind = ReportLayoutAssetHelper.ResolveTemplateKind(_environment, _configuration, templatePath)
+                },
+                filters = Enumerable.Empty<object>()
+            };
+        }
+        catch (SqlException)
+        {
+            throw new InvalidOperationException("Unable to load report definition.");
+        }
+        finally
+        {
+            reader?.Close();
             if (conn != null && conn.State != ConnectionState.Closed) conn.Close();
         }
     }

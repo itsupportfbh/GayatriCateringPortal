@@ -442,7 +442,6 @@ GO
 
 CREATE OR ALTER PROCEDURE dbo.sp_Rpt_BillingPrintById
     @BillId INT = NULL,
-    @BranchId INT = NULL
 AS
 BEGIN
     SET NOCOUNT ON;

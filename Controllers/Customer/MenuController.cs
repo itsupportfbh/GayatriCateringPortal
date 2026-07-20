@@ -9,10 +9,18 @@ namespace GayatriCateringPortal.Controllers.Customer
     public class MenuController : Controller
     {
         private readonly IMenusRepository _menusRepository;
+        private readonly IFoodMenuRepository _foodMenusRepository;
 
-        public MenuController(IMenusRepository menusRepository)
+        public MenuController(IMenusRepository menusRepository, IFoodMenuRepository foodMenusRepository)
         {
             _menusRepository = menusRepository;
+            _foodMenusRepository = foodMenusRepository;
+        }
+
+        [HttpGet("get")]
+        public IActionResult GetAll()
+        {
+            return Ok(_foodMenusRepository.GetAllMenusByCategory());
         }
 
         [HttpGet("")]

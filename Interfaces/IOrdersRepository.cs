@@ -6,7 +6,6 @@ namespace GayatriCateringPortal.Interfaces;
 public interface IOrdersRepository
 {
     List<OrderListItem> GetOrderList(DateTime? fromDate = null, DateTime? toDate = null);
-    List<Dictionary<string, object?>> GetInvoiceReportRows(int orderId, int? branchId = null);
     int UpdateOrderStatus(int OrderId, int Status);
     int UpdateOrderPaymentStatus(int OrderId, int Status);
     OrderPaymentStatus? GetOrderPaymentStatus(int orderId);

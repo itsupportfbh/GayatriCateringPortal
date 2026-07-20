@@ -47,6 +47,7 @@ public class EventMasterController : Controller
             item.Id,
             item.Name,
             item.MinPax,
+            item.ServiceCharge,
             item.AdvanceBookingDays,
             item.IsActive,
             item.IsDeleted,

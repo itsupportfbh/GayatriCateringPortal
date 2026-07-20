@@ -56,6 +56,7 @@ public class EventMasterRepository : IEventMasterRepository
             using var cmd = CreateCommand("SP_CreateEventMaster", conn);
             cmd.Parameters.Add(DataFactory.CreateParameter("@Name", item.Name));
             cmd.Parameters.Add(DataFactory.CreateParameter("@MinPax", item.MinPax));
+            cmd.Parameters.Add(DataFactory.CreateParameter("@ServiceCharge", item.ServiceCharge));
             cmd.Parameters.Add(DataFactory.CreateParameter("@AdvanceBookingDays", item.AdvanceBookingDays));
             cmd.Parameters.Add(DataFactory.CreateParameter("@PackageIds", item.PackageIds ?? (object)DBNull.Value));
             cmd.Parameters.Add(DataFactory.CreateParameter("@IsActive", item.IsActive));
@@ -80,6 +81,7 @@ public class EventMasterRepository : IEventMasterRepository
             cmd.Parameters.Add(DataFactory.CreateParameter("@Id", item.Id));
             cmd.Parameters.Add(DataFactory.CreateParameter("@Name", item.Name));
             cmd.Parameters.Add(DataFactory.CreateParameter("@MinPax", item.MinPax));
+            cmd.Parameters.Add(DataFactory.CreateParameter("@ServiceCharge", item.ServiceCharge));
             cmd.Parameters.Add(DataFactory.CreateParameter("@AdvanceBookingDays", item.AdvanceBookingDays));
             cmd.Parameters.Add(DataFactory.CreateParameter("@IsActive", item.IsActive));
             cmd.Parameters.Add(DataFactory.CreateParameter("@UpdatedBy", item.UpdatedBy ?? 0));
@@ -136,6 +138,7 @@ public class EventMasterRepository : IEventMasterRepository
                 Id = reader["Id"] == DBNull.Value ? 0 : Convert.ToInt32(reader["Id"]),
                 Name = reader["Name"] == DBNull.Value ? string.Empty : Convert.ToString(reader["Name"]) ?? string.Empty,
                 MinPax = reader["MinPax"] == DBNull.Value ? 0 : Convert.ToInt32(reader["MinPax"]),
+                ServiceCharge = GetOptionalDecimal(reader, "ServiceCharge"),
                 AdvanceBookingDays = reader["AdvanceBookingDays"] == DBNull.Value ? 0 : Convert.ToInt32(reader["AdvanceBookingDays"]),
                 IsDeleted = reader["IsDeleted"] != DBNull.Value && Convert.ToBoolean(reader["IsDeleted"]),
                 IsActive = reader["IsActive"] != DBNull.Value && Convert.ToBoolean(reader["IsActive"]),
@@ -146,5 +149,18 @@ public class EventMasterRepository : IEventMasterRepository
             });
         }
         return list;
+    }
+
+    private static decimal GetOptionalDecimal(IDataRecord record, string columnName)
+    {
+        try
+        {
+            var ordinal = record.GetOrdinal(columnName);
+            return record.IsDBNull(ordinal) ? 0 : Convert.ToDecimal(record.GetValue(ordinal));
+        }
+        catch (IndexOutOfRangeException)
+        {
+            return 0;
+        }
     }
 }
