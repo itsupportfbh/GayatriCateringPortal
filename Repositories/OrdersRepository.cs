@@ -50,55 +50,6 @@ public class OrdersRepository : IOrdersRepository
         }
     }
 
-    public List<Dictionary<string, object?>> GetInvoiceReportRows(int orderId, int? branchId = null)
-    {
-        var rows = new List<Dictionary<string, object?>>();
-        IDbConnection conn = null;
-        IDbCommand cmd = null;
-        IDataReader reader = null;
-
-        try
-        {
-            using (conn = DataFactory.CreateConnection())
-            {
-                conn.Open();
-                using (cmd = DataFactory.CreateCommand("dbo.sp_Rpt_BillingPrintById", conn))
-                {
-                    ((SqlCommand)cmd).CommandType = CommandType.StoredProcedure;
-                    cmd.Parameters.Add(DataFactory.CreateParameter("@BillId", orderId));
-                    cmd.Parameters.Add(DataFactory.CreateParameter("@BranchId", branchId.HasValue ? branchId.Value : DBNull.Value));
-
-                    reader = DataFactory.ExecuteReader(cmd);
-                    while (reader.Read())
-                    {
-                        var row = new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase);
-                        for (var i = 0; i < reader.FieldCount; i++)
-                        {
-                            var key = reader.GetName(i);
-                            row[key] = reader.IsDBNull(i) ? null : reader.GetValue(i);
-                        }
-                        rows.Add(row);
-                    }
-                }
-            }
-
-            return rows;
-        }
-        catch (SqlException)
-        {
-            throw new Exception("Database error");
-        }
-        catch (Exception ex)
-        {
-            throw new Exception(ex.StackTrace);
-        }
-        finally
-        {
-            if (reader != null) reader.Close();
-            if (conn != null && conn.State != ConnectionState.Closed) conn.Close();
-        }
-    }
-
     public int UpdateOrderStatus(int OrderId, int Status)
     {
         IDbConnection conn = null;

@@ -84,4 +84,15 @@ namespace GayatriCateringPortal.Models
         public string? Body { get; set; }
         public IFormFile? Attachment { get; set; }
     }
+
+    public class SendReportEmailRequest
+    {
+        public string? ToEmail { get; set; }
+        public string? CcEmail { get; set; }
+        public string? Subject { get; set; }
+        public int? ReportId { get; set; }
+        public int? RoleId { get; set; }
+        public int? OrderId { get; set; }
+        public string? ReportFiltersJson { get; set; }
+    }
 }
