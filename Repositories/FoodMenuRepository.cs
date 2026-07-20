@@ -320,6 +320,8 @@ namespace GayatriCateringPortal.Repositories
                         item.UpdatedBy = Convert.ToInt32(reader["UpdatedBy"]);
                     if (reader["UpdatedDate"] != DBNull.Value)
                         item.UpdatedDate = Convert.ToDateTime(reader["UpdatedDate"]);
+                    if (reader["Category"] != DBNull.Value)
+                        item.Category = Convert.ToString(reader["Category"])!;
 
                     list.Add(item);
                 }

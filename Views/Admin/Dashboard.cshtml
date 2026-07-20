@@ -4,70 +4,80 @@
 
 @section Styles {
     <link rel="stylesheet" href="~/css/admin/dashboard.css" asp-append-version="true">
-}
+    }
 
-<div class="page-header">
-    <div>
-        <div class="page-title">Admin Dashboard</div>
-        <div class="page-subtitle">Operations overview for orders, finance, kitchen and delivery</div>
+    <div class="page-header">
+        <div>
+            <div class="page-title">Admin Dashboard</div>
+            <div class="page-subtitle">Operations overview for orders, finance, kitchen and delivery</div>
+        </div>
+        <div style="display:none" class="page-header-actions">
+            <div class="app-header-filter orders-date-filter">
+                <label for="ordersFromDate">From</label>
+                <input type="date" id="ordersFromDate" class="form-control">
+            </div>
+            <div class="app-header-filter orders-date-filter">
+                <label for="ordersToDate">To</label>
+                <input type="date" id="ordersToDate" class="form-control">
+            </div>
+        </div>
+        <a href="/Admin/Orders" class="btn btn-orange">View Orders</a>
     </div>
-    <a href="/Admin/Orders" class="btn btn-orange">View Orders</a>
-</div>
 
-<div class="stats-grid" style="margin-bottom:18px">
-    <div class="stat-card">
-        <div class="stat-value" id="kpiOrders">0</div>
-        <div class="stat-label">Total Orders</div>
-        <div class="stat-sub">Live portal data</div>
+    <div class="stats-grid" style="margin-bottom:18px">
+        <div class="stat-card">
+            <div class="stat-value" id="kpiOrders">0</div>
+            <div class="stat-label">Total Orders</div>
+            <div class="stat-sub">Live portal data</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value" id="kpiActive">0</div>
+            <div class="stat-label">Confirmed / Active</div>
+            <div class="stat-sub">Kitchen ready</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value" id="kpiRevenue">S$0.00</div>
+            <div class="stat-label">Total Sales</div>
+            <div class="stat-sub">Quoted amount</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value" id="kpiOutstanding">S$0.00</div>
+            <div class="stat-label">Outstanding</div>
+            <div class="stat-sub">Need follow-up</div>
+        </div>
     </div>
-    <div class="stat-card">
-        <div class="stat-value" id="kpiActive">0</div>
-        <div class="stat-label">Confirmed / Active</div>
-        <div class="stat-sub">Kitchen ready</div>
-    </div>
-    <div class="stat-card">
-        <div class="stat-value" id="kpiRevenue">S$0.00</div>
-        <div class="stat-label">Total Sales</div>
-        <div class="stat-sub">Quoted amount</div>
-    </div>
-    <div class="stat-card">
-        <div class="stat-value" id="kpiOutstanding">S$0.00</div>
-        <div class="stat-label">Outstanding</div>
-        <div class="stat-sub">Need follow-up</div>
-    </div>
-</div>
 
-<div class="quick-actions" style="grid-template-columns:repeat(4,1fr);margin-bottom:24px">
-    <a href="/Admin/Quotations" class="qa-card" style="text-decoration:none;background:#eef8f2;border-color:var(--green)">
-        <div class="qa-icon">&#128196;</div>
-        <div class="qa-title">Create Quotation</div>
-        <div class="qa-sub">PDF-ready quotation view.</div>
-    </a>
-    <a href="/Admin/Invoices" class="qa-card" style="text-decoration:none">
-        <div class="qa-icon">&#129534;</div>
-        <div class="qa-title">Invoices</div>
-        <div class="qa-sub">Invoice and balance tracking.</div>
-    </a>
-    <a href="/Admin/Kitchen" class="qa-card" style="text-decoration:none">
-        <div class="qa-icon">&#127859;</div>
-        <div class="qa-title">Kitchen Queue</div>
-        <div class="qa-sub">Confirmed orders by event date.</div>
-    </a>
-    <a href="/Admin/Utensils" class="qa-card" style="text-decoration:none">
-        <div class="qa-icon">&#127869;</div>
-        <div class="qa-title">Utensils Config</div>
-        <div class="qa-sub">Chafing dish, fork, spoon qty rules.</div>
-    </a>
-</div>
-
-<div class="card">
-    <div class="panel-header">
-        <div class="panel-title">Recent Orders</div>
+    <div class="quick-actions" style="grid-template-columns:repeat(4,1fr);margin-bottom:24px">
+        <a href="/Admin/Quotations" class="qa-card" style="text-decoration:none;background:#eef8f2;border-color:var(--green)">
+            <div class="qa-icon">&#128196;</div>
+            <div class="qa-title">Create Quotation</div>
+            <div class="qa-sub">PDF-ready quotation view.</div>
+        </a>
+        <a href="/Admin/Invoices" class="qa-card" style="text-decoration:none">
+            <div class="qa-icon">&#129534;</div>
+            <div class="qa-title">Invoices</div>
+            <div class="qa-sub">Invoice and balance tracking.</div>
+        </a>
+        <a href="/Admin/Kitchen" class="qa-card" style="text-decoration:none">
+            <div class="qa-icon">&#127859;</div>
+            <div class="qa-title">Kitchen Queue</div>
+            <div class="qa-sub">Confirmed orders by event date.</div>
+        </a>
+        <a href="/Admin/Utensils" class="qa-card" style="text-decoration:none">
+            <div class="qa-icon">&#127869;</div>
+            <div class="qa-title">Utensils Config</div>
+            <div class="qa-sub">Chafing dish, fork, spoon qty rules.</div>
+        </a>
     </div>
-    <div class="table-wrap" id="recentOrders"></div>
-</div>
 
-@section Scripts {
-    <script src="~/js/admin/table-utils.js" asp-append-version="true"></script>
-    <script src="~/js/admin/dashboard.js" asp-append-version="true"></script>
-}
+    <div class="card">
+        <div class="panel-header">
+            <div class="panel-title">Recent Orders</div>
+        </div>
+        <div class="table-wrap" id="recentOrders"></div>
+    </div>
+
+    @section Scripts {
+        <script src="~/js/admin/table-utils.js" asp-append-version="true"></script>
+        <script src="~/js/admin/dashboard.js" asp-append-version="true"></script>
+    }
