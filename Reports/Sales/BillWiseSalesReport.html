@@ -1,0 +1,21 @@
+<style>
+  .bill-shell { font-family: "Segoe UI", Arial, sans-serif; color: #1e293b; }
+  .bill-head { padding: 16px 18px; border-radius: 10px; background: linear-gradient(140deg, #cffafe, #e0e7ff); margin-bottom: 12px; }
+  .bill-head h2 { margin: 0; font-size: 22px; }
+  .bill-head p { margin: 6px 0 0; color: #334155; }
+  .pill-row { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
+  .pill { border: 1px solid #cbd5e1; border-radius: 999px; padding: 4px 10px; font-size: 12px; background: #fff; }
+</style>
+<section class="bill-shell">
+  <div class="bill-head">
+    <h2>{{report.displayName}}</h2>
+    <p>{{report.description}}</p>
+    <p>Executed: {{meta.executedAt|datetime}} | Rows: {{meta.rowCount|number}}</p>
+  </div>
+  <div class="pill-row">
+    <span class="pill">Gross Total: {{sumTotalAmount|currency}}</span>
+    <span class="pill">Tax: {{sumTaxAmount|currency}}</span>
+    <span class="pill">Balance: {{sumBalanceAmount|currency}}</span>
+  </div>
+  {{table}}
+</section>

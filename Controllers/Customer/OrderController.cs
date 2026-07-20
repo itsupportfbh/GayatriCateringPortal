@@ -196,6 +196,27 @@ namespace GayatriCateringPortal.Controllers.Customer
             }
         }
 
+        [HttpGet("invoice-report")]
+        public IActionResult GetInvoiceReport([FromQuery] int orderId, [FromQuery] int? branchId = null)
+        {
+            if (orderId <= 0)
+                return BadRequest(new { success = false, message = "Invalid order id." });
+
+            try
+            {
+                var rows = _orders.GetInvoiceReportRows(orderId, branchId);
+                return Ok(new
+                {
+                    success = true,
+                    rows
+                });
+            }
+            catch
+            {
+                return StatusCode(500, new { success = false, message = "Unable to load invoice report data." });
+            }
+        }
+
         [HttpPost("create-payment-link")]
         public async Task<IActionResult> CreatePaymentLink([FromBody] CreatePaymentLinkRequest request)
         {

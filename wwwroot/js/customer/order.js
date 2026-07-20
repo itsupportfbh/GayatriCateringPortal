@@ -1003,6 +1003,14 @@ $(function () {
         $('#paymentModal').removeClass('hidden');
     }
 
+    function fetchInvoiceReportRows(orderId) {
+        return $.ajax({
+            url: '/Customer/Order/invoice-report?orderId=' + encodeURIComponent(orderId),
+            type: 'GET',
+            dataType: 'json'
+        });
+    }
+
     function generateOrderReviewPdfBlob(orderId) {
         return new Promise(function (resolve, reject) {
             if (!window.jspdf || !window.jspdf.jsPDF) {
@@ -1010,9 +1018,18 @@ $(function () {
                 return;
             }
 
-            try {
-                var jsPDFCtor = window.jspdf.jsPDF;
-                var doc = new jsPDFCtor({ orientation: 'p', unit: 'pt', format: 'a4' });
+            function readNum(value, fallbackValue) {
+                var n = Number(value);
+                if (Number.isFinite(n)) return n;
+                return Number(fallbackValue || 0);
+            }
+
+            function buildPdf(reportRows) {
+                reportRows = Array.isArray(reportRows) ? reportRows : [];
+
+                try {
+                    var jsPDFCtor = window.jspdf.jsPDF;
+                    var doc = new jsPDFCtor({ orientation: 'p', unit: 'pt', format: 'a4' });
                 var marginX = 14;
                 var y = 20;
                 var pageWidth = doc.internal.pageSize.getWidth();
@@ -1132,22 +1149,46 @@ $(function () {
                 var locationText = buildDeliveryAddress() || 'Self-Collect';
                 var consumingText = String(state.details.mealPeriod || '-');
                 var packageDishLines = selectedIncludedDishes();
+                var headerRow = reportRows.length ? reportRows[0] : null;
+
+                if (headerRow) {
+                    invoiceNo = (headerRow.OrderNumber || invoiceNo).toString();
+                    locationText = String(headerRow.Location || locationText || '-');
+                    consumingText = String(headerRow.MealPeriodName || consumingText || '-');
+                }
 
                 var invoiceRows = [];
-                var packageDescLines = [state.packageName || 'Custom Package'];
-                packageDishLines.forEach(function (dish) {
-                    packageDescLines.push('- ' + dish);
-                });
-                invoiceRows.push({
-                    descLines: packageDescLines,
-                    qty: String(state.pax || 0),
-                    unitPrice: moneyValue(state.packagePrice || 0),
-                    total: moneyValue(packageBase())
-                });
 
-                extractExtraRows().forEach(function (row) { invoiceRows.push(row); });
-                extractAddonRows().forEach(function (row) { invoiceRows.push(row); });
-                extractUtensilRows().forEach(function (row) { invoiceRows.push(row); });
+                if (reportRows.length) {
+                    reportRows.forEach(function (row) {
+                        var desc = String(row.Description || row.ItemName || '').trim();
+                        if (!desc) return;
+                        var qty = row.NoOfItems != null ? row.NoOfItems : row.Qty;
+                        invoiceRows.push({
+                            descLines: [desc],
+                            qty: String(qty == null ? '-' : qty),
+                            unitPrice: moneyValue(readNum(row.UnitPrice, 0)),
+                            total: moneyValue(readNum(row.Total, row.LineTotal || 0))
+                        });
+                    });
+                }
+
+                if (!invoiceRows.length) {
+                    var packageDescLines = [state.packageName || 'Custom Package'];
+                    packageDishLines.forEach(function (dish) {
+                        packageDescLines.push('- ' + dish);
+                    });
+                    invoiceRows.push({
+                        descLines: packageDescLines,
+                        qty: String(state.pax || 0),
+                        unitPrice: moneyValue(state.packagePrice || 0),
+                        total: moneyValue(packageBase())
+                    });
+
+                    extractExtraRows().forEach(function (row) { invoiceRows.push(row); });
+                    extractAddonRows().forEach(function (row) { invoiceRows.push(row); });
+                    extractUtensilRows().forEach(function (row) { invoiceRows.push(row); });
+                }
 
                 var widths = [34, 249, 70, 85, 85];
 
@@ -1180,20 +1221,20 @@ $(function () {
                 y += 102;
                 doc.setFont('helvetica', 'bold');
                 doc.setFontSize(14);
-                doc.text(state.details.company || 'Customer', marginX, y);
+                doc.text(String((headerRow && headerRow.CustomerName) || state.details.company || 'Customer'), marginX, y);
                 doc.text('Invoice/Function Date: ', pageWidth - marginX - 190, y);
                 doc.setFont('helvetica', 'bold');
-                doc.text(fmtDate(state.details.eventDate), pageWidth - marginX, y, { align: 'right' });
+                doc.text(fmtDate((headerRow && headerRow.EventDate) || state.details.eventDate), pageWidth - marginX, y, { align: 'right' });
 
                 y += 20;
-                doc.text((state.details.addressLine1 || '-') , marginX, y);
+                doc.text(String((headerRow && headerRow.Address) || state.details.addressLine1 || '-'), marginX, y);
                 doc.setFont('helvetica', 'normal');
                 doc.text('Departure Time: ', pageWidth - marginX - 190, y);
                 doc.setFont('helvetica', 'bold');
                 doc.text('-', pageWidth - marginX, y, { align: 'right' });
 
                 y += 20;
-                doc.text((state.details.postal || '-'), marginX, y);
+                doc.text(String((headerRow && headerRow.Pincode) || state.details.postal || '-'), marginX, y);
                 doc.setFont('helvetica', 'normal');
                 doc.text('Consuming Time: ', pageWidth - marginX - 190, y);
                 doc.setFont('helvetica', 'bold');
@@ -1201,7 +1242,7 @@ $(function () {
 
                 y += 20;
                 doc.setFont('helvetica', 'normal');
-                doc.text('Tel: ' + (state.details.mobile || '-'), marginX, y);
+                doc.text('Tel: ' + String((headerRow && headerRow.MobileNo) || state.details.mobile || '-'), marginX, y);
                 doc.text('Location: ', pageWidth - marginX - 190, y);
                 doc.setFont('helvetica', 'bold');
                 doc.text(locationText, pageWidth - marginX, y, { align: 'right' });
@@ -1253,18 +1294,22 @@ $(function () {
                     y += rowHeight;
                 });
 
-                var subTotal = packageBase() + extraTotal() + addonTotal() + utensilTotal();
-                var gst = gstTotal();
-                var grand = grandTotal();
+                var subTotal = headerRow ? readNum(headerRow.SubTotal, packageBase() + extraTotal() + addonTotal() + utensilTotal()) : (packageBase() + extraTotal() + addonTotal() + utensilTotal());
+                var gst = headerRow ? readNum(headerRow.TaxAmount, gstTotal()) : gstTotal();
+                var grand = headerRow ? readNum(headerRow.TotalAmount, grandTotal()) : grandTotal();
+                var balance = headerRow ? readNum(headerRow.BalanceRemaining, grand) : grand;
+                var taxLabel = headerRow && headerRow.TaxPercentage != null
+                    ? String(headerRow.TaxPercentage) + '% GST'
+                    : (((gstRate * 100).toFixed(0) || '0') + '% GST');
 
                 var summaryStartX = marginX + widths[0] + widths[1] + widths[2];
                 var summaryLabelWidth = widths[3];
                 var summaryValueWidth = widths[4];
                 var summaryRows = [
                     { label: 'Sub total', value: moneyValue(subTotal), bold: true },
-                    { label: ((gstRate * 100).toFixed(0) || '0') + '% GST', value: moneyValue(gst), bold: false },
+                    { label: taxLabel, value: moneyValue(gst), bold: false },
                     { label: 'Grand Total', value: moneyValue(grand), bold: true },
-                    { label: 'Balance Remaining', value: moneyValue(grand), bold: true }
+                    { label: 'Balance Remaining', value: moneyValue(balance), bold: true }
                 ];
 
                 summaryRows.forEach(function (row) {
@@ -1319,9 +1364,18 @@ $(function () {
                 }
 
                 resolve(doc.output('blob'));
-            } catch (err) {
-                reject(err);
+                } catch (err) {
+                    reject(err);
+                }
             }
+
+            fetchInvoiceReportRows(orderId)
+                .done(function (response) {
+                    buildPdf(response && response.rows ? response.rows : []);
+                })
+                .fail(function () {
+                    buildPdf([]);
+                });
         });
     }
 
