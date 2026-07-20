@@ -1,34 +1,29 @@
 $(document).ready(function () {
-    ensurePackageDetailModal();
     loadPackages();
 
-    $(document).on('click', '.package-detail-close', closePackageDetails);
-    $(document).on('click', '#packageDetailModal', function (event) {
-        if (event.target === this) closePackageDetails();
-    });
-    $(document).on('keydown', function (event) {
-        if (event.key === 'Escape') closePackageDetails();
+    $(document).on('click', '.package-view-btn', function () {
+        var packageId = Number($(this).data('package-id')) || 0;
+        var packageName = String($(this).data('package-name') || 'Package');
+        if (!packageId || $(this).prop('disabled')) {
+            return;
+        }
+
+        $('.package-view-btn').removeClass('is-active');
+        $(this).addClass('is-active');
+        showPackageDetails(packageId, packageName);
     });
 });
 
-function ensurePackageDetailModal() {
-    if ($('#packageDetailModal').length) return;
-
-    $('body').append(
-        '<div class="package-detail-overlay" id="packageDetailModal" aria-hidden="true">' +
-            '<div class="package-detail-dialog" role="dialog" aria-modal="true" aria-labelledby="packageDetailTitle">' +
-                '<button type="button" class="package-detail-close" aria-label="Close package details">&times;</button>' +
-                '<div class="package-detail-heading">' +
-                    '<div class="package-detail-kicker">Package menu</div>' +
-                    '<h2 id="packageDetailTitle">Package Details</h2>' +
-                '</div>' +
-                '<div class="package-detail-content" id="packageDetailContent"></div>' +
-            '</div>' +
+function loadPackages() {
+    $('#packageCards').html(
+        '<div class="card package-loading-card">' +
+        '<div class="pageloaderpanel">' +
+        '<div class="spinner" aria-hidden="true"></div>' +
+        '<div class="loader-text">Loading packages...</div>' +
+        '</div>' +
         '</div>'
     );
-}
 
-function loadPackages() {
     $.ajax({
         url: '/Customer/Packages/get',
         type: 'GET',
@@ -55,7 +50,7 @@ function renderPackages(packages) {
                 '<div class="preset-name">' + escapePackageHtml(packageName) + '</div>' +
                 '<div class="preset-price"><span class="preset-currency">S$</span>' + price.toFixed(2) + ' <span>/ pax</span></div>' +
                 '<div class="preset-description" title="' + escapePackageHtml(description) + '">' + escapePackageHtml(description) + '</div>' +
-                '<button type="button" data-package-name="' + escapePackageHtml(packageName) + '" onclick="showPackageDetails(' + packageId + ', this.getAttribute(\'data-package-name\'))" class="btn ' + buttonClass + ' btn-sm preset-action"' + (isActive ? '' : ' disabled') + '>' + buttonText + '</button>' +
+                '<button type="button" data-package-id="' + packageId + '" data-package-name="' + escapePackageHtml(packageName) + '" class="btn ' + buttonClass + ' btn-sm preset-action package-view-btn"' + (isActive ? '' : ' disabled') + '>' + buttonText + '</button>' +
                 '</article>';
         }).join('');
     }
@@ -65,16 +60,15 @@ function renderPackages(packages) {
 function showPackageDetails(packageId, packageName) {
     if (!packageId) return;
 
-    ensurePackageDetailModal();
-
     $('#packageDetailTitle').text(packageName);
-    $('#packageDetailContent').html('<div class="package-detail-status">Loading package menu...</div>');
-    $('#packageDetailModal').addClass('open').attr('aria-hidden', 'false');
-    $('body').addClass('package-modal-open');
+    $('#packageDetailMeta').html('<span class="meta-pill">Loading...</span>');
+    $('#packageDetailContent').html(buildDetailsSkeleton());
+    $('#packageSidebar').addClass('is-open');
 
     $.getJSON('/Customer/Packages/get/' + packageId + '/categories').done(function (categories) {
         categories = Array.isArray(categories) ? categories : [];
         if (!categories.length) {
+            $('#packageDetailMeta').html('<span class="meta-pill">0 categories</span><span class="meta-pill">0 items</span>');
             $('#packageDetailContent').html('<div class="package-detail-status">No categories are configured for this package.</div>');
             return;
         }
@@ -92,33 +86,59 @@ function showPackageDetails(packageId, packageName) {
             renderPackageDetails(results);
         });
     }).fail(function () {
+        $('#packageDetailMeta').html('<span class="meta-pill">Unavailable</span>');
         $('#packageDetailContent').html('<div class="package-detail-status error">Unable to load this package menu.</div>');
     });
 }
 
 function renderPackageDetails(results) {
-    var html = '<div class="package-category-grid">';
-    results.forEach(function (result) {
+    var categoryCount = results.length;
+    var menuCount = 0;
+    var cardsHtml = '';
+
+    results.forEach(function (result, index) {
         var category = result.category || {};
         var menus = result.menus || [];
         var categoryName = category.categoryName || category.CategoryName || 'Category';
-        html += '<section class="package-category-card"><h3>' + escapePackageHtml(categoryName) + '</h3><ul>';
+        menuCount += menus.length;
+
+        cardsHtml += '<section class="package-category-card" style="--stagger:' + index + '">' +
+            '<div class="package-category-head">' +
+            '<h3>' + escapePackageHtml(categoryName) + '</h3>' +
+            '<span class="category-count">' + menus.length + ' item' + (menus.length === 1 ? '' : 's') + '</span>' +
+            '</div><ul>';
         if (menus.length) {
             menus.forEach(function (menu) {
-                html += '<li>' + escapePackageHtml(menu.name || menu.Name || '') + '</li>';
+                cardsHtml += '<li>' + escapePackageHtml(menu.name || menu.Name || '') + '</li>';
             });
         } else {
-            html += '<li class="empty">' + (result.failed ? 'Unable to load menu items.' : 'No menu items available.') + '</li>';
+            cardsHtml += '<li class="empty">' + (result.failed ? 'Unable to load menu items.' : 'No menu items available.') + '</li>';
         }
-        html += '</ul></section>';
+        cardsHtml += '</ul></section>';
     });
-    html += '</div>';
+
+    var html = '<div class="package-category-grid">' + cardsHtml + '</div>';
+
+    $('#packageDetailMeta').html(
+        '<span class="meta-pill">' + categoryCount + ' categor' + (categoryCount === 1 ? 'y' : 'ies') + '</span>' +
+        '<span class="meta-pill">' + menuCount + ' menu item' + (menuCount === 1 ? '' : 's') + '</span>'
+    );
     $('#packageDetailContent').html(html);
 }
 
-function closePackageDetails() {
-    $('#packageDetailModal').removeClass('open').attr('aria-hidden', 'true');
-    $('body').removeClass('package-modal-open');
+function buildDetailsSkeleton() {
+    var blocks = [0, 1, 2].map(function () {
+        return '<section class="details-skeleton-card">' +
+            '<div class="details-skeleton-head shimmer"></div>' +
+            '<div class="details-skeleton-lines">' +
+            '<span class="shimmer"></span>' +
+            '<span class="shimmer"></span>' +
+            '<span class="shimmer short"></span>' +
+            '</div>' +
+            '</section>';
+    }).join('');
+
+    return '<div class="details-skeleton-wrap" aria-hidden="true">' + blocks + '</div>';
 }
 
 function escapePackageHtml(value) {
