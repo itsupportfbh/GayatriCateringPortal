@@ -13,14 +13,40 @@
         </div>
     </div>
 
-    <div class="d-flex gap-2 mb-3">
-        <button type="button" id="btnPending" class="delivery-tab active">
-            🚚 Pending Delivery
-        </button>
+    <div class="logistics-toolbar">
 
-        <button type="button" id="btnDelivered" class="delivery-tab">
-            ✅ Delivered
-        </button>
+        <div class="left-toolbar">
+            <button type="button" id="btnPending" class="delivery-tab active">
+                🚚 Pending Delivery
+            </button>
+
+            <button type="button" id="btnDelivered" class="delivery-tab">
+                ✅ Delivered
+            </button>
+        </div>
+
+        <div class="right-toolbar">
+            <div id="pendingsearch">
+                <input type="text"
+                       id="pendingSearch"
+                       class="tbl-search"
+                       data-table="PendingTable"
+                       placeholder="Search items...">
+            </div>
+
+            <div id="deliverysearch" style="display:none;">
+                <input type="text"
+                       id="DeliSearch"
+                       class="tbl-search"
+                       data-table="DeliveredTable"
+                       placeholder="Search items...">
+            </div>
+
+            <button class="btn btn-light">
+                <i class="fa fa-download"></i> Export
+            </button>
+        </div>
+
     </div>
 
     <div id="commsListPanel" class="card">
@@ -28,40 +54,20 @@
             <div class="panel-title">Dispatch Board</div>
         </div>
         <div class="muted" style="margin-bottom:16px">Track delivery assignments and active order dispatch progress.</div>
-        @*  <div class="table-wrap" id="logisticsTable">
-            <p class="muted">Loading...</p>
-        </div> *@
-        @* <div class="table-wrap">
-            <table class="tbl" id="LogisticsList" data-page-size="10">
-                <thead>
-                    <tr>
-                        <th class="sortable">#</th>
-                        <th class="sortable">Order Date</th>
-                        <th class="sortable">Order Number</th>
-                        <th class="sortable">Location</th>
-                        <th class="sortable">DriverName </th>
-                        <th class="sortable">Status</th>
-                        <th class="sortable">Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <!-- rows rendered by ~/js/admin/comms.js -->
-                </tbody>
-            </table>
-        </div> *@
+       
         <div id="pendingSection" class="table-wrap">
 
             <table class="tbl" id="PendingTable" data-page-size="10">
                 <thead>
                     <tr>
-                        <th>#</th>
-                        <th>Order Date</th>
-                        <th>Order No</th>
-                        <th>Customer</th>
-                        <th>Location</th>
-                        <th>Driver</th>
-                        <th>Status</th>
-                        <th width="170">Action</th>
+                        <th class="sortable">#</th>
+                        <th class="sortable">Order Date</th>
+                        <th class="sortable">Order No</th>
+                        <th class="sortable">Customer</th>
+                        <th class="sortable">Location</th>
+                        <th class="sortable">Driver</th>
+                        <th class="sortable">Status</th>
+                        <th >Action</th>
                     </tr>
                 </thead>
 
@@ -78,13 +84,13 @@
             <table class="tbl" id="DeliveredTable" data-page-size="10">
                 <thead>
                     <tr>
-                        <th>#</th>
-                        <th>Order Date</th>
-                        <th>Order No</th>
-                        <th>Customer</th>
-                        <th>Location</th>
-                        <th>Driver</th>
-                        <th>Delivered On</th>                        
+                        <th class="sortable">#</th>
+                        <th class="sortable">Order Date</th>
+                        <th class="sortable">Order No</th>
+                        <th class="sortable">Customer</th>
+                        <th class="sortable">Location</th>
+                        <th class="sortable">Driver</th>
+                        <th class="sortable">Delivered On</th>
                     </tr>
                 </thead>
 

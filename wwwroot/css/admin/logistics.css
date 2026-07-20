@@ -42,35 +42,26 @@
 
 
 
-/*.delivery-tabs {
+.logistics-toolbar {
     display: flex;
-    gap: 8px;
-    margin-bottom: 16px;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    width: 100%;
 }
 
-.delivery-tab {
-    padding: 8px 18px;
-    min-height: 36px;
-    border: 2px solid #0f5b38;
-    border-radius: 8px;
-    background: #fff;
-    color: #0f5b38;
-    font-size: 16px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all .25s ease;
+.left-toolbar {
+    display: flex;
+    gap: 10px;
+    align-items: center;
 }
 
-    .delivery-tab:hover {
-        background: #eef8f2;
-    }
+.right-toolbar {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+}
 
-    .delivery-tab.active {
-        background: #0f5b38;
-        color: #fff;
-        box-shadow: 0 2px 8px rgba(15, 91, 56, .18);
-    }
-
-        .delivery-tab.active:hover {
-            background: #0f5b38;
-        }*/
+.tbl-search {
+    width: 320px;
+}
