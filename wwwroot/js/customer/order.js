@@ -7,6 +7,7 @@ $(function () {
         selectedEvent: '',
         eventName: '',
         eventMinPax: 0,
+        packageServiceCharge: 0,
         eventAdvanceBookingDays: 0,
         pax: 0,
         selectedPackage: '',
@@ -139,11 +140,14 @@ $(function () {
                 id: String(item.id ?? item.Id ?? ''),
                 name: item.name ?? item.Name ?? 'Package',
                 price: Number(item.price ?? item.Price ?? 0),
+                serviceCharge: Math.max(0, Number(item.serviceCharge ?? item.ServiceCharge ?? 0) || 0),
                 desc: item.description ?? item.Description ?? ''
             };
         }).filter(function (item) {
             return item.id !== '';
         });
+
+        state.packageServiceCharge = packages.length ? packages[0].serviceCharge : 0;
 
         renderStep(false);
     }
@@ -205,12 +209,12 @@ $(function () {
     }
 
     function gstTotal() {
-        var subtotal = packageBase() + extraTotal() + addonTotal() + utensilTotal();
+        var subtotal = packageBase() + extraTotal() + addonTotal() + utensilTotal() + state.packageServiceCharge;
         return subtotal * gstRate;
     }
 
     function grandTotal() {
-        return packageBase() + extraTotal() + addonTotal() + utensilTotal() + gstTotal();
+        return packageBase() + extraTotal() + addonTotal() + utensilTotal() + state.packageServiceCharge + gstTotal();
     }
 
     function updateSummary() {
@@ -221,6 +225,7 @@ $(function () {
         $('#summaryAdditional').text(money(extraTotal() || 0));
         $('#summaryAddons').text(money(addonTotal() || 0));
         $('#summaryUtensils').text(money(utensilTotal()));
+        $('#summaryServiceCharge').text(money(state.packageServiceCharge));
         $('#summaryGst').text(money(gstTotal()));
         $('#summaryDeposit').text(money(depositTotal()));
         $('#summaryTotal').text(money(grandTotal()));
@@ -347,7 +352,8 @@ $(function () {
             html = '<div class="card order-card">' +
                 '<div class="section-label">Select Event</div>' +
                 '<div class="order-fields" style="margin-bottom:18px"><div><label>Event Type</label><select id="eventType"><option value="">-- Select Event --</option>' + eventOptions + '</select></div>' +
-                '<div><label>No. of Pax</label><input type="number" id="eventPaxCount" min="' + state.eventMinPax + '" value="' + (state.selectedEvent ? state.pax : '') + '"' + (state.selectedEvent ? '' : ' disabled') + '></div></div>' +
+                '<div><label>No. of Pax</label><input type="number" id="eventPaxCount" min="' + state.eventMinPax + '" value="' + (state.selectedEvent ? state.pax : '') + '"' + (state.selectedEvent ? '' : ' disabled') + '></div>' +
+                '<div><label>Service Charge</label><input type="text" value="' + money(state.packageServiceCharge) + '" readonly></div></div>' +
                 packagesPanel +
                 '</div>';
             showOrderLoader(false);
@@ -361,6 +367,7 @@ $(function () {
             '<div class="order-fields">' +
             '<div><label>Event Type</label><div class="plain-text-field">' + escapeHtml(state.eventName) + '</div></div>' +
             '<div><label>No. of Pax</label><div class="plain-text-field">' + state.pax + '</div></div>' +
+            '<div><label>Service Charge</label><div class="plain-text-field">' + money(state.packageServiceCharge) + '</div></div>' +
             '<div><label>Package</label><div class="plain-text-field">' + escapeHtml(state.packageName) + ' - S$' + state.packagePrice.toFixed(2) + '/pax</div></div>' +
             '<div><label>GST</label><div class="plain-text-field">' + (gstRate * 100).toFixed(0) + '% GST</div></div>' +
             '</div>' +
@@ -853,7 +860,7 @@ $(function () {
             '<section class="review-section"><div class="review-table-title">Additional Chargeable Menu Items</div><div class="review-table-wrap"><table class="item-table review-table"><thead><tr><th>Item</th><th>Type</th><th>Qty</th><th>Unit</th><th>Unit Price</th><th>Amount</th></tr></thead><tbody>' + (extraReviewRows || '<tr><td colspan="6" class="muted">No additional menu items selected.</td></tr>') + '</tbody></table></div></section>' +
             '<section class="review-section"><div class="review-table-title">Add-ons</div><div class="review-table-wrap"><table class="item-table review-table"><thead><tr><th>Add-on</th><th>Unit</th><th>Qty</th><th>Price</th><th>Amount</th></tr></thead><tbody>' + (addonReviewRows || '<tr><td colspan="5" class="muted">No add-ons selected.</td></tr>') + '</tbody></table></div></section>' +
             '<section class="review-section"><div class="review-table-title">Utensils / Equipment</div><div class="review-table-wrap"><table class="item-table review-table"><thead><tr><th>Item</th><th>Qty</th><th>Rental</th><th>Deposit</th><th>Amount</th></tr></thead><tbody>' + (utensilReviewRows || '<tr><td colspan="5" class="muted">No utensils selected.</td></tr>') + '</tbody></table></div></section>' +
-            '<section class="review-section review-payment-section"><div class="review-table-title">Payment Summary</div><div class="review-table-wrap"><table class="item-table review-table review-payment-table"><tbody><tr><td>Package Base</td><td>' + money(packageBase()) + '</td></tr><tr><td>Additional Menu</td><td>' + money(extraTotal()) + '</td></tr><tr><td>Add-ons</td><td>' + money(addonTotal()) + '</td></tr><tr><td>Utensils / Setup</td><td>' + money(utensilTotal()) + '</td></tr><tr><td>GST (' + (gstRate * 100).toFixed(0) + '%)</td><td>' + money(gstTotal()) + '</td></tr><tr><td>Refundable Deposit</td><td>' + money(depositTotal()) + '</td></tr><tr class="review-grand-total"><td>Total</td><td>' + money(grandTotal()) + '</td></tr></tbody></table></div></section></div>';
+            '<section class="review-section review-payment-section"><div class="review-table-title">Payment Summary</div><div class="review-table-wrap"><table class="item-table review-table review-payment-table"><tbody><tr><td>Package Base</td><td>' + money(packageBase()) + '</td></tr><tr><td>Additional Menu</td><td>' + money(extraTotal()) + '</td></tr><tr><td>Add-ons</td><td>' + money(addonTotal()) + '</td></tr><tr><td>Utensils / Setup</td><td>' + money(utensilTotal()) + '</td></tr><tr><td>Service Charge</td><td>' + money(state.packageServiceCharge) + '</td></tr><tr><td>GST (' + (gstRate * 100).toFixed(0) + '%)</td><td>' + money(gstTotal()) + '</td></tr><tr><td>Refundable Deposit</td><td>' + money(depositTotal()) + '</td></tr><tr class="review-grand-total"><td>Total</td><td>' + money(grandTotal()) + '</td></tr></tbody></table></div></section></div>';
         showOrderLoader(false);
         $('#orderStepContent').html(html);
     }
@@ -889,7 +896,8 @@ $(function () {
             additionalMenuAmount: extraTotal(),
             addOnsAmount: addonTotal(),
             utensilsAmount: utensilTotal(),
-            subTotal: packageBase() + extraTotal() + addonTotal() + utensilTotal(),
+            serviceCharge: state.packageServiceCharge,
+            subTotal: packageBase() + extraTotal() + addonTotal() + utensilTotal() + state.packageServiceCharge,
             discount: 0,
             deliveryFee: 0,
             taxAmount: gstTotal(),
@@ -1303,6 +1311,7 @@ $(function () {
         state.selectedEvent = '';
         state.eventName = '';
         state.eventMinPax = 0;
+        state.packageServiceCharge = 0;
         state.eventAdvanceBookingDays = 0;
         state.selectedPackage = '';
         state.packageName = '-';
@@ -1410,6 +1419,7 @@ $(function () {
         state.selectedEvent = selectedEvent ? selectedEvent.id : '';
         state.eventName = selectedEvent ? selectedEvent.name : '';
         state.eventMinPax = selectedEvent ? selectedEvent.minPax : 0;
+        state.packageServiceCharge = 0;
         state.eventAdvanceBookingDays = selectedEvent ? selectedEvent.advanceBookingDays : 0;
         state.selectedPackage = '';
         state.packageName = '-';
@@ -1492,6 +1502,7 @@ $(function () {
         state.selectedPackage = pkg.id;
         state.packageName = pkg.name;
         state.packagePrice = pkg.price;
+        state.packageServiceCharge = pkg.serviceCharge;
         state.pax = Math.max(parseInt(state.pax, 10) || 0, state.eventMinPax);
         state.step1View = 'form';
         currentStep = 1;

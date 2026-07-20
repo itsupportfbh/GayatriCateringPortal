@@ -314,6 +314,7 @@ public class OrdersRepository : IOrdersRepository
                 AddParameter(cmd, "@AdditionalMenuAmount", order.AdditionalMenuAmount);
                 AddParameter(cmd, "@AddOnsAmount", order.AddOnsAmount);
                 AddParameter(cmd, "@UtensilsAmount", order.UtensilsAmount);
+                AddParameter(cmd, "@ServiceCharge", order.ServiceCharge);
                 AddParameter(cmd, "@SubTotal", order.SubTotal);
                 AddParameter(cmd, "@Discount", order.Discount);
                 AddParameter(cmd, "@DeliveryFee", order.DeliveryFee);
@@ -596,6 +597,7 @@ public class OrdersRepository : IOrdersRepository
             AdditionalMenuAmount = reader["AdditionalMenuAmount"] == DBNull.Value ? null : Convert.ToDecimal(reader["AdditionalMenuAmount"]),
             AddOnsAmount = reader["AddOnsAmount"] == DBNull.Value ? null : Convert.ToDecimal(reader["AddOnsAmount"]),
             UtensilsAmount = reader["UtensilsAmount"] == DBNull.Value ? null : Convert.ToDecimal(reader["UtensilsAmount"]),
+            ServiceCharge = reader["ServiceCharge"] == DBNull.Value ? 0 : Convert.ToDecimal(reader["ServiceCharge"]),
             SubTotal = Convert.ToDecimal(reader["SubTotal"]),
             Discount = Convert.ToDecimal(reader["Discount"]),
             DeliveryFee = Convert.ToDecimal(reader["DeliveryFee"]),

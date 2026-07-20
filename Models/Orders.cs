@@ -34,6 +34,8 @@ namespace GayatriCateringPortal.Models
 
             public decimal? UtensilsAmount { get; set; }
 
+            public decimal ServiceCharge { get; set; }
+
             public decimal SubTotal { get; set; }
 
             public decimal Discount { get; set; }

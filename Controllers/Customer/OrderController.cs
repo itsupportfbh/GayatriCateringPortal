@@ -48,6 +48,7 @@ namespace GayatriCateringPortal.Controllers.Customer
                 id = item.Id,
                 name = item.Name,
                 minPax = item.MinPax,
+                serviceCharge = item.ServiceCharge,
                 advanceBookingDays = item.AdvanceBookingDays
             }));
 
@@ -55,7 +56,20 @@ namespace GayatriCateringPortal.Controllers.Customer
         public IActionResult GetEventPackages(int eventId)
         {
             if (eventId <= 0) return BadRequest(new { message = "A valid event is required." });
-            return Ok(_packages.GetByEventId(eventId));
+            var selectedEvent = _events.GetById(eventId);
+            if (selectedEvent == null || !selectedEvent.IsActive || selectedEvent.IsDeleted)
+                return NotFound(new { message = "Event not found." });
+
+            return Ok(_packages.GetByEventId(eventId).Select(item => new
+            {
+                item.Id,
+                item.Name,
+                item.Description,
+                item.Price,
+                item.IsActive,
+                item.IsDeleted,
+                serviceCharge = selectedEvent.ServiceCharge
+            }));
         }
 
         [HttpGet("events/{eventId:int}")]
@@ -67,7 +81,7 @@ namespace GayatriCateringPortal.Controllers.Customer
             if (item == null || item.IsDeleted)
                 return NotFound(new { message = "Event not found." });
 
-            return Ok(new { id = item.Id, name = item.Name });
+            return Ok(new { id = item.Id, name = item.Name, serviceCharge = item.ServiceCharge });
         }
 
         [HttpGet("meal-periods")]
@@ -190,6 +204,17 @@ namespace GayatriCateringPortal.Controllers.Customer
                     message = $"{selectedEvent.Name} must be booked at least {selectedEvent.AdvanceBookingDays} day(s) in advance. Please select {minimumEventDate:dd-MM-yyyy} or later."
                 });
             }
+
+            request.Order.ServiceCharge = selectedEvent.ServiceCharge;
+            request.Order.SubTotal =
+                (request.Order.PackageBaseAmount ?? 0) +
+                (request.Order.AdditionalMenuAmount ?? 0) +
+                (request.Order.AddOnsAmount ?? 0) +
+                (request.Order.UtensilsAmount ?? 0) +
+                request.Order.ServiceCharge;
+            request.Order.TaxAmount = request.Order.SubTotal * ((request.Order.TaxPercentage ?? 0) / 100m);
+            request.Order.TotalAmount = request.Order.SubTotal - request.Order.Discount +
+                request.Order.DeliveryFee + request.Order.TaxAmount;
 
             try
             {
