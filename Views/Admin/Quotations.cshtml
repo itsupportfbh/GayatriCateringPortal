@@ -4,41 +4,52 @@
 
 @section Styles {
     <link rel="stylesheet" href="~/css/admin/quotations.css" asp-append-version="true">
-}
+    }
 
-<div class="page-header">
-    <div>
-        <div class="page-title">Quotations</div>
-        <div class="page-subtitle">Create, preview, print, email and WhatsApp quotations</div>
+    <div class="page-header">
+        <div>
+            <div class="page-title">Quotations</div>
+            <div class="page-subtitle">Create, preview, print, email and WhatsApp quotations</div>
+        </div>
+        <div class="page-header-actions">
+            <div class="app-header-filter">
+                <input type="text" id="QuotationSearch" class="tbl-search" data-table="quotationsTable" placeholder="Search Quotation...">
+            </div>
+        </div>
     </div>
-</div>
 
-<div class="quotations-shell">
-<div class="card quotations-register-card">
-    <div class="panel-header">
-        <div class="panel-title">Quotation Register</div>
+    <div id="QuotListPanel" class="quotations-shell">
+        <div class="card quotations-register-card">
+            <div class="panel-header">
+                <div class="panel-title">Quotation Register</div>
+            </div>
+            <div class="table-wrap" >
+                <table class="tbl" id="quotationsTable" data-page-size="10">
+                    <thead>
+                        <tr>
+                            <th class="sortable">#</th>
+                            <th class="sortable">Order No</th>
+                            <th class="sortable">Customer</th>
+                            <th class="sortable">Package</th>
+                            <th class="sortable">OrderDate</th>
+                            <th class="sortable">Pax</th>
+                            <th class="sortable">Status</th>
+                            <th class="sortable">Paid Amount</th>
+                            <th class="sortable">Total Amount</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        <!-- Ajax -->
+                    </tbody>
+
+                </table>
+            </div>
+        </div>
     </div>
-    <div class="table-wrap" id="quotationsTable"></div>
-</div>
 
-<div class="card quotations-actions-card">
-    <div class="panel-header">
-        <div class="panel-title">Quotation Actions</div>
-    </div>
-    <div class="quotation-actions-bar">
-        <button class="btn btn-primary" id="previewQuotationBtn">Preview Quatation</button>
-        <button class="btn btn-orange" id="emailQuotationBtn">Send Email</button>
-        <button class="btn btn-primary" id="waQuotationBtn">Send WhatsApp</button>
-    </div>
-    <div class="muted quotation-actions-note">Every send attempt is recorded in Communication Log.</div>
-</div>
-
-<div id="quotationDoc" class="hidden">
-    <div class="print-doc" id="quotationDocContent"></div>
-</div>
-</div>
-
-@section Scripts {
-    <script src="~/js/admin/table-utils.js" asp-append-version="true"></script>
-    <script src="~/js/admin/quotations.js" asp-append-version="true"></script>
-}
+    @section Scripts {
+        <script src="~/js/admin/table-utils.js" asp-append-version="true"></script>
+        <script src="~/js/admin/quotations.js" asp-append-version="true"></script>
+    }

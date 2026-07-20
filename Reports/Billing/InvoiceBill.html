@@ -1,0 +1,333 @@
+<style>
+  .invoice-sheet {
+    background: #fff;
+    color: #111;
+    font-family: Arial, Helvetica, sans-serif;
+    margin: 0 auto;
+    max-width: 960px;
+    padding: 10px 12px 24px;
+  }
+
+  .invoice-sheet *,
+  .invoice-sheet *::before,
+  .invoice-sheet *::after {
+    box-sizing: border-box;
+  }
+
+  .invoice-header {
+    align-items: start;
+    display: grid;
+    gap: 16px;
+    grid-template-columns: minmax(0, 1fr) 340px;
+    margin-bottom: 12px;
+  }
+
+  .invoice-brand-title {
+    font-size: 28px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    margin: 0;
+    text-transform: uppercase;
+  }
+
+  .invoice-logo {
+    display: block;
+    height: auto;
+    margin-bottom: 4px;
+    max-width: 230px;
+    width: 230px;
+  }
+
+  .invoice-brand-sub {
+    font-size: 13px;
+    margin-top: 2px;
+  }
+
+  .invoice-company {
+    font-size: 14px;
+    line-height: 1.45;
+    padding-top: 4px;
+  }
+
+  .invoice-company-note {
+    font-size: 12px;
+    margin: 1px 0;
+  }
+
+  .invoice-party-grid {
+    display: grid;
+    gap: 18px;
+    grid-template-columns: minmax(0, 1fr) 320px;
+    margin-bottom: 14px;
+  }
+
+  .invoice-block {
+    min-height: 130px;
+  }
+
+  .invoice-customer-name {
+    font-size: 16px;
+    font-weight: 700;
+    margin: 0 0 6px;
+  }
+
+  .invoice-address,
+  .invoice-label-line {
+    font-size: 13px;
+    line-height: 1.45;
+    margin: 2px 0;
+    word-break: break-word;
+  }
+
+  .invoice-meta-row {
+    align-items: baseline;
+    display: grid;
+    grid-template-columns: 150px minmax(0, 1fr);
+    margin-bottom: 6px;
+  }
+
+  .invoice-meta-row strong {
+    font-size: 13px;
+  }
+
+  .invoice-items {
+    border-collapse: collapse;
+    margin-bottom: 0;
+    table-layout: fixed;
+    width: 100%;
+  }
+
+  .invoice-items th,
+  .invoice-items td {
+    border: 1px solid #232323;
+    font-size: 13px;
+    padding: 6px 8px;
+    vertical-align: top;
+  }
+
+  .invoice-items td:nth-child(2) {
+    white-space: pre-line;
+  }
+
+  .invoice-items th {
+    font-weight: 800;
+    text-transform: uppercase;
+  }
+
+  .invoice-items .col-no { width: 42px; }
+  .invoice-items .col-desc { width: auto; }
+  .invoice-items .col-qty { width: 92px; }
+  .invoice-items .col-unit { width: 118px; }
+  .invoice-items .col-total { width: 132px; }
+
+  .text-center { text-align: center; }
+  .text-right { text-align: right; }
+
+  .invoice-summary {
+    margin-left: auto;
+    margin-top: -1px;
+    width: 280px;
+  }
+
+  .invoice-summary table {
+    border-collapse: collapse;
+    table-layout: fixed;
+    width: 100%;
+  }
+
+  .invoice-summary td {
+    border: 1px solid #232323;
+    font-size: 13px;
+    padding: 6px 10px;
+  }
+
+  .invoice-summary .label {
+    font-weight: 700;
+    text-align: right;
+  }
+
+  .invoice-summary .amount {
+    text-align: right;
+    white-space: nowrap;
+    width: 136px;
+  }
+
+  .invoice-summary .grand td,
+  .invoice-summary .balance td {
+    font-weight: 800;
+  }
+
+  .invoice-terms {
+    margin-top: 18px;
+  }
+
+  .invoice-terms h3 {
+    font-size: 16px;
+    margin: 0 0 8px;
+  }
+
+  .invoice-terms p {
+    font-size: 13px;
+    margin: 0 0 6px;
+  }
+
+  .invoice-signatures {
+    display: grid;
+    gap: 24px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    margin-top: 110px;
+  }
+
+  .invoice-signature {
+    padding-top: 10px;
+    text-align: center;
+  }
+
+  .invoice-signature .line {
+    border-top: 1px solid #444;
+    display: block;
+    margin: 0 auto 6px;
+    max-width: 160px;
+  }
+
+  .invoice-footer {
+    margin-top: 38px;
+    text-align: center;
+  }
+
+  .invoice-footer strong {
+    display: block;
+    font-size: 14px;
+    margin-bottom: 2px;
+  }
+
+  .invoice-footer div {
+    font-size: 12px;
+    margin: 1px 0;
+  }
+
+  @media (max-width: 920px) {
+    .invoice-header,
+    .invoice-party-grid,
+    .invoice-signatures {
+      grid-template-columns: 1fr;
+    }
+
+    .invoice-summary {
+      width: 100%;
+    }
+  }
+</style>
+
+<section class="invoice-sheet">
+  <div class="invoice-header">
+    <div class="invoice-company">
+      <img class="invoice-logo" src="/images/logo.jpg" alt="Gayatri Restaurant">
+      <div class="invoice-company-note">Catering Hotline : +65 6294 6294</div>
+    </div>
+    <div class="text-right">
+      <h1 class="invoice-brand-title">TAX INVOICE</h1>
+      <div class="invoice-brand-sub">GST Reg No. 201234567A</div>
+      <div class="invoice-brand-sub"><strong>INVOICE NO:</strong> {{rows.0.OrderNumber}}</div>
+      <div class="invoice-brand-sub">Order Date: {{rows.0.OrderDate|date}}</div>
+    </div>
+  </div>
+
+  <div class="invoice-party-grid">
+    <div class="invoice-block">
+      <div class="invoice-customer-name">{{rows.0.CustomerName}}</div>
+      <div class="invoice-address">{{rows.0.Address}}</div>
+      <div class="invoice-address">{{rows.0.Location}}</div>
+      <div class="invoice-address">{{rows.0.Pincode}}</div>
+      <div class="invoice-label-line">Tel: {{rows.0.MobileNo}}</div>
+    </div>
+    <div class="invoice-block">
+      <div class="invoice-meta-row">
+        <strong>Invoice/Function Date:</strong>
+        <span>{{rows.0.EventDate|date}}</span>
+      </div>
+      <div class="invoice-meta-row">
+        <strong>Departure Time:</strong>
+        <span>-</span>
+      </div>
+      <div class="invoice-meta-row">
+        <strong>Consuming Time:</strong>
+        <span>{{rows.0.MealPeriodName}}</span>
+      </div>
+      <div class="invoice-meta-row">
+        <strong>Location:</strong>
+        <span>{{rows.0.Location}}</span>
+      </div>
+    </div>
+  </div>
+
+  <table class="invoice-items">
+    <thead>
+      <tr>
+        <th class="col-no text-center">No</th>
+        <th class="col-desc">Description</th>
+        <th class="col-qty text-center">No Of Items</th>
+        <th class="col-unit text-right">Unit Price</th>
+        <th class="col-total text-right">Total</th>
+      </tr>
+    </thead>
+    <tbody>
+      {{#rows}}
+      <tr>
+        <td class="text-center">{{No}}</td>
+        <td>{{Description}}</td>
+        <td class="text-center">{{NoOfItems|number}}</td>
+        <td class="text-right">S${{UnitPrice|currency}}</td>
+        <td class="text-right">S${{Total|currency}}</td>
+      </tr>
+      {{/rows}}
+    </tbody>
+  </table>
+
+  <div class="invoice-summary">
+    <table>
+      <tr>
+        <td class="label">Sub total</td>
+        <td class="amount">S${{rows.0.SubTotal|currency}}</td>
+      </tr>
+      <tr>
+        <td class="label">{{rows.0.TaxPercentage|number}}% GST</td>
+        <td class="amount">S${{rows.0.TaxAmount|currency}}</td>
+      </tr>
+      <tr class="grand">
+        <td class="label">Grand Total</td>
+        <td class="amount">S${{rows.0.TotalAmount|currency}}</td>
+      </tr>
+      <tr class="balance">
+        <td class="label">Balance Remaining</td>
+        <td class="amount">S${{rows.0.BalanceRemaining|currency}}</td>
+      </tr>
+    </table>
+  </div>
+
+  <div class="invoice-terms">
+    <h3>Terms &amp; Conditions:</h3>
+    <p>Deposit paid is not refundable.</p>
+    <p>Cheque should be made payable to GAYATRI RESTAURANT PTE LTD</p>
+    <p>For order support, contact Hotline: +65 6294 6294 / Email: catering@gayatri.com.sg</p>
+    <p>Food best consumed within 3 hours from consuming time.</p>
+  </div>
+
+  <div class="invoice-signatures">
+    <div class="invoice-signature">
+      <span class="line"></span>
+      <div>Authorise Signature</div>
+    </div>
+    <div class="invoice-signature">
+      <span class="line"></span>
+      <div>Customer Signature</div>
+    </div>
+  </div>
+
+  <div class="invoice-footer">
+    <strong>Gayatri Restaurant Pte Ltd</strong>
+    <div>2 Tessensohn Road, Singapore 217664</div>
+    <div>Tel: +65 6294 6294 &nbsp; Email: catering@gayatri.com.sg</div>
+    <div>UEN: 201234567A</div>
+  </div>
+</section>

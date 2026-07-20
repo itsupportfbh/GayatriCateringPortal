@@ -145,11 +145,12 @@ function renderLogisDelList(rows) {
         html += `
         <tr>
             <td>${index + 1}</td>
-            <td>${item.createdDate ?? ""}</td>
+            <td>${item.orderDate ?? ""}</td>
             <td>${item.orderNumber ?? ""}</td>
             <td>${item.status ?? ""}</td>
             <td>${item.location ?? ""}</td> 
             <td>${item.driverName ?? ""}</td> 
+            <td>${item.createdDate ?? ""}</td> 
         </tr>`;
     });
 

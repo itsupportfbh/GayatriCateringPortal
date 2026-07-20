@@ -1,10 +1,11 @@
+using GayatriCateringPortal.Models;
 using System.Collections.Generic;
 
 namespace GayatriCateringPortal.Interfaces;
 
 public interface IQuotationsRepository
 {
-    List<object> GetAll();
+    List<OrderListItem> GetAll();
     object? GetById(int id);
     int Create(object item);
     bool Update(object item);

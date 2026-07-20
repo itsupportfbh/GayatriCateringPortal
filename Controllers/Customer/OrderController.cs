@@ -1,5 +1,6 @@
 ﻿using GayatriCateringPortal.Interfaces;
 using GayatriCateringPortal.Models;
+using GayatriCateringPortal.Models.Reports;
 using GayatriCateringPortal.Interfaces.Customer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -16,13 +17,14 @@ namespace GayatriCateringPortal.Controllers.Customer
         private readonly IAddOnRepository _addOns;
         private readonly IConfiguration _configuration;
         private readonly IHttpClientFactory _httpClientFactory;
+        private readonly IReportsRepository _reports;
         private readonly IEventMasterRepository _events;
         private readonly IPackageRepository _packages;
         private readonly IMealPeriodsRepository _mealPeriods;
         private readonly IUtensilsRepository _utensils;
 
         public OrderController(IOrdersRepository orders, IAddOnRepository addOns, IConfiguration configuration,
-            IHttpClientFactory httpClientFactory, IEventMasterRepository events,
+            IHttpClientFactory httpClientFactory, IReportsRepository reports, IEventMasterRepository events,
             IPackageRepository packages, IMealPeriodsRepository mealPeriods,
             IUtensilsRepository utensils)
         {
@@ -30,6 +32,7 @@ namespace GayatriCateringPortal.Controllers.Customer
             _addOns = addOns;
             _configuration = configuration;
             _httpClientFactory = httpClientFactory;
+            _reports = reports;
             _events = events;
             _packages = packages;
             _mealPeriods = mealPeriods;
@@ -229,6 +232,33 @@ namespace GayatriCateringPortal.Controllers.Customer
                     paymentStatus = status.PaymentStatus,
                     isPaid = status.IsPaid
                 });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { success = false, message = ex.Message });
+            }
+        }
+
+        [HttpGet("invoice-report-preview")]
+        public IActionResult GetInvoiceReportPreview([FromQuery] int orderId)
+        {
+            if (orderId <= 0)
+                return BadRequest(new { success = false, message = "Invalid order id." });
+
+            try
+            {
+                var request = new ReportExecutionRequest
+                {
+                    RoleId = 1,
+                    ReportId = 4,
+                    Filters = new Dictionary<string, object?>
+                    {
+                        ["BillId"] = orderId
+                    }
+                };
+
+                var result = _reports.ExecuteReport(request);
+                return Ok(new { success = true, result });
             }
             catch (Exception ex)
             {

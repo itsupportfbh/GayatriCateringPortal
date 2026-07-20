@@ -1,0 +1,24 @@
+<style>
+  .rpt-shell { font-family: "Segoe UI", Arial, sans-serif; color: #1f2937; }
+  .rpt-head { padding: 16px 18px; border-radius: 10px; background: linear-gradient(140deg, #dcfce7, #dbeafe); margin-bottom: 12px; }
+  .rpt-head h2 { margin: 0; font-size: 22px; }
+  .rpt-head p { margin: 6px 0 0; color: #334155; }
+  .rpt-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin-bottom: 12px; }
+  .rpt-tile { border: 1px solid #dbe3ea; border-radius: 10px; padding: 10px 12px; background: #fff; }
+  .rpt-tile span { display: block; color: #64748b; font-size: 12px; }
+  .rpt-tile strong { font-size: 18px; }
+  @media (max-width: 900px) { .rpt-grid { grid-template-columns: 1fr; } }
+</style>
+<section class="rpt-shell">
+  <div class="rpt-head">
+    <h2>{{report.displayName}}</h2>
+    <p>{{report.description}}</p>
+    <p>Executed: {{meta.executedAt|datetime}} | Rows: {{meta.rowCount|number}}</p>
+  </div>
+  <div class="rpt-grid">
+    <div class="rpt-tile"><span>Total Orders</span><strong>{{meta.rowCount|number}}</strong></div>
+    <div class="rpt-tile"><span>Total Amount</span><strong>{{sumTotalAmount|currency}}</strong></div>
+    <div class="rpt-tile"><span>Total Balance</span><strong>{{sumBalanceAmount|currency}}</strong></div>
+  </div>
+  {{table}}
+</section>

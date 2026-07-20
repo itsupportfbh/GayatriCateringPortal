@@ -9,25 +9,73 @@
 <div class="page-header">
     <div>
         <div class="page-title">Reports</div>
-        <div class="page-subtitle">Sales, menu popularity, kitchen, transport and finance overview</div>
+        <div class="page-subtitle">Dynamic report catalog, filter-driven preview and invoice-ready output</div>
+    </div>
+    <div class="page-header-actions">
+        <button type="button" class="btn btn-light btn-sm btn-report-nav" id="btnBackToMenus">↩ Back to Menus</button>
     </div>
 </div>
 
-<div class="card" style="margin-bottom:18px">
-    <div class="panel-header">
-        <div class="panel-title">Revenue by Package</div>
-    </div>
-    <div id="reportBars"></div>
-</div>
+<section class="card reports-workspace">
+    <div class="reports-main-grid">
+        <div class="reports-left-col">
+            <div class="reports-panel">
+                <div class="panel-header compact-head">
+                    <div class="panel-title">Categories</div>
+                </div>
+                <div class="category-picker">
+                    <label for="selReportCategory">Select Category</label>
+                    <select id="selReportCategory" class="form-control"></select>
+                </div>
+                <div id="reportCategoriesMeta" class="hint" style="margin-top:6px"></div>
+            </div>
 
-<div class="card">
-    <div class="panel-header">
-        <div class="panel-title">Report Coverage</div>
+            <div class="reports-panel reports-list-panel">
+                <div class="panel-header compact-head">
+                    <div class="panel-title">Reports</div>
+                </div>
+                <div class="reports-toolbar">
+                    <input type="text" id="txtReportSearch" class="form-control" placeholder="Search by code, name or description">
+                    <select id="selReportPageSize" class="form-control">
+                        <option value="6">Show 6</option>
+                        <option value="12" selected>Show 12</option>
+                        <option value="24">Show 24</option>
+                        <option value="48">Show 48</option>
+                    </select>
+                    <div id="reportListStats" class="report-list-stats"></div>
+                </div>
+                <div id="reportCards" class="report-cards-grid"></div>
+                <div class="report-list-footer">
+                    <button type="button" class="btn btn-light btn-sm" id="btnReportLoadMore">Load more</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="reports-right-col">
+            <div class="reports-panel reports-filter-panel">
+                <div class="panel-header compact-head">
+                    <div class="panel-title">Filters</div>
+                    <div class="panel-actions">
+                        <button type="button" class="btn btn-sm btn-report-action btn-preview" id="btnPreviewReport">▶ Preview</button>
+                        <button type="button" class="btn btn-light btn-sm btn-report-action" id="btnPrintReport">🖨 Print</button>
+                        <button type="button" class="btn btn-light btn-sm btn-report-action btn-excel" id="btnExportExcelReport">📗 Export Excel</button>
+                        <button type="button" class="btn btn-light btn-sm btn-report-action btn-pdf" id="btnExportPdfReport">📄 Export PDF</button>
+                        <button type="button" class="btn btn-light btn-sm btn-report-action" id="btnClearReportFilters">↺ Clear</button>
+                    </div>
+                </div>
+                <div id="reportFilterWrap"></div>
+            </div>
+
+            <div class="reports-panel reports-preview-panel">
+                <div class="panel-header compact-head">
+                    <div class="panel-title">Preview</div>
+                </div>
+                <div id="reportResultWrap" class="table-wrap"></div>
+            </div>
+        </div>
     </div>
-    <div class="pkg-grid" id="reportCoverage"></div>
-</div>
+</section>
 
 @section Scripts {
-    <script src="~/js/admin/table-utils.js" asp-append-version="true"></script>
     <script src="~/js/admin/reports.js" asp-append-version="true"></script>
 }

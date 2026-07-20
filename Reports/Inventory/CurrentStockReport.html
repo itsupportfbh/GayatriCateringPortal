@@ -1,0 +1,14 @@
+<style>
+  .stock-shell { font-family: "Segoe UI", Arial, sans-serif; color: #111827; }
+  .stock-head { padding: 16px 18px; border-radius: 10px; background: linear-gradient(140deg, #fef3c7, #fee2e2); margin-bottom: 12px; }
+  .stock-head h2 { margin: 0; font-size: 22px; }
+  .stock-head p { margin: 6px 0 0; color: #374151; }
+</style>
+<section class="stock-shell">
+  <div class="stock-head">
+    <h2>{{report.displayName}}</h2>
+    <p>{{report.description}}</p>
+    <p>Executed: {{meta.executedAt|datetime}} | Items: {{meta.rowCount|number}}</p>
+  </div>
+  {{table}}
+</section>

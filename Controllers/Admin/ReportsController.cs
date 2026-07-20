@@ -1,4 +1,5 @@
 using GayatriCateringPortal.Interfaces;
+using GayatriCateringPortal.Models.Reports;
 using Microsoft.AspNetCore.Mvc;
 namespace GayatriCateringPortal.Controllers.Admin
 {
@@ -19,6 +20,88 @@ namespace GayatriCateringPortal.Controllers.Admin
             ViewData["Page"] = "reports";
             ViewData["Title"] = "Reports";
             return View("~/Views/Admin/Reports.cshtml");
+        }
+
+        [HttpGet("categories")]
+        public IActionResult Categories([FromQuery] int roleId)
+        {
+            var result = _reportsRepository.GetCategories(roleId);
+            return Ok(result);
+        }
+
+        [HttpGet("list")]
+        public IActionResult List([FromQuery] int roleId, [FromQuery] int? categoryId)
+        {
+            var result = _reportsRepository.GetReports(roleId, categoryId);
+            return Ok(result);
+        }
+
+        [HttpGet("definition")]
+        public IActionResult Definition([FromQuery] int roleId, [FromQuery] int reportId)
+        {
+            var definition = _reportsRepository.GetReportDefinition(roleId, reportId);
+            if (definition == null)
+            {
+                return NotFound(new { message = "Report definition not found or access denied." });
+            }
+
+            return Ok(definition);
+        }
+
+        [HttpGet("permissions")]
+        public IActionResult Permissions([FromQuery] int roleId)
+        {
+            var result = _reportsRepository.GetReportPermissions(roleId);
+            return Ok(result);
+        }
+
+        [HttpPost("permissions/save")]
+        public IActionResult SavePermissions([FromBody] List<ReportPermissionRequest> permissions)
+        {
+            try
+            {
+                var result = _reportsRepository.SaveReportPermission(permissions ?? new List<ReportPermissionRequest>());
+                return Ok(new { message = result });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+            catch
+            {
+                return StatusCode(500, new { message = "Unable to save report permissions." });
+            }
+        }
+
+        [HttpPost("preview")]
+        public IActionResult Preview([FromBody] ReportExecutionRequest request)
+        {
+            if (request == null)
+            {
+                return BadRequest(new { message = "Invalid report request." });
+            }
+
+            try
+            {
+                var result = _reportsRepository.ExecuteReport(request);
+                return Ok(result);
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { message = ex.Message });
+            }
+            catch
+            {
+                return StatusCode(500, new { message = "Unable to execute report." });
+            }
         }
 
         [HttpGet("get/{name}")]
