@@ -1669,17 +1669,15 @@ body.admin-mode .sidebar {
 /* TOAST */
 .toast {
     position: fixed;
-    top: 50%;
-    left: 50%;
-    right: auto;
+    top: 72px;
+    right: 20px;
     bottom: auto;
-    width: 420px;
+    width: 300px;
     max-width: calc(100vw - 32px);
     z-index: 11001;
     display: flex;
     flex-direction: column;
-    gap: 12px;
-    transform: translate(-50%, -50%)
+    gap: 12px
 }
 
 /* individual toast item */
@@ -1699,13 +1697,12 @@ body.admin-mode .sidebar {
 
 @media (max-width: 760px) {
     .toast {
-        top: 50%;
-        right: auto;
-        left: 50%;
-        width: calc(100vw - 32px);
-        max-width: 420px;
+        top: 60px;
+        right: 10px;
+        left: 10px;
+        width: auto;
+        max-width: none;
         gap: 10px;
-        transform: translate(-50%, -50%);
     }
 
     .toast-item,
@@ -1719,17 +1716,6 @@ body.admin-mode .sidebar {
         transform: translateX(0);
         opacity: 1
     }
-
-.toast-item-centered,
-.toast-item-centered.show {
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    right: auto;
-    width: min(420px, calc(100vw - 32px));
-    transform: translate(-50%, -50%);
-    z-index: 11002;
-}
 
     .toast-item .toast-row {
         display: flex;

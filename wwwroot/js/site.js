@@ -1,7 +1,7 @@
 // ===== SHARED UTILITIES =====
 
 function showToast(msg, duration, options) {
-    // options: { confirm: boolean, center: boolean, yesText: string, noText: string, onYes: fn, onNo: fn, type: 'success'|'error'|'info'|'warning', title: string }
+    // options: { confirm: boolean, yesText: string, noText: string, onYes: fn, onNo: fn, type: 'success'|'error'|'info'|'warning', title: string }
     var container = document.getElementById('toast');
     if (!container) return;
 
@@ -96,7 +96,6 @@ function showToast(msg, duration, options) {
 
     var item = document.createElement('div');
     item.className = 'toast-item' + (type ? ' toast-item-' + type : '');
-    if (options && options.center) item.classList.add('toast-item-centered');
 
     var row = document.createElement('div');
     row.className = 'toast-row';
@@ -516,8 +515,7 @@ function initRichDatePickers(root) {
                     if (typeof window.showToast === 'function') {
                         window.showToast(reason, 4200, {
                             type: 'warning',
-                            title: 'Date not available',
-                            center: true
+                            title: 'Date not available'
                         });
                     }
                 }, true);
