@@ -26,7 +26,6 @@ namespace GayatriCateringPortal.Repositories
                         list = this.List(reader);
                     }
                 }
-
                 return list;
             }
             catch (SqlException)
