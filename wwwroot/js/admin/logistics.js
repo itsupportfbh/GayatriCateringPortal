@@ -214,7 +214,9 @@ $(function () {
         $(this).addClass("active");
 
         $("#pendingSection").show();
+        $("#pendingsearch").show();
         $("#deliveredSection").hide();
+        $("#deliverysearch").hide();
 
         $("#btnPending")
             .removeClass("btn-outline-warning")
@@ -232,7 +234,9 @@ $(function () {
         $(this).addClass("active");
 
         $("#pendingSection").hide();
+        $("#pendingsearch").hide();
         $("#deliveredSection").show();
+        $("#deliverysearch").show();
 
         $("#btnDelivered")
             .removeClass("btn-outline-success")

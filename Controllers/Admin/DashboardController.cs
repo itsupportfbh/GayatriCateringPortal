@@ -15,12 +15,19 @@ namespace GayatriCateringPortal.Controllers.Admin
         [HttpGet("")]
         public IActionResult Index()
         {
-            var summary = _dashboardRepository.GetSummary();
-            ViewData["Summary"] = summary;
+            //var summary = _dashboardRepository.GetSummary();
+            //ViewData["Summary"] = summary;
             ViewData["Mode"] = "admin";
             ViewData["Page"] = "dashboard";
             ViewData["Title"] = "Dashboard";
             return View("~/Views/Admin/Dashboard.cshtml");
+        }
+
+        [HttpGet("get")]
+        public IActionResult GetDashboard()
+        {
+            var data = _dashboardRepository.GetDashboard();
+            return Ok(data);
         }
     }
 }

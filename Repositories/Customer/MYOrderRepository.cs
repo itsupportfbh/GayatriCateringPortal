@@ -31,6 +31,10 @@ public class MYOrderRepository : IMYOrderRepository
                     reader = DataFactory.ExecuteReader(cmd);
 
                     list = this.List(reader);
+                    reader.Close();
+                    reader = null;
+
+                    BindEventIds(conn, list);
                 }
             }
 
@@ -40,9 +44,9 @@ public class MYOrderRepository : IMYOrderRepository
         {
             throw new Exception("Database error");
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            throw new Exception(ex.StackTrace);
+            throw;
         }
         finally
         {
@@ -56,6 +60,9 @@ public class MYOrderRepository : IMYOrderRepository
 
         while (reader.Read())
         {
+            var orderStatus = reader["OrderStatus"] == DBNull.Value ? 0 : Convert.ToInt32(reader["OrderStatus"]);
+            var orderStatusName = reader["OrderStatusName"]?.ToString() ?? string.Empty;
+
             OrderListItem item = new OrderListItem
             {
                 Id = reader["Id"] == DBNull.Value ? 0 : Convert.ToInt32(reader["Id"]),
@@ -63,16 +70,18 @@ public class MYOrderRepository : IMYOrderRepository
                 CustomerName = reader["CustomerName"]?.ToString() ?? string.Empty,
                 MobileNo = reader["MobileNo"]?.ToString() ?? string.Empty,
                 EmailId = reader["EmailId"]?.ToString() ?? string.Empty,
+                EventId = GetOptionalInt32(reader, "EventId"),
                 PackageName = reader["PackageName"]?.ToString() ?? string.Empty,
-                EventName = reader["EventName"]?.ToString() ?? string.Empty,
+                // Older versions of GetMYOrders did not return EventName.
+                EventName = GetOptionalString(reader, "EventName"),
                 LocationName = reader["LocationName"]?.ToString() ?? string.Empty,
                 EventDate = reader["EventDate"] == DBNull.Value
                     ? null
                     : Convert.ToDateTime(reader["EventDate"]),
                 MealPeriodName = reader["MealPeriodName"]?.ToString() ?? string.Empty,
                 Pax = reader["Pax"] == DBNull.Value ? 0 : Convert.ToInt32(reader["Pax"]),
-                OrderStatus = reader["OrderStatus"] == DBNull.Value ? 0 : Convert.ToInt32(reader["OrderStatus"]),
-                OrderStatusName = reader["OrderStatusName"]?.ToString() ?? string.Empty,
+                OrderStatus = orderStatus,
+                OrderStatusName = orderStatus == 5 ? "Quotation" : orderStatusName,
                 TotalAmount = reader["TotalAmount"] == DBNull.Value ? 0 : Convert.ToDecimal(reader["TotalAmount"]),
                 PaidAmount = reader["PaidAmount"] == DBNull.Value ? 0 : Convert.ToDecimal(reader["PaidAmount"]),
                 PaymentStatus = reader["PaymentStatus"]?.ToString() ?? string.Empty
@@ -82,5 +91,57 @@ public class MYOrderRepository : IMYOrderRepository
         }
 
         return list;
+    }
+
+    private static string GetOptionalString(IDataRecord record, string columnName)
+    {
+        try
+        {
+            var ordinal = record.GetOrdinal(columnName);
+            return record.IsDBNull(ordinal) ? string.Empty : record.GetString(ordinal);
+        }
+        catch (IndexOutOfRangeException)
+        {
+            return string.Empty;
+        }
+    }
+
+    private static int? GetOptionalInt32(IDataRecord record, string columnName)
+    {
+        try
+        {
+            var ordinal = record.GetOrdinal(columnName);
+            return record.IsDBNull(ordinal) ? null : Convert.ToInt32(record.GetValue(ordinal));
+        }
+        catch (IndexOutOfRangeException)
+        {
+            return null;
+        }
+    }
+
+    private static void BindEventIds(IDbConnection connection, List<OrderListItem> orders)
+    {
+        if (orders.Count == 0) return;
+
+        var parameterNames = orders
+            .Select((_, index) => "@OrderId" + index)
+            .ToArray();
+
+        using var command = DataFactory.CreateCommand(
+            "SELECT Id, EventId FROM dbo.Orders WHERE Id IN (" + string.Join(",", parameterNames) + ")",
+            connection);
+
+        for (var index = 0; index < orders.Count; index++)
+            command.Parameters.Add(DataFactory.CreateParameter(parameterNames[index], orders[index].Id));
+
+        using var eventReader = DataFactory.ExecuteReader(command);
+        var ordersById = orders.ToDictionary(item => item.Id);
+
+        while (eventReader.Read())
+        {
+            var orderId = eventReader["Id"] == DBNull.Value ? 0 : Convert.ToInt32(eventReader["Id"]);
+            if (ordersById.TryGetValue(orderId, out var order))
+                order.EventId = eventReader["EventId"] == DBNull.Value ? null : Convert.ToInt32(eventReader["EventId"]);
+        }
     }
 }

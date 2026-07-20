@@ -10,11 +10,33 @@ $(function () {
         $('#ordersList').html('<div class="muted">Loading orders...</div>');
         $.get('/Customer/MyOrders/get', { phoneNo: phoneNo }, function (data) {
             myOrders = Array.isArray(data) ? data : [];
-            renderOrders(myOrders);
+            bindEventNames(myOrders).always(function () {
+                renderOrders(myOrders);
+            });
         }).fail(function (xhr) {
             var message = xhr.responseJSON?.message || 'Unable to load your orders.';
             $('#ordersList').html('<div class="muted">' + escapeHtml(message) + '</div>');
         });
+    }
+
+    function bindEventNames(orders) {
+        var eventIds = [];
+        orders.forEach(function (order) {
+            var eventId = parseInt(order.eventId, 10) || 0;
+            if (eventId > 0 && eventIds.indexOf(eventId) === -1) eventIds.push(eventId);
+        });
+
+        var requests = eventIds.map(function (eventId) {
+            return $.getJSON('/Customer/Order/events/' + eventId).then(function (eventItem) {
+                orders.forEach(function (order) {
+                    if (Number(order.eventId) === eventId) order.eventName = eventItem.name || '-';
+                });
+            }, function () {
+                return null;
+            });
+        });
+
+        return requests.length ? $.when.apply($, requests) : $.Deferred().resolve().promise();
     }
 
     $('#btnFindMyOrders').on('click', function () {
@@ -64,7 +86,7 @@ $(function () {
                 '<div class="order-meta-item"><strong>Event Date</strong><span>' + displayDate(o.eventDate) + '</span></div>' +
                 '<div class="order-meta-item"><strong>Meal Period</strong><span>' + escapeHtml(o.mealPeriodName || '-') + '</span></div>' +
                 '<div class="order-meta-item"><strong>Pax</strong><span>' + (Number(o.pax) || 0) + '</span></div>' +
-                '<div class="order-meta-item"><strong>Location</strong><span>' + escapeHtml(o.locationName || '-') + '</span></div>' +
+                '<div class="order-meta-item"><strong>Order Status</strong><span class="badge badge-' + statusClass + '">' + escapeHtml(statusLabel) + '</span></div>' +
                 '<div class="order-meta-item"><strong>Payment</strong><span class="badge ' + paymentClass(paymentLabel) + '">' + escapeHtml(paymentLabel) + '</span></div>' +
                 '<div class="order-meta-item"><strong>Total</strong><span>S$' + total.toFixed(2) + '</span></div>' +
                 '<div class="order-meta-item"><strong>Paid</strong><span>S$' + paid.toFixed(2) + '</span></div>' +

@@ -39,13 +39,32 @@ namespace GayatriCateringPortal.Controllers.Customer
         [HttpGet("events")]
         public IActionResult GetEvents() => Ok(_events.GetAll()
             .Where(item => item.IsActive && item.IsDeleted != true)
-            .OrderBy(item => item.Name));
+            .OrderBy(item => item.Name)
+            .Select(item => new
+            {
+                id = item.Id,
+                name = item.Name,
+                minPax = item.MinPax,
+                advanceBookingDays = item.AdvanceBookingDays
+            }));
 
         [HttpGet("events/{eventId:int}/packages")]
         public IActionResult GetEventPackages(int eventId)
         {
             if (eventId <= 0) return BadRequest(new { message = "A valid event is required." });
             return Ok(_packages.GetByEventId(eventId));
+        }
+
+        [HttpGet("events/{eventId:int}")]
+        public IActionResult GetEvent(int eventId)
+        {
+            if (eventId <= 0) return BadRequest(new { message = "A valid event is required." });
+
+            var item = _events.GetById(eventId);
+            if (item == null || item.IsDeleted)
+                return NotFound(new { message = "Event not found." });
+
+            return Ok(new { id = item.Id, name = item.Name });
         }
 
         [HttpGet("meal-periods")]
@@ -146,6 +165,27 @@ namespace GayatriCateringPortal.Controllers.Customer
             if (string.IsNullOrWhiteSpace(request.Customer.MobileNo))
             {
                 return BadRequest(new { success = false, message = "Customer mobile number is required." });
+            }
+
+            if (!request.Order.EventId.HasValue || !request.Order.EventDate.HasValue)
+            {
+                return BadRequest(new { success = false, message = "Event and event date are required." });
+            }
+
+            var selectedEvent = _events.GetById(request.Order.EventId.Value);
+            if (selectedEvent == null || !selectedEvent.IsActive || selectedEvent.IsDeleted)
+            {
+                return BadRequest(new { success = false, message = "The selected event is not available." });
+            }
+
+            var minimumEventDate = DateTime.Today.AddDays(Math.Max(0, selectedEvent.AdvanceBookingDays));
+            if (request.Order.EventDate.Value.Date < minimumEventDate)
+            {
+                return BadRequest(new
+                {
+                    success = false,
+                    message = $"{selectedEvent.Name} must be booked at least {selectedEvent.AdvanceBookingDays} day(s) in advance. Please select {minimumEventDate:dd-MM-yyyy} or later."
+                });
             }
 
             try

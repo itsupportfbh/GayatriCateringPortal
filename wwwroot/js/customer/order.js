@@ -7,6 +7,7 @@ $(function () {
         selectedEvent: '',
         eventName: '',
         eventMinPax: 0,
+        eventAdvanceBookingDays: 0,
         pax: 0,
         selectedPackage: '',
         packageName: '-',
@@ -68,7 +69,8 @@ $(function () {
                     return {
                         id: String(item.id ?? item.Id ?? ''),
                         name: item.name ?? item.Name ?? 'Event',
-                        minPax: Number(item.minPax ?? item.MinPax ?? 0)
+                        minPax: Number(item.minPax ?? item.MinPax ?? 0),
+                        advanceBookingDays: Math.max(0, Number(item.advanceBookingDays ?? item.AdvanceBookingDays ?? 0) || 0)
                     };
                 }).filter(function (item) { return item.id; });
                 renderStep();
@@ -562,6 +564,10 @@ $(function () {
             loadMealPeriods();
         }
         var d = state.details;
+        var minimumEventDate = getMinimumEventDate();
+        if (d.eventDate && d.eventDate < minimumEventDate) {
+            d.eventDate = '';
+        }
         var mealPeriodOptions = mealPeriods.map(function (period) {
             return '<option value="' + period.id + '"' + (String(d.mealPeriodId) === period.id ? ' selected' : '') + '>' + escapeHtml(period.name) + '</option>';
         }).join('');
@@ -571,7 +577,7 @@ $(function () {
             '<div class="form-group"><label>Contact Person <span class="field-required">*</span></label><input id="detailContact" class="form-control" value="' + d.contact + '"><div class="field-error hidden" id="detailContactError"></div></div>' +
             '<div class="form-group"><label>Email</label><input id="detailEmail" class="form-control" value="' + d.email + '"><div class="field-error hidden" id="detailEmailError"></div></div>' +
             '<div class="form-group"><label>Mobile / WhatsApp <span class="field-required">*</span></label><input id="detailMobile" class="form-control" value="' + d.mobile + '"><div class="field-error hidden" id="detailMobileError"></div></div>' +
-            '<div class="form-group"><label>Event Date <span class="field-required">*</span></label><input id="detailDate" class="form-control" type="date" value="' + d.eventDate + '"><div class="field-error hidden" id="detailDateError"></div></div>' +
+            '<div class="form-group"><label>Event Date <span class="field-required">*</span></label><input id="detailDate" class="form-control" type="date" min="' + minimumEventDate + '" data-advance-booking-days="' + state.eventAdvanceBookingDays + '" value="' + d.eventDate + '"><div class="field-error hidden" id="detailDateError"></div></div>' +
             '<div class="form-group"><label>Meal Period <span class="field-required">*</span></label><select id="detailPeriod" class="form-control"' + (mealPeriods.length ? '' : ' disabled') + '><option value="">' + mealPeriodPlaceholder + '</option>' + mealPeriodOptions + '</select><div class="field-error hidden" id="detailPeriodError"></div></div>' +
             '<div class="form-group event-address-field"><label for="detailAddressLine1">Address <span class="field-required">*</span></label><textarea class="form-control" id="detailAddressLine1" name="AddressLine1" rows="2" placeholder="Enter address">' + escapeHtml(d.addressLine1 || '') + '</textarea><div class="field-error hidden" id="detailAddressLine1Error"></div></div>' +
             '<div class="form-group"><label>Postal Code </label><input id="detailPostal" value="' + d.postal + '"></div>' +
@@ -811,7 +817,7 @@ $(function () {
             .join(', ');
     }
 
-    function buildOrderPayload() {
+    function buildOrderPayload(orderStatus) {
         var customerName = String(state.details.company || state.details.contact || '').trim();
         var customerMobile = String(state.details.mobile || '').trim();
         var order = {
@@ -819,6 +825,7 @@ $(function () {
             orderNumber: generateOrderNumber(),
             customerId: 0,
             packageId: parseInt(state.selectedPackage, 10) || null,
+            eventId: parseInt(state.selectedEvent, 10) || null,
             mealPeriodId: parseInt(state.details.mealPeriodId, 10) || null,
             locationId: null,
             eventDate: state.details.eventDate || null,
@@ -836,7 +843,7 @@ $(function () {
             totalAmount: grandTotal(),
             taxPercentage: gstRate * 100,
             paidAmount: 0,
-            orderStatus: 0,
+            orderStatus: parseInt(orderStatus, 10) || 0,
             createdDate: new Date().toISOString(),
             createdBy: null,
             updatedDate: null,
@@ -932,8 +939,9 @@ $(function () {
         };
     }
 
-    function submitOrder() {
-        var request = buildOrderPayload();
+    function submitOrder(orderStatus) {
+        var isQuotation = parseInt(orderStatus, 10) === 5;
+        var request = buildOrderPayload(orderStatus);
         if (!validateStep(4, true)) {
             currentStep = 4;
             renderStep();
@@ -971,6 +979,10 @@ $(function () {
             success: function (response) {
                 if (response && response.success) {
                     var orderId = parseInt(response.id, 10) || 0;
+                    if (isQuotation) {
+                        showToast('Quotation request sent successfully.', 3000, { type: 'success', title: 'Quotation sent' });
+                        return;
+                    }
                     showToast('Order details saved successfully. Please complete payment.', 3000, { type: 'success', title: 'Saved' });
                     loadUpiAndOpenPayment(orderId);
                 } else {
@@ -1513,6 +1525,7 @@ $(function () {
         state.selectedEvent = '';
         state.eventName = '';
         state.eventMinPax = 0;
+        state.eventAdvanceBookingDays = 0;
         state.selectedPackage = '';
         state.packageName = '-';
         state.packagePrice = 0;
@@ -1574,13 +1587,14 @@ $(function () {
 
     $('#summaryQuoteBtn').on('click', function (e) {
         e.preventDefault();
-        showToast('Quotation request sent successfully.', 2600, { type: 'success', title: 'Quotation sent' });
+        e.stopPropagation();
+        submitOrder(5);
     });
 
     $('#summarySubmitBtn').on('click', function (e) {
         e.preventDefault();
         e.stopPropagation();
-        submitOrder();
+        submitOrder(0);
     });
 
     $('#btnClosePayment, #btnPaymentCancel').on('click', function () {
@@ -1618,6 +1632,7 @@ $(function () {
         state.selectedEvent = selectedEvent ? selectedEvent.id : '';
         state.eventName = selectedEvent ? selectedEvent.name : '';
         state.eventMinPax = selectedEvent ? selectedEvent.minPax : 0;
+        state.eventAdvanceBookingDays = selectedEvent ? selectedEvent.advanceBookingDays : 0;
         state.selectedPackage = '';
         state.packageName = '-';
         state.packagePrice = 0;
@@ -1625,8 +1640,11 @@ $(function () {
         packages = [];
         includedChoices = [];
         includedChoiceSelections = {};
-        if (state.selectedEvent) loadOrderPackages(state.selectedEvent);
-        else renderStep(false);
+        if (state.selectedEvent) {
+            loadOrderPackages(state.selectedEvent);
+        } else {
+            renderStep(false);
+        }
     });
 
     $(document).on('input', '#eventPaxCount', function () {
@@ -1715,6 +1733,18 @@ $(function () {
         $(errorSelector).addClass('hidden').text('');
     }
 
+    function getMinimumEventDate() {
+        var date = new Date();
+        date.setHours(12, 0, 0, 0);
+        date.setDate(date.getDate() + (Number(state.eventAdvanceBookingDays) || 0));
+        return date.getFullYear() + '-' + String(date.getMonth() + 1).padStart(2, '0') + '-' + String(date.getDate()).padStart(2, '0');
+    }
+
+    function getAdvanceBookingMessage() {
+        var days = Number(state.eventAdvanceBookingDays) || 0;
+        return state.eventName + ' must be booked at least ' + days + ' day' + (days === 1 ? '' : 's') + ' in advance. Please select ' + getMinimumEventDate() + ' or later.';
+    }
+
     function validateStep1(showFeedback) {
         if (!state.selectedEvent) {
             if (showFeedback) showToast('Select an event to continue.', 3000, { type: 'error', title: 'Validation' });
@@ -1774,6 +1804,7 @@ $(function () {
 
         var firstInvalid = null;
         var hasErrors = false;
+        var hasAdvanceBookingError = false;
         requiredFields.forEach(function (field) {
             clearFieldError(field.input, field.error);
             var value = $(field.input).length
@@ -1808,11 +1839,27 @@ $(function () {
             }
         }
 
+        var eventDate = $('#detailDate').length
+            ? String($('#detailDate').val() || '').trim()
+            : String(state.details.eventDate || '').trim();
+        if (eventDate && eventDate < getMinimumEventDate()) {
+            hasErrors = true;
+            hasAdvanceBookingError = true;
+            if (showFeedback && $('#detailDate').length) {
+                setFieldError('#detailDate', '#detailDateError', getAdvanceBookingMessage());
+            }
+            if (!firstInvalid && $('#detailDate').length) {
+                firstInvalid = '#detailDate';
+            }
+        }
+
         if (hasErrors && showFeedback) {
             if (firstInvalid) {
                 $(firstInvalid).focus();
             }
-            showToast('Please fill all required Event Details fields.', 3200, { type: 'error', title: 'Validation' });
+            if (!hasAdvanceBookingError) {
+                showToast('Please fill all required Event Details fields.', 3200, { type: 'error', title: 'Validation' });
+            }
         }
 
         return !hasErrors;
