@@ -303,6 +303,7 @@ public class OrdersRepository : IOrdersRepository
                 AddParameter(cmd, "@OrderNumber", order.OrderNumber);
                 AddParameter(cmd, "@CustomerId", order.CustomerId);
                 AddParameter(cmd, "@PackageId", order.PackageId);
+                AddParameter(cmd, "@EventId", order.EventId);
                 AddParameter(cmd, "@MealPeriodId", order.MealPeriodId);
                 AddParameter(cmd, "@LocationId", order.LocationId);
                 AddParameter(cmd, "@EventDate", order.EventDate);

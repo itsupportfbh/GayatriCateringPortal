@@ -7,7 +7,6 @@ $(function () {
         selectedEvent: '',
         eventName: '',
         eventMinPax: 0,
-        eventAdvanceBookingDays: 0,
         pax: 0,
         selectedPackage: '',
         packageName: '-',
@@ -32,6 +31,7 @@ $(function () {
 
     var packages = [];
     var events = [];
+    var packagesLoading = false;
 
     function loadOrganizationGst() {
         return $.ajax({
@@ -68,8 +68,7 @@ $(function () {
                     return {
                         id: String(item.id ?? item.Id ?? ''),
                         name: item.name ?? item.Name ?? 'Event',
-                        minPax: Number(item.minPax ?? item.MinPax ?? 0),
-                        advanceBookingDays: Number(item.advanceBookingDays ?? item.AdvanceBookingDays ?? 0)
+                        minPax: Number(item.minPax ?? item.MinPax ?? 0)
                     };
                 }).filter(function (item) { return item.id; });
                 renderStep();
@@ -84,7 +83,8 @@ $(function () {
 
     function loadOrderPackages(eventId) {
         packages = [];
-        renderStep();
+        packagesLoading = true;
+        renderStep(false);
         $.ajax({
             url: '/Customer/Order/events/' + encodeURIComponent(eventId) + '/packages',
             type: 'GET',
@@ -92,6 +92,12 @@ $(function () {
             error: function () {
                 renderOrderPackages([]);
                 showToast('Unable to load packages for this event.', 3000, { type: 'error', title: 'Package load failed' });
+            },
+            complete: function () {
+                packagesLoading = false;
+                if (currentStep === 1 && state.step1View === 'packages') {
+                    renderStep(false);
+                }
             }
         });
     }
@@ -135,7 +141,7 @@ $(function () {
             return item.id !== '';
         });
 
-        renderStep();
+        renderStep(false);
     }
 
     var includedChoices = [];
@@ -241,10 +247,11 @@ $(function () {
         $panel.toggleClass('hidden', !show);
     }
 
-    function renderStep() {
-        showOrderLoader(true);
-        updateSteps();
-        setTimeout(function () {
+    function renderStep(withLoader) {
+        var useLoader = withLoader !== false;
+
+        function doRender() {
+            updateSteps();
             if (currentStep === 1) renderStep1();
             if (currentStep === 2) renderStep2();
             if (currentStep === 3) renderStep3();
@@ -252,7 +259,15 @@ $(function () {
             if (currentStep === 5) renderStep5();
             if (currentStep === 6) renderStep6();
             updateSummary();
-        }, 80);
+        }
+
+        if (useLoader) {
+            showOrderLoader(true);
+            setTimeout(doRender, 80);
+            return;
+        }
+
+        doRender();
     }
 
     function renderStep1() {
@@ -262,17 +277,23 @@ $(function () {
             var eventOptions = events.map(function (item) {
                 return '<option value="' + item.id + '"' + (item.id === state.selectedEvent ? ' selected' : '') + '>' + escapeHtml(item.name) + '</option>';
             }).join('');
+
+            var packagesPanel = '';
+            if (state.selectedEvent) {
+                packagesPanel = '<div class="section-label">Available Packages</div>' +
+                    '<div class="muted" style="font-size:13px;margin-bottom:12px">Select a package configured for this event.</div>' +
+                    (packagesLoading
+                        ? '<div class="event-packages-loader"><div class="spinner"></div><span>Loading packages...</span></div>'
+                        : packages.length
+                            ? '<div class="pkg-grid">' + packages.map(renderPackageCard).join('') + '</div>'
+                            : '<div class="muted">No packages are configured for this event.</div>');
+            }
+
             html = '<div class="card order-card">' +
                 '<div class="section-label">Select Event</div>' +
                 '<div class="order-fields" style="margin-bottom:18px"><div><label>Event Type</label><select id="eventType"><option value="">-- Select Event --</option>' + eventOptions + '</select></div>' +
                 '<div><label>No. of Pax</label><input type="number" id="eventPaxCount" min="' + state.eventMinPax + '" value="' + (state.selectedEvent ? state.pax : '') + '"' + (state.selectedEvent ? '' : ' disabled') + '></div></div>' +
-                '<div class="section-label">Available Packages</div>' +
-                '<div class="muted" style="font-size:13px;margin-bottom:12px">Select an event first, then choose one of its configured packages.</div>' +
-                (!state.selectedEvent
-                    ? '<div class="muted">Please select an event to view packages.</div>'
-                    : packages.length
-                    ? '<div class="pkg-grid">' + packages.map(renderPackageCard).join('') + '</div>'
-                    : '<div class="muted">No packages are configured for this event.</div>') +
+                packagesPanel +
                 '</div>';
             showOrderLoader(false);
             $('#orderStepContent').html(html);
@@ -283,10 +304,10 @@ $(function () {
             '<div class="section-label">Step 1 - Select Indian Package</div>' +
             '<div class="actions" style="justify-content:flex-end;margin-bottom:10px"><button class="btn btn-light btn-sm" id="btnChangePackage">Change Package</button></div>' +
             '<div class="order-fields">' +
-            '<div><label>Event Type</label><input type="text" value="' + escapeHtml(state.eventName) + '" readonly></div>' +
-            '<div><label>No. of Pax</label><input type="number" id="paxCount" min="' + state.eventMinPax + '" value="' + state.pax + '"></div>' +
-            '<div><label>Package Type</label><input type="text" value="' + escapeHtml(state.packageName) + ' - S$' + state.packagePrice.toFixed(2) + '/pax" readonly></div>' +
-            '<div><label>GST</label><input type="text" value="' + (gstRate * 100).toFixed(0) + '% GST" readonly></div>' +
+            '<div><label>Event Type</label><div class="plain-text-field">' + escapeHtml(state.eventName) + '</div></div>' +
+            '<div><label>No. of Pax</label><div class="plain-text-field">' + state.pax + '</div></div>' +
+            '<div><label>Package</label><div class="plain-text-field">' + escapeHtml(state.packageName) + ' - S$' + state.packagePrice.toFixed(2) + '/pax</div></div>' +
+            '<div><label>GST</label><div class="plain-text-field">' + (gstRate * 100).toFixed(0) + '% GST</div></div>' +
             '</div>' +
             '<div class="choice-block"><div class="section-label">Package Choice Selection - ' + state.packageName.toUpperCase() + '</div>' +
             '<div class="package-value-box"><div>Package Rate<b>' + money(state.packagePrice) + ' / pax</b></div><div>No. of Pax<b>' + state.pax + '</b></div><div>Package Value<b>' + money(packageBase()) + '</b></div></div>' +
@@ -550,23 +571,13 @@ $(function () {
             '<div class="form-group"><label>Contact Person <span class="field-required">*</span></label><input id="detailContact" class="form-control" value="' + d.contact + '"><div class="field-error hidden" id="detailContactError"></div></div>' +
             '<div class="form-group"><label>Email</label><input id="detailEmail" class="form-control" value="' + d.email + '"><div class="field-error hidden" id="detailEmailError"></div></div>' +
             '<div class="form-group"><label>Mobile / WhatsApp <span class="field-required">*</span></label><input id="detailMobile" class="form-control" value="' + d.mobile + '"><div class="field-error hidden" id="detailMobileError"></div></div>' +
-            '<div class="form-group"><label>Event Date <span class="field-required">*</span></label><input id="detailDate" class="form-control" type="date" min="' + getMinimumEventDate() + '" value="' + d.eventDate + '"><div class="muted" style="font-size:12px;margin-top:5px">Book at least ' + state.eventAdvanceBookingDays + ' day(s) in advance.</div><div class="field-error hidden" id="detailDateError"></div></div>' +
+            '<div class="form-group"><label>Event Date <span class="field-required">*</span></label><input id="detailDate" class="form-control" type="date" value="' + d.eventDate + '"><div class="field-error hidden" id="detailDateError"></div></div>' +
             '<div class="form-group"><label>Meal Period <span class="field-required">*</span></label><select id="detailPeriod" class="form-control"' + (mealPeriods.length ? '' : ' disabled') + '><option value="">' + mealPeriodPlaceholder + '</option>' + mealPeriodOptions + '</select><div class="field-error hidden" id="detailPeriodError"></div></div>' +
-            '<div class="form-group event-address-field"><label for="detailAddressLine1">Address Line 1 <span class="field-required">*</span></label><input type="text" class="form-control" id="detailAddressLine1" name="AddressLine1" autocomplete="address-line1" placeholder="Enter address line 1" value="' + escapeHtml(d.addressLine1 || '') + '"><div class="field-error hidden" id="detailAddressLine1Error"></div></div>' +
+            '<div class="form-group event-address-field"><label for="detailAddressLine1">Address <span class="field-required">*</span></label><textarea class="form-control" id="detailAddressLine1" name="AddressLine1" rows="2" placeholder="Enter address">' + escapeHtml(d.addressLine1 || '') + '</textarea><div class="field-error hidden" id="detailAddressLine1Error"></div></div>' +
             '<div class="form-group"><label>Postal Code </label><input id="detailPostal" value="' + d.postal + '"></div>' +
             '</div><div class="form-group"><label>Notes</label><textarea id="detailNotes" rows="3">' + d.notes + '</textarea></div></div>';
         showOrderLoader(false);
         $('#orderStepContent').html(html);
-    }
-
-    function getMinimumEventDate() {
-        var date = new Date();
-        date.setHours(0, 0, 0, 0);
-        date.setDate(date.getDate() + Math.max(0, Number(state.eventAdvanceBookingDays) || 0));
-        var year = date.getFullYear();
-        var month = String(date.getMonth() + 1).padStart(2, '0');
-        var day = String(date.getDate()).padStart(2, '0');
-        return year + '-' + month + '-' + day;
     }
 
     function loadMealPeriods() {
@@ -774,7 +785,8 @@ $(function () {
         var organizationWhatsapp = organizationInfo.whatsapp ?? organizationInfo.Whatsapp ?? '-';
 
         var html = '<div class="review-sheet report-review" id="orderReviewReport">' +
-            '<div class="review-top"><div class="review-brand"><img class="review-logo" src="/images/logo.jpg" alt="' + escapeHtml(organizationName) + ' logo"><div><div class="review-title">' + escapeHtml(organizationName) + '</div><div class="review-company-details">UEN: ' + escapeHtml(organizationUen) + '<br>Email: ' + escapeHtml(organizationEmail) + '<br>Hotline: ' + escapeHtml(organizationHotline) + ' &nbsp;|&nbsp; WhatsApp: ' + escapeHtml(organizationWhatsapp) + '</div></div></div><div class="review-line"><strong>Quotation Request</strong><br>Date: ' + new Date().toLocaleDateString('en-SG') + '<br>Status: Draft</div></div>' +
+            '<div class="review-top"><div class="review-brand"><img class="review-logo" src="/images/logo.jpg" alt="' + escapeHtml(organizationName) + ' logo"></div><div class="review-line"><div class="review-title">' + escapeHtml(organizationName) + '</div>UEN: ' + escapeHtml(organizationUen) + '<br>Email: ' + escapeHtml(organizationEmail) + '<br>Hotline: ' + escapeHtml(organizationHotline) + ' &nbsp;|&nbsp; WhatsApp: ' + escapeHtml(organizationWhatsapp) + '</div></div>' +
+            '<div class="review-quote-meta"><strong>Quotation Request</strong><span>Date: ' + new Date().toLocaleDateString('en-SG') + '</span><span>Status: Draft</span></div>' +
             '<div class="review-split"><div><strong>Customer</strong><div>Name : ' + escapeHtml(state.details.company || '-') + '</div><div>Contact: ' + escapeHtml(state.details.contact || '-') + '</div><div>Email: ' + escapeHtml(state.details.email || '-') + '</div><div>Mobile: ' + escapeHtml(state.details.mobile || '-') + '</div></div>' +
             '<div><strong>Event</strong><div>Type: ' + escapeHtml(state.eventName || '-') + '</div><div>Date: ' + escapeHtml(state.details.eventDate || '-') + '</div><div>Meal Period: ' + escapeHtml(state.details.mealPeriod || '-') + '</div><div>Pax: ' + state.pax + '</div><div>Address: ' + escapeHtml(buildDeliveryAddress() || '-') + '</div><div>Notes: ' + escapeHtml(state.details.notes || '-') + '</div></div></div>' +
             '<section class="review-section"><div class="review-table-title">Package Details</div><div class="review-table-wrap"><table class="item-table review-table"><thead><tr><th>Package</th><th>Rate</th><th>Pax</th><th>Amount</th></tr></thead><tbody><tr><td>' + escapeHtml(state.packageName) + '</td><td>' + money(state.packagePrice) + '/pax</td><td>' + state.pax + '</td><td>' + money(packageBase()) + '</td></tr></tbody></table></div></section>' +
@@ -928,6 +940,29 @@ $(function () {
             return;
         }
 
+        function getFriendlySubmitMessage(xhr) {
+            var serverMessage = String(xhr && xhr.responseJSON && xhr.responseJSON.message ? xhr.responseJSON.message : '').trim();
+            var combined = (serverMessage + ' ' + String(xhr && xhr.responseText ? xhr.responseText : '')).toLowerCase();
+
+            if (!serverMessage) {
+                return 'Unable to submit order right now. Please try again in a moment.';
+            }
+
+            // Never expose SQL/SP/internal implementation errors to customers.
+            if (combined.indexOf('procedure or function') > -1 ||
+                combined.indexOf('sp_') > -1 ||
+                combined.indexOf('sql') > -1 ||
+                combined.indexOf('exception') > -1 ||
+                combined.indexOf('stack') > -1 ||
+                combined.indexOf('inner') > -1 ||
+                combined.indexOf('parameter') > -1 ||
+                combined.indexOf('argument') > -1) {
+                return 'Unable to submit order at the moment. Our team has been notified. Please try again shortly.';
+            }
+
+            return serverMessage;
+        }
+
         $.ajax({
             url: '/Customer/Order/save',
             type: 'POST',
@@ -943,7 +978,7 @@ $(function () {
                 }
             },
             error: function (xhr) {
-                showToast(xhr.responseJSON?.message || 'Error submitting order.', 4000, { type: 'error', title: 'Submit failed' });
+                showToast(getFriendlySubmitMessage(xhr), 4200, { type: 'error', title: 'Submit failed' });
             }
         });
     }
@@ -964,7 +999,433 @@ $(function () {
         $('#paymentAmountText').text('Amount: ' + money(amount));
         $('#paymentUpiText').text('UPI ID: ' + upiId);
         $('#paymentQrImage').attr('src', qrUrl);
+        $('#btnPaymentDone').data('order-id', orderId);
         $('#paymentModal').removeClass('hidden');
+    }
+
+    function generateOrderReviewPdfBlob(orderId) {
+        return new Promise(function (resolve, reject) {
+            if (!window.jspdf || !window.jspdf.jsPDF) {
+                reject(new Error('PDF library not loaded'));
+                return;
+            }
+
+            try {
+                var jsPDFCtor = window.jspdf.jsPDF;
+                var doc = new jsPDFCtor({ orientation: 'p', unit: 'pt', format: 'a4' });
+                var marginX = 14;
+                var y = 20;
+                var pageWidth = doc.internal.pageSize.getWidth();
+                var pageHeight = doc.internal.pageSize.getHeight();
+                var contentWidth = pageWidth - (marginX * 2);
+                var bottomReserved = 88;
+
+                function ensureSpace(heightNeeded) {
+                    if (y + heightNeeded <= pageHeight - bottomReserved) return;
+                    doc.addPage();
+                    y = 20;
+                }
+
+                function fmtDate(value) {
+                    var dt = value ? new Date(value) : new Date();
+                    if (isNaN(dt.getTime())) return '-';
+                    var day = String(dt.getDate()).padStart(2, '0');
+                    var month = dt.toLocaleString('en-US', { month: 'short' });
+                    var year = dt.getFullYear();
+                    return day + '-' + month + '-' + year;
+                }
+
+                function fmtTime(value) {
+                    if (!value) return '-';
+                    var dt = new Date(value);
+                    if (isNaN(dt.getTime())) return '-';
+                    return dt.toLocaleTimeString('en-SG', { hour: '2-digit', minute: '2-digit', hour12: true }).toLowerCase();
+                }
+
+                function moneyValue(value) {
+                    return money(value || 0);
+                }
+
+                function selectedIncludedDishes() {
+                    var list = [];
+                    includedChoices.forEach(function (category) {
+                        var selections = includedChoiceSelections[String(category.categoryId)] || [];
+                        var requiredQuantity = Number(category.requiredQuantity) || 1;
+                        for (var index = 0; index < requiredQuantity; index++) {
+                            var selectedId = String(selections[index] || '');
+                            var selectedMenu = (category.menus || []).find(function (menu) {
+                                return String(menu.id) === selectedId;
+                            });
+                            if (selectedMenu && selectedMenu.name) {
+                                list.push(selectedMenu.name);
+                            }
+                        }
+                    });
+                    return list;
+                }
+
+                function extractExtraRows() {
+                    return extraRows.filter(function (row) {
+                        return (state.extraItems[row.key] || 0) > 0;
+                    }).map(function (row) {
+                        var qty = state.extraItems[row.key] || 0;
+                        return {
+                            descLines: [row.dish],
+                            qty: String(qty),
+                            unitPrice: moneyValue(row.price),
+                            total: moneyValue(qty * row.price)
+                        };
+                    });
+                }
+
+                function extractAddonRows() {
+                    return addonRows.filter(function (row) {
+                        return (state.addons[row.key] || 0) > 0;
+                    }).map(function (row) {
+                        var qty = state.addons[row.key] || 0;
+                        return {
+                            descLines: [row.name],
+                            qty: String(qty) + ' ' + row.unit,
+                            unitPrice: moneyValue(row.price),
+                            total: moneyValue(qty * row.price)
+                        };
+                    });
+                }
+
+                function extractUtensilRows() {
+                    return utensilRows.filter(function (row) {
+                        return (state.utensils[row.name] || 0) > 0;
+                    }).map(function (row) {
+                        var qty = state.utensils[row.name] || 0;
+                        return {
+                            descLines: [row.name],
+                            qty: String(qty) + ' pcs',
+                            unitPrice: moneyValue(row.price),
+                            total: moneyValue(qty * row.price)
+                        };
+                    });
+                }
+
+                function drawTableHeader(tableTop, widths) {
+                    doc.setFont('helvetica', 'bold');
+                    doc.setFontSize(10);
+                    doc.rect(marginX, tableTop, contentWidth, 20);
+                    var x = marginX;
+                    for (var i = 0; i < widths.length - 1; i++) {
+                        x += widths[i];
+                        doc.line(x, tableTop, x, tableTop + 20);
+                    }
+                    doc.text('NO', marginX + (widths[0] / 2), tableTop + 13, { align: 'center' });
+                    doc.text('DESCRIPTION', marginX + widths[0] + (widths[1] / 2), tableTop + 13, { align: 'center' });
+                    doc.text('NO OF ITEMS', marginX + widths[0] + widths[1] + (widths[2] / 2), tableTop + 13, { align: 'center' });
+                    doc.text('UNIT PRICE', marginX + widths[0] + widths[1] + widths[2] + (widths[3] / 2), tableTop + 13, { align: 'center' });
+                    doc.text('TOTAL', marginX + widths[0] + widths[1] + widths[2] + widths[3] + (widths[4] / 2), tableTop + 13, { align: 'center' });
+                }
+
+                var organizationName = String(organizationInfo.name ?? organizationInfo.Name ?? 'Gayatri Restaurant Pte Ltd');
+                var organizationUen = String(organizationInfo.uen ?? organizationInfo.UEN ?? '-');
+                var organizationEmail = String(organizationInfo.email ?? organizationInfo.Email ?? '-');
+                var organizationHotline = String(organizationInfo.hotline ?? organizationInfo.Hotline ?? '-');
+                var organizationAddress = String(organizationInfo.address ?? organizationInfo.Address ?? '-');
+                var generatedDate = new Date();
+                var invoiceNo = String(orderId || '-') + '/' + String(generatedDate.getFullYear()).slice(-2);
+                var locationText = buildDeliveryAddress() || 'Self-Collect';
+                var consumingText = String(state.details.mealPeriod || '-');
+                var packageDishLines = selectedIncludedDishes();
+
+                var invoiceRows = [];
+                var packageDescLines = [state.packageName || 'Custom Package'];
+                packageDishLines.forEach(function (dish) {
+                    packageDescLines.push('- ' + dish);
+                });
+                invoiceRows.push({
+                    descLines: packageDescLines,
+                    qty: String(state.pax || 0),
+                    unitPrice: moneyValue(state.packagePrice || 0),
+                    total: moneyValue(packageBase())
+                });
+
+                extractExtraRows().forEach(function (row) { invoiceRows.push(row); });
+                extractAddonRows().forEach(function (row) { invoiceRows.push(row); });
+                extractUtensilRows().forEach(function (row) { invoiceRows.push(row); });
+
+                var widths = [34, 249, 70, 85, 85];
+
+                var logoElement = document.querySelector('#orderReviewReport .review-logo');
+                if (logoElement && logoElement.complete && logoElement.naturalWidth > 0) {
+                    try {
+                        doc.addImage(logoElement, 'JPEG', marginX + 2, y + 2, 124, 58);
+                    } catch (_e) {
+                        // Ignore logo embedding issues and continue invoice generation.
+                    }
+                }
+
+                doc.setFont('helvetica', 'normal');
+                doc.setFontSize(12);
+                doc.text('Catering Hotline : ' + organizationHotline, marginX + 2, y + 74);
+
+                doc.setFont('helvetica', 'bold');
+                doc.setFontSize(28);
+                doc.text('TAX INVOICE', pageWidth - marginX - 2, y + 15, { align: 'right' });
+                doc.setFont('helvetica', 'normal');
+                doc.setFontSize(12);
+                doc.text('GST Reg No. ' + organizationUen, pageWidth - marginX - 2, y + 32, { align: 'right' });
+                doc.setFont('helvetica', 'bold');
+                doc.setFontSize(14);
+                doc.text('INVOICE NO: ' + invoiceNo, pageWidth - marginX - 2, y + 52, { align: 'right' });
+                doc.setFont('helvetica', 'normal');
+                doc.setFontSize(11);
+                doc.text('Order Date: ' + fmtDate(generatedDate), pageWidth - marginX - 2, y + 69, { align: 'right' });
+
+                y += 102;
+                doc.setFont('helvetica', 'bold');
+                doc.setFontSize(14);
+                doc.text(state.details.company || 'Customer', marginX, y);
+                doc.text('Invoice/Function Date: ', pageWidth - marginX - 190, y);
+                doc.setFont('helvetica', 'bold');
+                doc.text(fmtDate(state.details.eventDate), pageWidth - marginX, y, { align: 'right' });
+
+                y += 20;
+                doc.text((state.details.addressLine1 || '-') , marginX, y);
+                doc.setFont('helvetica', 'normal');
+                doc.text('Departure Time: ', pageWidth - marginX - 190, y);
+                doc.setFont('helvetica', 'bold');
+                doc.text('-', pageWidth - marginX, y, { align: 'right' });
+
+                y += 20;
+                doc.text((state.details.postal || '-'), marginX, y);
+                doc.setFont('helvetica', 'normal');
+                doc.text('Consuming Time: ', pageWidth - marginX - 190, y);
+                doc.setFont('helvetica', 'bold');
+                doc.text(consumingText, pageWidth - marginX, y, { align: 'right' });
+
+                y += 20;
+                doc.setFont('helvetica', 'normal');
+                doc.text('Tel: ' + (state.details.mobile || '-'), marginX, y);
+                doc.text('Location: ', pageWidth - marginX - 190, y);
+                doc.setFont('helvetica', 'bold');
+                doc.text(locationText, pageWidth - marginX, y, { align: 'right' });
+
+                y += 18;
+                var tableTop = y;
+                drawTableHeader(tableTop, widths);
+                y = tableTop + 20;
+
+                doc.setFont('helvetica', 'normal');
+                doc.setFontSize(10);
+
+                invoiceRows.forEach(function (row, index) {
+                    var descLines = (row.descLines || []).slice();
+                    if (!descLines.length) descLines = ['-'];
+                    var descWrapped = [];
+                    descLines.forEach(function (line) {
+                        var wrapped = doc.splitTextToSize(String(line), widths[1] - 8);
+                        for (var i = 0; i < wrapped.length; i++) {
+                            descWrapped.push(wrapped[i]);
+                        }
+                    });
+
+                    var lineCount = Math.max(descWrapped.length, 1);
+                    var rowHeight = Math.max(22, 8 + (lineCount * 13));
+                    ensureSpace(rowHeight + 2);
+
+                    if (y + rowHeight > pageHeight - bottomReserved) {
+                        doc.addPage();
+                        y = 20;
+                        tableTop = y;
+                        drawTableHeader(tableTop, widths);
+                        y = tableTop + 20;
+                    }
+
+                    doc.rect(marginX, y, contentWidth, rowHeight);
+                    var lineX = marginX;
+                    for (var j = 0; j < widths.length - 1; j++) {
+                        lineX += widths[j];
+                        doc.line(lineX, y, lineX, y + rowHeight);
+                    }
+
+                    doc.text(String(index + 1), marginX + (widths[0] / 2), y + 14, { align: 'center' });
+                    doc.text(descWrapped, marginX + widths[0] + 4, y + 14);
+                    doc.text(String(row.qty || '-'), marginX + widths[0] + widths[1] + (widths[2] / 2), y + 14, { align: 'center' });
+                    doc.text(String(row.unitPrice || '-'), marginX + widths[0] + widths[1] + widths[2] + (widths[3] / 2), y + 14, { align: 'center' });
+                    doc.text(String(row.total || '-'), marginX + widths[0] + widths[1] + widths[2] + widths[3] + (widths[4] / 2), y + 14, { align: 'center' });
+
+                    y += rowHeight;
+                });
+
+                var subTotal = packageBase() + extraTotal() + addonTotal() + utensilTotal();
+                var gst = gstTotal();
+                var grand = grandTotal();
+
+                var summaryStartX = marginX + widths[0] + widths[1] + widths[2];
+                var summaryLabelWidth = widths[3];
+                var summaryValueWidth = widths[4];
+                var summaryRows = [
+                    { label: 'Sub total', value: moneyValue(subTotal), bold: true },
+                    { label: ((gstRate * 100).toFixed(0) || '0') + '% GST', value: moneyValue(gst), bold: false },
+                    { label: 'Grand Total', value: moneyValue(grand), bold: true },
+                    { label: 'Balance Remaining', value: moneyValue(grand), bold: true }
+                ];
+
+                summaryRows.forEach(function (row) {
+                    ensureSpace(22);
+                    doc.rect(summaryStartX, y, summaryLabelWidth + summaryValueWidth, 22);
+                    doc.line(summaryStartX + summaryLabelWidth, y, summaryStartX + summaryLabelWidth, y + 22);
+                    doc.setFont('helvetica', row.bold ? 'bold' : 'normal');
+                    doc.text(row.label, summaryStartX + summaryLabelWidth - 6, y + 15, { align: 'right' });
+                    doc.text(row.value, summaryStartX + summaryLabelWidth + summaryValueWidth - 6, y + 15, { align: 'right' });
+                    y += 22;
+                });
+
+                y += 12;
+                ensureSpace(170);
+                doc.setFont('helvetica', 'bold');
+                doc.setFontSize(12);
+                doc.text('Terms & Conditions:', marginX, y);
+
+                y += 20;
+                doc.setFont('helvetica', 'normal');
+                doc.setFontSize(11);
+                doc.text('Deposit paid is not refundable.', marginX, y);
+                y += 18;
+                doc.text('Cheque should be made payable to ' + (organizationName || 'GAYATRI RESTAURANT').toUpperCase(), marginX, y);
+                y += 18;
+                doc.text('For order support, contact Hotline: ' + organizationHotline + ' / Email: ' + organizationEmail, marginX, y);
+                y += 18;
+                doc.text('Food best consumed within 3 hours from consuming time.', marginX, y);
+
+                var signY = pageHeight - 120;
+                doc.line(marginX, signY, marginX + 120, signY);
+                doc.line(pageWidth - marginX - 120, signY, pageWidth - marginX, signY);
+                doc.setFont('helvetica', 'normal');
+                doc.text('Authorise Signature', marginX, signY + 15);
+                doc.text('Customer Signature', pageWidth - marginX, signY + 15, { align: 'right' });
+
+                doc.setFont('helvetica', 'bold');
+                doc.setFontSize(10.5);
+                doc.text(organizationName, pageWidth / 2, pageHeight - 58, { align: 'center' });
+                doc.setFont('helvetica', 'normal');
+                doc.setFontSize(9.5);
+                doc.text(organizationAddress, pageWidth / 2, pageHeight - 44, { align: 'center' });
+                doc.text('Tel: ' + organizationHotline + '   Email: ' + organizationEmail, pageWidth / 2, pageHeight - 31, { align: 'center' });
+                doc.text('UEN: ' + organizationUen, pageWidth / 2, pageHeight - 18, { align: 'center' });
+
+                var totalPages = doc.internal.getNumberOfPages();
+                for (var pageIndex = 1; pageIndex <= totalPages; pageIndex++) {
+                    doc.setPage(pageIndex);
+                    doc.setFont('helvetica', 'normal');
+                    doc.setFontSize(10);
+                    doc.text('page ' + pageIndex + ' / ' + totalPages, pageWidth - marginX, pageHeight - 6, { align: 'right' });
+                }
+
+                resolve(doc.output('blob'));
+            } catch (err) {
+                reject(err);
+            }
+        });
+    }
+
+    function sendOrderReviewEmail(orderId) {
+        var toEmail = String(state.details.email || '').trim();
+        if (!toEmail) {
+            showToast('Email is required in Event Details to send order PDF.', 3500, { type: 'warning', title: 'Email missing' });
+            return;
+        }
+
+        generateOrderReviewPdfBlob(orderId).then(function (pdfBlob) {
+            var formData = new FormData();
+            formData.append('ToEmail', toEmail);
+            formData.append('Subject', 'Order Confirmation - ' + (state.eventName || 'Event') + ' - ' + (orderId || '-'));
+            formData.append('Body', buildOrderEmailBody(orderId));
+            formData.append('Attachment', new File([pdfBlob], 'Order-' + (orderId || 'Details') + '.pdf', { type: 'application/pdf' }));
+
+            $.ajax({
+                url: '/Common/SendEmail',
+                type: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function () {
+                    showToast('Order details PDF sent to email successfully.', 3500, { type: 'success', title: 'Email sent' });
+                    setTimeout(function () {
+                        resetOrderForNew();
+                        showToast('Ready for next order.', 2200, { type: 'success', title: 'Create new order' });
+                    }, 400);
+                },
+                error: function (xhr) {
+                    showToast(xhr.responseJSON?.Message || 'Payment confirmed, but email sending failed.', 4000, { type: 'warning', title: 'Email failed' });
+                }
+            });
+        }).catch(function () {
+            showToast('Payment confirmed, but PDF generation failed.', 3500, { type: 'warning', title: 'PDF failed' });
+        });
+    }
+
+    function buildOrderEmailBody(orderId) {
+        var organizationName = String(organizationInfo.name ?? organizationInfo.Name ?? 'Gayatri Restaurant Pte Ltd');
+        var organizationUen = String(organizationInfo.uen ?? organizationInfo.UEN ?? '-');
+        var organizationAddress = String(organizationInfo.address ?? organizationInfo.Address ?? '-');
+        var organizationEmail = String(organizationInfo.email ?? organizationInfo.Email ?? '-');
+        var organizationHotline = String(organizationInfo.hotline ?? organizationInfo.Hotline ?? '-');
+        var organizationWhatsapp = String(organizationInfo.whatsapp ?? organizationInfo.Whatsapp ?? '-');
+        var gstPercent = (gstRate * 100).toFixed(0) + '%';
+
+        return '' +
+            '<div style="font-family:Segoe UI,Arial,sans-serif;background:#f4f7f5;margin:0;padding:16px;color:#183028">' +
+            '<div style="max-width:760px;margin:0 auto;background:#ffffff;border:1px solid #d9e6de;border-radius:10px;overflow:hidden">' +
+            '<div style="background:#156b3f;color:#ffffff;padding:16px 18px">' +
+            '<div style="font-size:26px;font-weight:800;line-height:1.2">' + escapeHtml(organizationName) + '</div>' +
+            '<div style="margin-top:6px;font-size:13px;opacity:.95">UEN: ' + escapeHtml(organizationUen) + '</div>' +
+            '<div style="margin-top:4px;font-size:13px;opacity:.95">Hotline: ' + escapeHtml(organizationHotline) + ' | WhatsApp: ' + escapeHtml(organizationWhatsapp) + '</div>' +
+            '<div style="margin-top:4px;font-size:13px;opacity:.95">Email: ' + escapeHtml(organizationEmail) + '</div>' +
+            '</div>' +
+
+            '<div style="padding:18px">' +
+            '<div style="font-size:15px">Dear ' + escapeHtml(state.details.contact || state.details.company || 'Customer') + ',</div>' +
+            '<div style="margin-top:10px;font-size:14px;line-height:1.6;color:#2f4f41">Thank you for confirming your payment with <strong>' + escapeHtml(organizationName) + '</strong>. Your order is received and the detailed PDF is attached for your records.</div>' +
+
+            '<table style="width:100%;border-collapse:collapse;margin-top:16px;font-size:13px">' +
+            '<tr>' +
+            '<td style="width:50%;padding:12px;border:1px solid #e1ece5;background:#f8fcfa;vertical-align:top">' +
+            '<div style="font-weight:700;color:#156b3f;margin-bottom:6px">Order Snapshot</div>' +
+            '<div><strong>Order ID:</strong> ' + escapeHtml(String(orderId || '-')) + '</div>' +
+            '<div><strong>Event:</strong> ' + escapeHtml(state.eventName || '-') + '</div>' +
+            '<div><strong>Event Date:</strong> ' + escapeHtml(state.details.eventDate || '-') + '</div>' +
+            '<div><strong>Meal Period:</strong> ' + escapeHtml(state.details.mealPeriod || '-') + '</div>' +
+            '<div><strong>Pax:</strong> ' + escapeHtml(String(state.pax || 0)) + '</div>' +
+            '</td>' +
+            '<td style="width:50%;padding:12px;border:1px solid #e1ece5;background:#f8fcfa;vertical-align:top">' +
+            '<div style="font-weight:700;color:#156b3f;margin-bottom:6px">Customer Snapshot</div>' +
+            '<div><strong>Name:</strong> ' + escapeHtml(state.details.company || '-') + '</div>' +
+            '<div><strong>Contact:</strong> ' + escapeHtml(state.details.contact || '-') + '</div>' +
+            '<div><strong>Mobile:</strong> ' + escapeHtml(state.details.mobile || '-') + '</div>' +
+            '<div><strong>Email:</strong> ' + escapeHtml(state.details.email || '-') + '</div>' +
+            '<div><strong>Address:</strong> ' + escapeHtml(buildDeliveryAddress() || '-') + '</div>' +
+            '</td>' +
+            '</tr>' +
+            '</table>' +
+
+            '<table style="width:100%;border-collapse:collapse;margin-top:14px;font-size:13px">' +
+            '<tr><td colspan="2" style="padding:10px 12px;border:1px solid #dce9e1;background:#edf6f0;font-weight:700;color:#156b3f">Payment Summary</td></tr>' +
+            '<tr><td style="padding:8px 12px;border:1px solid #e6efe9">Package Base</td><td style="padding:8px 12px;border:1px solid #e6efe9;text-align:right">' + money(packageBase()) + '</td></tr>' +
+            '<tr><td style="padding:8px 12px;border:1px solid #e6efe9">Additional Menu</td><td style="padding:8px 12px;border:1px solid #e6efe9;text-align:right">' + money(extraTotal()) + '</td></tr>' +
+            '<tr><td style="padding:8px 12px;border:1px solid #e6efe9">Add-ons</td><td style="padding:8px 12px;border:1px solid #e6efe9;text-align:right">' + money(addonTotal()) + '</td></tr>' +
+            '<tr><td style="padding:8px 12px;border:1px solid #e6efe9">Utensils / Setup</td><td style="padding:8px 12px;border:1px solid #e6efe9;text-align:right">' + money(utensilTotal()) + '</td></tr>' +
+            '<tr><td style="padding:8px 12px;border:1px solid #e6efe9">GST (' + escapeHtml(gstPercent) + ')</td><td style="padding:8px 12px;border:1px solid #e6efe9;text-align:right">' + money(gstTotal()) + '</td></tr>' +
+            '<tr><td style="padding:8px 12px;border:1px solid #e6efe9">Refundable Deposit</td><td style="padding:8px 12px;border:1px solid #e6efe9;text-align:right">' + money(depositTotal()) + '</td></tr>' +
+            '<tr><td style="padding:10px 12px;border:1px solid #d1e2d8;background:#edf6f0;font-size:15px;font-weight:800">Grand Total Payable</td><td style="padding:10px 12px;border:1px solid #d1e2d8;background:#edf6f0;text-align:right;font-size:15px;font-weight:800">' + money(grandTotal()) + '</td></tr>' +
+            '</table>' +
+
+            '<div style="margin-top:14px;padding:12px;border-left:3px solid #f59e0b;background:#fffbeb;color:#6b4e16;font-size:12.5px">Please keep this email and attached PDF for reference. For support or order changes, contact us via hotline/WhatsApp and mention your Order ID.</div>' +
+            '</div>' +
+
+            '<div style="padding:12px 18px;border-top:1px solid #e6efe9;background:#fafcfb;font-size:12px;color:#557064">' +
+            '<div><strong>' + escapeHtml(organizationName) + '</strong></div>' +
+            '<div>' + escapeHtml(organizationAddress) + '</div>' +
+            '<div>Email: ' + escapeHtml(organizationEmail) + ' | Hotline: ' + escapeHtml(organizationHotline) + ' | WhatsApp: ' + escapeHtml(organizationWhatsapp) + '</div>' +
+            '</div>' +
+            '</div>' +
+            '</div>';
     }
 
     function loadUpiAndOpenPayment(orderId) {
@@ -974,21 +1435,59 @@ $(function () {
             return;
         }
         $.ajax({
-            url: '/Admin/Settings/get',
+            url: '/Customer/Organization/gst',
             type: 'GET',
-            success: function (rows) {
-                var data = Array.isArray(rows) && rows.length ? rows[0] : {};
-                var settingsUpi = String(data.upiId ?? data.UPIId ?? '').trim();
+            success: function (data) {
+                var settingsUpi = String(data?.upiId ?? data?.UPIId ?? '').trim();
                 if (!settingsUpi) {
                     showToast('UPI Id is not configured. Please contact support.', 4000, { type: 'error', title: 'Payment unavailable' });
                     return;
                 }
+                organizationInfo = Object.assign({}, organizationInfo || {}, data || {});
                 openPaymentModal(orderId, settingsUpi);
             },
             error: function () {
                 showToast('Unable to load UPI Id for payment.', 4000, { type: 'error', title: 'Payment unavailable' });
             }
         });
+    }
+
+    function resetOrderForNew() {
+        closePaymentModal();
+        currentStep = 1;
+        state.step1View = 'packages';
+        state.selectedEvent = '';
+        state.eventName = '';
+        state.eventMinPax = 0;
+        state.selectedPackage = '';
+        state.packageName = '-';
+        state.packagePrice = 0;
+        state.pax = 0;
+        state.extraItems = {};
+        state.addons = {};
+        state.utensils = {};
+        state.details = {
+            company: '',
+            contact: '',
+            email: '',
+            mobile: '',
+            eventDate: '',
+            mealPeriodId: '',
+            mealPeriod: '',
+            postal: '',
+            addressLine1: '',
+            notes: ''
+        };
+        includedChoices = [];
+        includedChoiceSelections = {};
+        renderStep();
+
+        setTimeout(function () {
+            var $eventType = $('#eventType');
+            if ($eventType.length) {
+                $eventType.trigger('focus');
+            }
+        }, 60);
     }
 
     $(document).on('click', '.wizard-step', function () {
@@ -1026,6 +1525,7 @@ $(function () {
 
     $('#summarySubmitBtn').on('click', function (e) {
         e.preventDefault();
+        e.stopPropagation();
         submitOrder();
     });
 
@@ -1033,9 +1533,13 @@ $(function () {
         closePaymentModal();
     });
 
-    $('#btnPaymentDone').on('click', function () {
+    $('#btnPaymentDone').on('click', function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        var orderId = parseInt($(this).data('order-id'), 10) || 0;
         closePaymentModal();
         showToast('Payment confirmed. Thank you!', 3000, { type: 'success', title: 'Payment confirmed' });
+        sendOrderReviewEmail(orderId);
     });
 
     $('#paymentModal').on('click', function (e) {
@@ -1045,23 +1549,7 @@ $(function () {
     });
 
     $('#btnResetOrder').on('click', function () {
-        closePaymentModal();
-        currentStep = 1;
-        state.step1View = 'packages';
-        state.selectedEvent = '';
-        state.eventName = '';
-        state.eventMinPax = 0;
-        state.eventAdvanceBookingDays = 0;
-        state.selectedPackage = '';
-        state.packageName = '-';
-        state.packagePrice = 0;
-        state.pax = 0;
-        state.extraItems = {};
-        state.addons = {};
-        state.utensils = {};
-        includedChoices = [];
-        includedChoiceSelections = {};
-        renderStep();
+        resetOrderForNew();
     });
 
     $(document).on('click', '#btnChangePackage', function () {
@@ -1076,16 +1564,15 @@ $(function () {
         state.selectedEvent = selectedEvent ? selectedEvent.id : '';
         state.eventName = selectedEvent ? selectedEvent.name : '';
         state.eventMinPax = selectedEvent ? selectedEvent.minPax : 0;
-        state.eventAdvanceBookingDays = selectedEvent ? selectedEvent.advanceBookingDays : 0;
         state.selectedPackage = '';
         state.packageName = '-';
         state.packagePrice = 0;
-        state.pax = Math.max(parseInt(state.pax, 10) || 0, state.eventMinPax);
+        state.pax = state.eventMinPax || 0;
         packages = [];
         includedChoices = [];
         includedChoiceSelections = {};
         if (state.selectedEvent) loadOrderPackages(state.selectedEvent);
-        else renderStep();
+        else renderStep(false);
     });
 
     $(document).on('input', '#eventPaxCount', function () {
@@ -1224,7 +1711,7 @@ $(function () {
             { key: 'mobile', input: '#detailMobile', error: '#detailMobileError', message: 'Mobile / WhatsApp is required' },
             { key: 'eventDate', input: '#detailDate', error: '#detailDateError', message: 'Event Date is required' },
             { key: 'mealPeriodId', input: '#detailPeriod', error: '#detailPeriodError', message: 'Meal Period is required' },
-            { key: 'addressLine1', input: '#detailAddressLine1', error: '#detailAddressLine1Error', message: 'Address Line 1 is required' }
+            { key: 'addressLine1', input: '#detailAddressLine1', error: '#detailAddressLine1Error', message: 'Address is required' }
         ];
 
         if ($('#detailCompany').length) {
@@ -1250,16 +1737,6 @@ $(function () {
                 }
             }
         });
-
-        var eventDate = String(state.details.eventDate || '').trim();
-        var minimumEventDate = getMinimumEventDate();
-        if (eventDate && eventDate < minimumEventDate) {
-            hasErrors = true;
-            if (showFeedback) {
-                setFieldError('#detailDate', '#detailDateError', 'Event date must be on or after ' + minimumEventDate);
-                if (!firstInvalid) firstInvalid = '#detailDate';
-            }
-        }
 
         var email = $('#detailEmail').length
             ? String($('#detailEmail').val() || '').trim()
@@ -1365,7 +1842,7 @@ $(function () {
 
         qty = Math.max(qty, 0);
         if (qty > 0) state.utensils[name] = qty; else delete state.utensils[name];
-        renderStep();
+        renderStep(false);
     });
 
     $(document).on('click', '#suggestUtensilsBtn', function () {
@@ -1373,12 +1850,12 @@ $(function () {
         utensilRows.forEach(function (row) {
             state.utensils[row.name] = calculateUtensilSuggestedQty(row);
         });
-        renderStep();
+        renderStep(false);
     });
 
     $(document).on('click', '#clearUtensilsBtn', function () {
         state.utensils = {};
-        renderStep();
+        renderStep(false);
     });
 
     function updateEventDetails() {

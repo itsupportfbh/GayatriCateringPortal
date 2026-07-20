@@ -12,6 +12,8 @@ namespace GayatriCateringPortal.Models
 
             public int? PackageId { get; set; }
 
+            public int? EventId { get; set; }
+
             public int? MealPeriodId { get; set; }
 
             public int? LocationId { get; set; }

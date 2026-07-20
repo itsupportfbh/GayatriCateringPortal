@@ -8,6 +8,7 @@ public class OrderListItem
     public string MobileNo { get; set; } = string.Empty;
     public string EmailId { get; set; } = string.Empty;
     public string PackageName { get; set; } = string.Empty;
+    public string EventName { get; set; } = string.Empty;
     public string LocationName { get; set; } = string.Empty;
     public DateTime? EventDate { get; set; }
     public DateTime? CreatedDate { get; set; }
