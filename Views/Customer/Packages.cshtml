@@ -15,19 +15,31 @@
 </div>
 
 <!-- PACKAGES -->
-<div class="preset-grid" id="packageCards">
-    <div class="card"><p class="muted">Loading packages...</p></div>
-</div>
+<div class="packages-layout">
+    <section>
+        <div class="preset-grid" id="packageCards">
+            <div class="card package-loading-card">
+                <div class="pageloaderpanel">
+                    <div class="spinner" aria-hidden="true"></div>
+                    <div class="loader-text">Loading packages...</div>
+                </div>
+            </div>
+        </div>
+    </section>
 
-<div class="package-detail-overlay" id="packageDetailModal" aria-hidden="true">
-    <div class="package-detail-dialog" role="dialog" aria-modal="true" aria-labelledby="packageDetailTitle">
-        <button type="button" class="package-detail-close" aria-label="Close package details">&times;</button>
+    <aside class="package-sidebar" id="packageSidebar" aria-live="polite">
         <div class="package-detail-heading">
             <div class="package-detail-kicker">Package menu</div>
-            <h2 id="packageDetailTitle">Package Details</h2>
+            <h2 id="packageDetailTitle">Select a package</h2>
+            <div class="package-detail-subtitle">Click View on any package card to see menu categories.</div>
+            <div class="package-detail-meta" id="packageDetailMeta">
+                <span class="meta-pill">Ready</span>
+            </div>
         </div>
-        <div class="package-detail-content" id="packageDetailContent"></div>
-    </div>
+        <div class="package-detail-content" id="packageDetailContent">
+            <div class="package-detail-status">Package details will appear here.</div>
+        </div>
+    </aside>
 </div>
 
 @*

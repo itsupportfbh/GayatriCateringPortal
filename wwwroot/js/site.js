@@ -92,6 +92,10 @@ function showToast(msg, duration, options) {
     }
 
     // normal stacked toast
+    if (!type) {
+        type = 'info';
+    }
+
     var title = options && options.title ? options.title : null;
 
     var item = document.createElement('div');
