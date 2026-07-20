@@ -73,8 +73,8 @@ function renderLocationList(rows) {
         }
 
         var statusBadge = active
-            ? '<span class="badge-pill badge-pill--success">Active</span>'
-            : '<span class="badge-pill badge-pill--warning">Inactive</span>';
+            ? '<span class="badge badge-confirmed">Active</span>'
+            : '<span class="badge badge-cancelled">Inactive</span>';
 
         return `
             <tr>
