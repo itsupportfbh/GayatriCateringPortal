@@ -3,7 +3,6 @@ using GayatriCateringPortal.Interfaces;
 using GayatriCateringPortal.Models;
 using Microsoft.Data.SqlClient;
 using System.Data;
-using System.Net.NetworkInformation;
 
 namespace GayatriCateringPortal.Repositories
 {
@@ -27,7 +26,7 @@ namespace GayatriCateringPortal.Repositories
                         list = this.List(reader);
                     }
                 }
-                return list ?? new List<FoodMenu>();                 
+                return list;
             }
             catch (SqlException)
             {
@@ -43,16 +42,53 @@ namespace GayatriCateringPortal.Repositories
             }
         }
 
-        public List<FoodMenu> GetByCategoryId(int categoryId)
+        public List<MenuCategoryResult> GetAllMenusByCategory()
         {
-            var list = new List<FoodMenu>();
-            if (categoryId <= 0) return list;
+            var categories = new List<MenuCategoryResult>();
 
             using var conn = DataFactory.CreateConnection();
             conn.Open();
-            using var cmd = DataFactory.CreateCommand(
-                "SELECT Id, Code, Name, CategoryId, Price, PreparationTime, FoodType, Servicecharge, IsActive, IsDeleted, CreatedBy, CreatedDate, UpdatedBy, UpdatedDate " +
-                "FROM FoodMenu WHERE CategoryId = @CategoryId AND IsActive = 1 AND IsDeleted = 0 ORDER BY Name", conn);
+            using var cmd = DataFactory.CreateCommand("SP_GetAllMenuByCategoryId", conn);
+            ((SqlCommand)cmd).CommandType = CommandType.StoredProcedure;
+            using var reader = DataFactory.ExecuteReader(cmd);
+
+            var categoriesById = new Dictionary<int, MenuCategoryResult>();
+            while (reader.Read())
+            {
+                var categoryId = Convert.ToInt32(reader["CategoryId"]);
+                if (!categoriesById.TryGetValue(categoryId, out var category))
+                {
+                    category = new MenuCategoryResult
+                    {
+                        Id = categoryId,
+                        Name = Convert.ToString(reader["CategoryName"]) ?? string.Empty
+                    };
+                    categoriesById.Add(categoryId, category);
+                    categories.Add(category);
+                }
+
+                category.Items.Add(new MenuItemResult
+                {
+                    Id = Convert.ToInt32(reader["MenuId"]),
+                    Name = Convert.ToString(reader["MenuName"]) ?? string.Empty,
+                    Price = reader["Price"] == DBNull.Value ? null : Convert.ToString(reader["Price"]),
+                    FoodType = reader["FoodType"] == DBNull.Value ? null : Convert.ToInt32(reader["FoodType"]),
+                    PreparationTime = reader["PreparationTime"] == DBNull.Value ? null : Convert.ToString(reader["PreparationTime"]),
+                    ServiceCharge = reader["ServiceCharge"] == DBNull.Value ? null : Convert.ToString(reader["ServiceCharge"])
+                });
+            }
+
+            return categories;
+        }
+
+        public List<FoodMenu> GetByCategoryId(int categoryId)
+        {
+            if (categoryId <= 0) return new List<FoodMenu>();
+
+            using var conn = DataFactory.CreateConnection();
+            conn.Open();
+            using var cmd = DataFactory.CreateCommand("SP_GetAllMenuByCategoryId", conn);
+            ((SqlCommand)cmd).CommandType = CommandType.StoredProcedure;
             cmd.Parameters.Add(DataFactory.CreateParameter("@CategoryId", categoryId));
             using var reader = DataFactory.ExecuteReader(cmd);
             return List(reader);

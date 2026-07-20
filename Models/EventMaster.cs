@@ -7,6 +7,7 @@
         public string Name { get; set; } = string.Empty;
 
         public int MinPax { get; set; } = 0;
+        public decimal ServiceCharge { get; set; } = 0;
         public int AdvanceBookingDays { get; set; }
         public string? PackageIds { get; set; }
         public List<EventDetails> PackageDetails { get; set; } = new();

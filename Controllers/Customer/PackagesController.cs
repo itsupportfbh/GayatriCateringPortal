@@ -22,7 +22,9 @@ namespace GayatriCateringPortal.Controllers.Customer
         }
 
         [HttpGet("get")]
-        public IActionResult GetAll() => Ok(_packages.GetAll());
+        public IActionResult GetAll() => Ok(_packages.GetAll()
+            .Where(item => item.IsActive && !item.IsDeleted)
+            .OrderBy(item => item.Name));
 
         [HttpGet("get/{id:int}")]
         public IActionResult Get(int id)
