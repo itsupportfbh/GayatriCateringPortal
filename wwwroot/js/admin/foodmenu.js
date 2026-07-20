@@ -114,6 +114,7 @@ function renderMenuList(rows) {
             var code = menu.code || menu.Code || '';
             var name = menu.name || menu.Name || '';
             var CategoryId = menu.categoryId || menu.CategoryId || '';
+            var Category = menu.category || menu.Category || '';
             var active = menu.isActive;
 
             var actions;
@@ -136,7 +137,7 @@ function renderMenuList(rows) {
                     <td>${id}</td>
                     <td>${code}</td>
                     <td>${name}</td>
-                    <td>${CategoryId || ''}</td>
+                    <td>${Category || ''}</td>
                     <td>${statusBadge}</td>
                     <td>
                         <div class="row-actions">

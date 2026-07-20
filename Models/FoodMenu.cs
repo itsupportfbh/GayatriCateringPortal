@@ -1,4 +1,5 @@
 using System;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace GayatriCateringPortal.Models
 {
@@ -18,5 +19,7 @@ namespace GayatriCateringPortal.Models
         public DateTime? CreatedDate { get; set; } = null!;
         public int UpdatedBy { get; set; }
         public DateTime? UpdatedDate { get; set; }
+        [NotMapped]
+        public string Category { get; set; }
     }
 }
