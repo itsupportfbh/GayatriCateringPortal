@@ -330,7 +330,7 @@ namespace GayatriCateringPortal.Controllers
 
             if (reportId == 4)
             {
-                return BuildInvoiceLayoutPdf(rows, logoImage);
+                return BuildInvoicePdf(rows, logoImage);
             }
 
             return BuildGenericReportPdf(reportName, rows, columns, logoImage);
@@ -498,7 +498,7 @@ namespace GayatriCateringPortal.Controllers
             AppendPdfText(stream, (left + right) / 2f, y - 2f, "Email-generated report PDF", false, 9, PdfTextAlign.Center);
         }
 
-        private byte[] BuildInvoiceLayoutPdf(List<Dictionary<string, object?>> rows, PdfImageData? logoImage)
+        private byte[] BuildInvoicePdf(List<Dictionary<string, object?>> rows, PdfImageData? logoImage)
         {
             var firstRow = rows.FirstOrDefault() ?? new Dictionary<string, object?>();
             var pageWidth = 595f;
@@ -513,10 +513,10 @@ namespace GayatriCateringPortal.Controllers
             var y = pageTop;
             var isFirstPage = true;
             var totalTableWidth = right - left;
-            var colNo = left + 28f;
-            var colDesc = left + 332f;
-            var colQty = left + 390f;
-            var colUnit = left + 474f;
+            var colNo = left + 30f;
+            var colDesc = left + 280f;
+            var colQty = left + 330f;
+            var colUnit = left + 430f;
 
             void StartNewPage(bool includeMeta)
             {
@@ -1218,7 +1218,21 @@ namespace GayatriCateringPortal.Controllers
                 GetString(row, "Pincode")
             };
 
-            return lines.Where(line => !string.IsNullOrWhiteSpace(line));
+            var filtered = lines.Where(line => !string.IsNullOrWhiteSpace(line)).ToList();
+            
+            // Remove consecutive duplicates
+            var deduplicated = new List<string>();
+            string? previousLine = null;
+            foreach (var line in filtered)
+            {
+                if (line != previousLine)
+                {
+                    deduplicated.Add(line);
+                    previousLine = line;
+                }
+            }
+            
+            return deduplicated;
         }
 
         private static IEnumerable<string> WrapPlainText(string text, int maxChars)
