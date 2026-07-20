@@ -817,7 +817,7 @@ $(function () {
             .join(', ');
     }
 
-    function buildOrderPayload() {
+    function buildOrderPayload(orderStatus) {
         var customerName = String(state.details.company || state.details.contact || '').trim();
         var customerMobile = String(state.details.mobile || '').trim();
         var order = {
@@ -843,7 +843,7 @@ $(function () {
             totalAmount: grandTotal(),
             taxPercentage: gstRate * 100,
             paidAmount: 0,
-            orderStatus: 0,
+            orderStatus: parseInt(orderStatus, 10) || 0,
             createdDate: new Date().toISOString(),
             createdBy: null,
             updatedDate: null,
@@ -939,8 +939,9 @@ $(function () {
         };
     }
 
-    function submitOrder() {
-        var request = buildOrderPayload();
+    function submitOrder(orderStatus) {
+        var isQuotation = parseInt(orderStatus, 10) === 5;
+        var request = buildOrderPayload(orderStatus);
         if (!validateStep(4, true)) {
             currentStep = 4;
             renderStep();
@@ -978,6 +979,10 @@ $(function () {
             success: function (response) {
                 if (response && response.success) {
                     var orderId = parseInt(response.id, 10) || 0;
+                    if (isQuotation) {
+                        showToast('Quotation request sent successfully.', 3000, { type: 'success', title: 'Quotation sent' });
+                        return;
+                    }
                     showToast('Order details saved successfully. Please complete payment.', 3000, { type: 'success', title: 'Saved' });
                     loadUpiAndOpenPayment(orderId);
                 } else {
@@ -1528,13 +1533,14 @@ $(function () {
 
     $('#summaryQuoteBtn').on('click', function (e) {
         e.preventDefault();
-        showToast('Quotation request sent successfully.', 2600, { type: 'success', title: 'Quotation sent' });
+        e.stopPropagation();
+        submitOrder(5);
     });
 
     $('#summarySubmitBtn').on('click', function (e) {
         e.preventDefault();
         e.stopPropagation();
-        submitOrder();
+        submitOrder(0);
     });
 
     $('#btnClosePayment, #btnPaymentCancel').on('click', function () {

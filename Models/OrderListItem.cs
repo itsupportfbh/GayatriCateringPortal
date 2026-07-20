@@ -7,6 +7,7 @@ public class OrderListItem
     public string CustomerName { get; set; } = string.Empty;
     public string MobileNo { get; set; } = string.Empty;
     public string EmailId { get; set; } = string.Empty;
+    public int? EventId { get; set; }
     public string PackageName { get; set; } = string.Empty;
     public string EventName { get; set; } = string.Empty;
     public string LocationName { get; set; } = string.Empty;

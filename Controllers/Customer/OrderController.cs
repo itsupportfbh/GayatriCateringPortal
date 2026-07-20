@@ -55,6 +55,18 @@ namespace GayatriCateringPortal.Controllers.Customer
             return Ok(_packages.GetByEventId(eventId));
         }
 
+        [HttpGet("events/{eventId:int}")]
+        public IActionResult GetEvent(int eventId)
+        {
+            if (eventId <= 0) return BadRequest(new { message = "A valid event is required." });
+
+            var item = _events.GetById(eventId);
+            if (item == null || item.IsDeleted)
+                return NotFound(new { message = "Event not found." });
+
+            return Ok(new { id = item.Id, name = item.Name });
+        }
+
         [HttpGet("meal-periods")]
         public IActionResult GetMealPeriods()
         {
