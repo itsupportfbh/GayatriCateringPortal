@@ -326,176 +326,47 @@ namespace GayatriCateringPortal.Controllers
                 ?? "Report";
             var rows = GetList(GetValue(root, "rows"));
             var columns = GetList(GetValue(root, "columns"));
-            var logoImage = LoadInvoiceLogoData();
 
             if (reportId == 4)
             {
-                return BuildInvoicePdf(rows, logoImage);
+                //return BuildInvoicePdf(rows, logoImage);
+                return BuildInvoicePdf(rows, LoadInvoiceLogoData());
             }
 
-            return BuildGenericReportPdf(reportName, rows, columns, logoImage);
-        }
-
-        private byte[] BuildGenericReportPdf(string reportName, List<Dictionary<string, object?>> rows, List<Dictionary<string, object?>> columns, PdfImageData? logoImage)
-        {
-            var pageWidth = 595f;
-            var pageHeight = 842f;
-            var left = 32f;
-            var right = 563f;
-            var pageTop = 810f;
-            var pageBottom = 36f;
-            var footerReserve = 112f;
-            var pages = new List<string>();
-            var stream = new StringBuilder();
-            var y = pageTop;
-            var colLeft = left;
-            var colRight = right;
-
-            void StartNewPage(bool includeHeader)
+            var lines = new List<PdfTextLine>
             {
-                stream = new StringBuilder();
-                y = pageTop;
-
-                if (logoImage != null)
-                {
-                    AppendPdfImage(stream, logoImage, left, y - 44f, 112f, 44f);
-                    AppendPdfText(stream, right, y, reportName, true, 18, PdfTextAlign.Right);
-                }
-                else
-                {
-                    AppendPdfText(stream, left, y, reportName, true, 18);
-                    AppendPdfText(stream, right, y, "Gayatri Catering", false, 10, PdfTextAlign.Right);
-                }
-
-                AppendPdfText(stream, right, y - 18f, "Generated: " + DateTime.Now.ToString("dd MMM yyyy HH:mm", CultureInfo.InvariantCulture), false, 10, PdfTextAlign.Right);
-                AppendPdfText(stream, right, y - 32f, "Row Count: " + rows.Count.ToString(CultureInfo.InvariantCulture), false, 10, PdfTextAlign.Right);
-                y -= 62f;
-
-                if (includeHeader)
-                {
-                    DrawGenericTableHeader(stream, colLeft, colRight, ref y, columns);
-                }
-                else
-                {
-                    AppendPdfText(stream, left, y, "Continued Report Rows", true, 11);
-                    y -= 18f;
-                    DrawGenericTableHeader(stream, colLeft, colRight, ref y, columns);
-                }
-            }
-
-            void FinishPage()
-            {
-                pages.Add(stream.ToString());
-            }
-
-            StartNewPage(true);
+                new(reportName, true, 18),
+                new($"Generated: {DateTime.Now:dd MMM yyyy HH:mm}", false, 10),
+                new($"Row Count: {rows.Count}", false, 10),
+                new(string.Empty),
+            };
 
             if (!columns.Any())
             {
-                AppendPdfText(stream, left, y, "No data found.", true, 12);
-                FinishPage();
-                return BuildPdfDocument(pages, pageWidth, pageHeight, logoImage);
+                lines.Add(new PdfTextLine("No data found.", true));
+                return BuildSimplePdf(lines);
             }
 
             for (var rowIndex = 0; rowIndex < rows.Count; rowIndex++)
             {
                 var row = rows[rowIndex];
-                var estimatedHeight = EstimateGenericRowHeight(columns, row);
+                lines.Add(new PdfTextLine($"Record {rowIndex + 1}", true, 12));
 
-                if (y - estimatedHeight < pageBottom + footerReserve)
+                foreach (var column in columns)
                 {
-                    FinishPage();
-                    StartNewPage(false);
+                    var columnDictionary = ToDictionary(column);
+                    var header = Convert.ToString(GetValue(columnDictionary, "header"))
+                        ?? Convert.ToString(GetValue(columnDictionary, "field"))
+                        ?? "Field";
+                    var field = Convert.ToString(GetValue(columnDictionary, "field")) ?? string.Empty;
+                    var value = GetDisplayValue(GetValue(row, field), Convert.ToString(GetValue(columnDictionary, "type")));
+                    lines.AddRange(BuildWrappedLines(header + ": " + value, 100));
                 }
 
-                DrawGenericRow(stream, rowIndex + 1, row, columns, colLeft, colRight, ref y);
+                lines.Add(new PdfTextLine(string.Empty));
             }
 
-            DrawGenericFooter(stream, left, right, pageBottom + 24f);
-            FinishPage();
-
-            return BuildPdfDocument(pages, pageWidth, pageHeight, logoImage);
-        }
-
-        private static void DrawGenericTableHeader(StringBuilder stream, float left, float right, ref float y, List<Dictionary<string, object?>> columns)
-        {
-            var rowTop = y;
-            var rowBottom = y - 24f;
-            DrawRect(stream, left, rowBottom, right - left, rowTop - rowBottom);
-
-            var columnWidth = columns.Count > 0 ? (right - left) / columns.Count : right - left;
-            var currentX = left;
-
-            foreach (var column in columns)
-            {
-                DrawVerticalLine(stream, currentX, rowBottom, rowTop);
-                var header = Convert.ToString(GetValue(column, "header"))
-                    ?? Convert.ToString(GetValue(column, "field"))
-                    ?? "Field";
-                AppendPdfText(stream, currentX + (columnWidth / 2f), y - 16f, header, true, 9, PdfTextAlign.Center);
-                currentX += columnWidth;
-            }
-
-            DrawVerticalLine(stream, right, rowBottom, rowTop);
-            y = rowBottom;
-        }
-
-        private static void DrawGenericRow(StringBuilder stream, int rowNumber, Dictionary<string, object?> row, List<Dictionary<string, object?>> columns, float left, float right, ref float y)
-        {
-            var rowTop = y;
-            var rowHeight = EstimateGenericRowHeight(columns, row);
-            var rowBottom = y - rowHeight;
-            DrawRect(stream, left, rowBottom, right - left, rowTop - rowBottom);
-
-            var columnWidth = columns.Count > 0 ? (right - left) / columns.Count : right - left;
-            var currentX = left;
-
-            foreach (var column in columns)
-            {
-                DrawVerticalLine(stream, currentX, rowBottom, rowTop);
-                var field = Convert.ToString(GetValue(column, "field")) ?? string.Empty;
-                var type = Convert.ToString(GetValue(column, "type"));
-                var value = GetDisplayValue(GetValue(row, field), type);
-                var lines = WrapPlainText(value, 42).ToList();
-                var textY = rowTop - 14f;
-
-                foreach (var line in lines)
-                {
-                    AppendPdfText(stream, currentX + 4f, textY, line, false, 9);
-                    textY -= 10f;
-                }
-
-                currentX += columnWidth;
-            }
-
-            DrawVerticalLine(stream, right, rowBottom, rowTop);
-            y = rowBottom;
-        }
-
-        private static float EstimateGenericRowHeight(List<Dictionary<string, object?>> columns, Dictionary<string, object?> row)
-        {
-            if (!columns.Any())
-            {
-                return 24f;
-            }
-
-            var maxLines = 1;
-            foreach (var column in columns)
-            {
-                var field = Convert.ToString(GetValue(column, "field")) ?? string.Empty;
-                var type = Convert.ToString(GetValue(column, "type"));
-                var value = GetDisplayValue(GetValue(row, field), type);
-                var lineCount = Math.Max(1, WrapPlainText(value, 42).Count());
-                maxLines = Math.Max(maxLines, lineCount);
-            }
-
-            return 18f + ((maxLines - 1) * 10f);
-        }
-
-        private static void DrawGenericFooter(StringBuilder stream, float left, float right, float y)
-        {
-            AppendPdfText(stream, (left + right) / 2f, y + 12f, "Gayatri Catering", true, 10, PdfTextAlign.Center);
-            AppendPdfText(stream, (left + right) / 2f, y - 2f, "Email-generated report PDF", false, 9, PdfTextAlign.Center);
+            return BuildSimplePdf(lines);
         }
 
         private byte[] BuildInvoicePdf(List<Dictionary<string, object?>> rows, PdfImageData? logoImage)
@@ -1125,7 +996,6 @@ namespace GayatriCateringPortal.Controllers
             var labels = new[]
             {
                 ("Sub total", "S$" + FormatNumericText(GetValue(firstRow, "SubTotal"), true), false),
-                ("Service Charge", "S$" + FormatNumericText(GetValue(firstRow, "ServiceCharge"), true), false),
                 (FormatNumericText(GetValue(firstRow, "TaxPercentage"), false) + "% GST", "S$" + FormatNumericText(GetValue(firstRow, "TaxAmount"), true), false),
                 ("Grand Total", "S$" + FormatNumericText(GetValue(firstRow, "TotalAmount"), true), true),
                 ("Balance Remaining", "S$" + FormatNumericText(GetValue(firstRow, "BalanceRemaining"), true), true)
